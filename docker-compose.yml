@@ -69,7 +69,7 @@ services:
       JWT_PUBLIC_KEY_PATH: /app/keys/falcon512_vk.pem
       JWT_TOKEN_DURATION: 60
     volumes:
-      - ./auth-service/keys:/app/keys:ro
+      - ./auth-service/keys:/app/keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -125,7 +125,7 @@ services:
       JWT_PUBLIC_KEY_PATH: /app/keys/falcon512_vk.pem
       JWT_TOKEN_DURATION: 60
     volumes:
-      - ./gateway/keys:/app/keys:ro
+      - ./gateway/keys:/app/keys
     depends_on:
       - auth-service
       - todo-service

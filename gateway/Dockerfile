@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # =========================
 FROM alpine:3.20
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata su-exec
 
 WORKDIR /app
 
@@ -34,9 +34,10 @@ RUN adduser -D appuser && \
     mkdir -p /app/logs /app/keys && \
     chown -R appuser:appuser /app
 
-USER appuser
+COPY gateway/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-ENTRYPOINT ["/app/app"]
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 HEALTHCHECK --interval=2m --timeout=5s \
   CMD wget -qO- http://localhost:3000/health || exit 1
