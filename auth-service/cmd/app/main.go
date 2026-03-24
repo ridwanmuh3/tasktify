@@ -16,7 +16,7 @@ func main() {
 	validate := config.NewValidator(viperConfig)
 	srv := grpc.NewServer()
 
-	db.AutoMigrate(&entity.Task{})
+	db.AutoMigrate(&entity.User{})
 
 	config.Bootstrap(&config.BootstrapConfig{
 		DB:         db,
