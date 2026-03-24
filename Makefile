@@ -6,6 +6,7 @@ COMPOSE = docker compose
 
 # --- Key Generation ---
 keygen:
+	mkdir -p auth-service/keys gateway/keys
 	cd cmd/keygen && go run main.go ../../auth-service/keys
 	cp auth-service/keys/falcon512_vk.pem gateway/keys/
 
