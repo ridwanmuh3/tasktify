@@ -1,5 +1,26 @@
 services:
   # =========================
+  # Caddy Reverse Proxy (HTTPS)
+  # =========================
+  caddy:
+    image: caddy:2-alpine
+    container_name: tasktify-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/data/logs
+    depends_on:
+      - gateway
+    networks:
+      - frontend
+
+  # =========================
   # PostgreSQL Database
   # =========================
   postgres:
@@ -7,18 +28,18 @@ services:
     container_name: tasktify-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tasktify
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-tasktify}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - backend
 
   # =========================
   # Auth Service (gRPC :3001)
@@ -30,9 +51,9 @@ services:
     container_name: tasktify-auth-service
     restart: unless-stopped
     environment:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: tasktify
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-tasktify}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SSL_MODE: disable
@@ -49,11 +70,11 @@ services:
       JWT_TOKEN_DURATION: 60
     volumes:
       - ./auth-service/keys:/app/keys:ro
-    ports:
-      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - backend
 
   # =========================
   # Todo Service (gRPC :3002)
@@ -65,9 +86,9 @@ services:
     container_name: tasktify-todo-service
     restart: unless-stopped
     environment:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: tasktify
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-tasktify}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SSL_MODE: disable
@@ -77,11 +98,11 @@ services:
       APP_NAME: todo-service
       APP_MODE: production
       GRPC_PORT: 3002
-    ports:
-      - "3002:3002"
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - backend
 
   # =========================
   # API Gateway (HTTP :3000)
@@ -105,11 +126,22 @@ services:
       JWT_TOKEN_DURATION: 60
     volumes:
       - ./gateway/keys:/app/keys:ro
-    ports:
-      - "3000:3000"
     depends_on:
       - auth-service
       - todo-service
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
+  caddy_logs:

@@ -42,6 +42,13 @@ logs-auth:
 logs-todo:
 	$(COMPOSE) logs -f todo-service
 
+logs-caddy:
+	$(COMPOSE) logs -f caddy
+
+# --- Production Deploy ---
+deploy: vendor
+	$(COMPOSE) up -d --build
+
 # --- Local Development ---
 run-gateway:
 	cd gateway && APP_MODE=dev go run ./cmd/app/main.go
@@ -71,4 +78,4 @@ vendor:
 	cd gateway && go mod vendor
 	cd todo-service && go mod vendor
 
-.PHONY: keygen compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo run-gateway run-auth run-todo build tidy vendor
+.PHONY: keygen compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor
