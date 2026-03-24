@@ -5,7 +5,7 @@ import (
 )
 
 type Task struct {
-	Id          uuid.UUID `gorm:"primaryKey;default:uuid_generate_v4()"`
+	Id          uuid.UUID `gorm:"primaryKey;default:gen_random_uuid()"`
 	Title       string    `gorm:"type:varchar;size:100;not null"`
 	Description string    `gorm:"type:text"`
 	Status      string    `gorm:"type:varchar;size:30;not null"`
