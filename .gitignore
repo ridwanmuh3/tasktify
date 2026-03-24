@@ -1,0 +1,22 @@
+# Binaries
+bin/
+*.exe
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Environment
+.env
+
+# Keys (sensitive - generate with `make keygen`)
+**/keys/*.pem
+
+# Vendored dependencies
+**/vendor/
+
+# Temporary
+tmp/

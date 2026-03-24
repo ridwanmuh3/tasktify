@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package auth;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "./internal/model";
+
+message Auth {
+    string token_type = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+}
+
+message AuthResponse {
+  Auth auth = 1;
+}
+
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RefreshTokenRequest {
+  string user_id = 1;
+  string refresh_token = 2;
+}
+
+message VerifyRequest {
+    string token = 1;
+}
+
+service AuthService {
+    rpc SignIn(SignInRequest) returns (AuthResponse);
+    rpc RefreshToken(RefreshTokenRequest) returns(AuthResponse);
+    rpc Verify(VerifyRequest) returns (google.protobuf.Empty);
+}

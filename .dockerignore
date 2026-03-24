@@ -1,0 +1,14 @@
+**/.git
+**/.env
+**/bin
+**/tmp
+**/.idea
+**/.vscode
+**/node_modules
+**/*.test
+**/docker-compose*.yml
+**/.dockerignore
+**/Makefile
+**/README.md
+**/deployments
+**/cmd/keygen

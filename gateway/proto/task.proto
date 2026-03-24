@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package todo;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "./internal/model";
+
+message Task {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string description = 4;
+  string status = 5; 
+  google.protobuf.Timestamp due_date = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message TaskResponse {
+  Task task = 1;
+}
+
+message ListTaskResponse {
+  repeated Task tasks = 1;
+}
+
+message CreateTaskRequest {
+  string user_id = 1;
+  string title = 2;
+  string description = 3;
+  string status = 4;
+  google.protobuf.Timestamp due_date = 5;
+}
+
+message UpdateTaskRequest {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  string description = 4;
+  string status = 5;
+  google.protobuf.Timestamp due_date = 6;
+}
+
+message DeleteTaskRequest {
+  string id = 1;
+  string user_id = 2;
+}
+
+message GetTaskRequest {
+    string id = 1;
+    string user_id = 2;
+}
+
+message GetAllTaskRequest {
+    string user_id = 1;
+}
+
+enum TaskStatus {
+    PENDING = 0;
+    IN_PROGRESS= 1;
+    COMPLETED = 2;
+}
+
+service TaskService {
+  rpc Create(CreateTaskRequest) returns (google.protobuf.Empty);
+  rpc Update(UpdateTaskRequest) returns (google.protobuf.Empty);
+  rpc Delete(DeleteTaskRequest) returns (google.protobuf.Empty);
+  rpc Get(GetTaskRequest) returns (TaskResponse);
+  rpc GetAll(GetAllTaskRequest) returns (ListTaskResponse);
+}

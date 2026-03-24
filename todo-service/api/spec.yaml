@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: API Server
+  description: REST API documentation
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /{name}:
+    get:
+      summary: Say hello
+      description: Returns a greeting message for the given name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          example: John
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelloResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HelloResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Hello John
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: internal server error
+
+    PageMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        total_item:
+          type: integer
+          format: int64
+        total_page:
+          type: integer
+          format: int64
