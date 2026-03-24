@@ -14,231 +14,242 @@
               * default: 100 iterations shared among 1 VUs (maxDuration: 10m0s, gracefulStop: 30s)
 
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m01.0s), 1/1 VUs, 1 complete and 0 interrupted iterations
+default   [   1% ] 1 VUs  00m00.8s/10m0s  001/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m02.0s), 1/1 VUs, 3 complete and 0 interrupted iterations
+default   [   3% ] 1 VUs  00m01.8s/10m0s  003/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m03.0s), 1/1 VUs, 4 complete and 0 interrupted iterations
+default   [   4% ] 1 VUs  00m02.8s/10m0s  004/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m04.0s), 1/1 VUs, 6 complete and 0 interrupted iterations
+default   [   6% ] 1 VUs  00m03.8s/10m0s  006/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m05.0s), 1/1 VUs, 8 complete and 0 interrupted iterations
+default   [   8% ] 1 VUs  00m04.8s/10m0s  008/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m06.0s), 1/1 VUs, 10 complete and 0 interrupted iterations
+default   [  10% ] 1 VUs  00m05.8s/10m0s  010/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m07.0s), 1/1 VUs, 11 complete and 0 interrupted iterations
+default   [  11% ] 1 VUs  00m06.8s/10m0s  011/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m08.0s), 1/1 VUs, 14 complete and 0 interrupted iterations
+default   [  14% ] 1 VUs  00m07.8s/10m0s  014/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m09.0s), 1/1 VUs, 16 complete and 0 interrupted iterations
+default   [  16% ] 1 VUs  00m08.8s/10m0s  016/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m10.0s), 1/1 VUs, 17 complete and 0 interrupted iterations
+default   [  17% ] 1 VUs  00m09.8s/10m0s  017/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m11.0s), 1/1 VUs, 19 complete and 0 interrupted iterations
+default   [  19% ] 1 VUs  00m10.8s/10m0s  019/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m12.0s), 1/1 VUs, 21 complete and 0 interrupted iterations
+default   [  21% ] 1 VUs  00m11.8s/10m0s  021/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m13.0s), 1/1 VUs, 23 complete and 0 interrupted iterations
+default   [  23% ] 1 VUs  00m12.8s/10m0s  023/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m14.0s), 1/1 VUs, 25 complete and 0 interrupted iterations
+default   [  25% ] 1 VUs  00m13.8s/10m0s  025/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m15.0s), 1/1 VUs, 26 complete and 0 interrupted iterations
+default   [  26% ] 1 VUs  00m14.8s/10m0s  026/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m16.0s), 1/1 VUs, 28 complete and 0 interrupted iterations
+default   [  28% ] 1 VUs  00m15.8s/10m0s  028/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m17.0s), 1/1 VUs, 30 complete and 0 interrupted iterations
+default   [  30% ] 1 VUs  00m16.8s/10m0s  030/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m18.0s), 1/1 VUs, 32 complete and 0 interrupted iterations
+default   [  32% ] 1 VUs  00m17.8s/10m0s  032/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m19.0s), 1/1 VUs, 34 complete and 0 interrupted iterations
+default   [  34% ] 1 VUs  00m18.8s/10m0s  034/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m20.0s), 1/1 VUs, 36 complete and 0 interrupted iterations
+default   [  36% ] 1 VUs  00m19.8s/10m0s  036/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m21.0s), 1/1 VUs, 37 complete and 0 interrupted iterations
+default   [  37% ] 1 VUs  00m20.8s/10m0s  037/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m22.0s), 1/1 VUs, 38 complete and 0 interrupted iterations
+default   [  38% ] 1 VUs  00m21.8s/10m0s  038/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m23.0s), 1/1 VUs, 40 complete and 0 interrupted iterations
+default   [  40% ] 1 VUs  00m22.8s/10m0s  040/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m24.0s), 1/1 VUs, 42 complete and 0 interrupted iterations
+default   [  42% ] 1 VUs  00m23.8s/10m0s  042/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m25.0s), 1/1 VUs, 44 complete and 0 interrupted iterations
+default   [  44% ] 1 VUs  00m24.8s/10m0s  044/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m26.0s), 1/1 VUs, 46 complete and 0 interrupted iterations
+default   [  46% ] 1 VUs  00m25.8s/10m0s  046/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m27.0s), 1/1 VUs, 48 complete and 0 interrupted iterations
+default   [  48% ] 1 VUs  00m26.8s/10m0s  048/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m28.0s), 1/1 VUs, 50 complete and 0 interrupted iterations
+default   [  50% ] 1 VUs  00m27.8s/10m0s  050/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m29.0s), 1/1 VUs, 52 complete and 0 interrupted iterations
+default   [  52% ] 1 VUs  00m28.8s/10m0s  052/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m30.0s), 1/1 VUs, 53 complete and 0 interrupted iterations
+default   [  53% ] 1 VUs  00m29.8s/10m0s  053/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m31.0s), 1/1 VUs, 55 complete and 0 interrupted iterations
+default   [  55% ] 1 VUs  00m30.8s/10m0s  055/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m32.0s), 1/1 VUs, 58 complete and 0 interrupted iterations
+default   [  58% ] 1 VUs  00m31.8s/10m0s  058/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m33.0s), 1/1 VUs, 59 complete and 0 interrupted iterations
+default   [  59% ] 1 VUs  00m32.8s/10m0s  059/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m34.0s), 1/1 VUs, 61 complete and 0 interrupted iterations
+default   [  61% ] 1 VUs  00m33.8s/10m0s  061/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m35.0s), 1/1 VUs, 63 complete and 0 interrupted iterations
+default   [  63% ] 1 VUs  00m34.8s/10m0s  063/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m36.0s), 1/1 VUs, 65 complete and 0 interrupted iterations
+default   [  65% ] 1 VUs  00m35.8s/10m0s  065/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m37.0s), 1/1 VUs, 68 complete and 0 interrupted iterations
+default   [  68% ] 1 VUs  00m36.8s/10m0s  068/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m38.0s), 1/1 VUs, 70 complete and 0 interrupted iterations
+default   [  70% ] 1 VUs  00m37.8s/10m0s  070/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m39.0s), 1/1 VUs, 72 complete and 0 interrupted iterations
+default   [  72% ] 1 VUs  00m38.8s/10m0s  072/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m40.0s), 1/1 VUs, 74 complete and 0 interrupted iterations
+default   [  74% ] 1 VUs  00m39.8s/10m0s  074/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m41.0s), 1/1 VUs, 76 complete and 0 interrupted iterations
+default   [  76% ] 1 VUs  00m40.8s/10m0s  076/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m42.0s), 1/1 VUs, 77 complete and 0 interrupted iterations
+default   [  77% ] 1 VUs  00m41.8s/10m0s  077/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m43.0s), 1/1 VUs, 79 complete and 0 interrupted iterations
+default   [  79% ] 1 VUs  00m42.8s/10m0s  079/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m44.0s), 1/1 VUs, 81 complete and 0 interrupted iterations
+default   [  81% ] 1 VUs  00m43.8s/10m0s  081/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m45.0s), 1/1 VUs, 83 complete and 0 interrupted iterations
+default   [  83% ] 1 VUs  00m44.8s/10m0s  083/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m46.0s), 1/1 VUs, 85 complete and 0 interrupted iterations
+default   [  85% ] 1 VUs  00m45.8s/10m0s  085/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m47.0s), 1/1 VUs, 87 complete and 0 interrupted iterations
+default   [  87% ] 1 VUs  00m46.8s/10m0s  087/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m48.0s), 1/1 VUs, 89 complete and 0 interrupted iterations
+default   [  89% ] 1 VUs  00m47.8s/10m0s  089/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m49.0s), 1/1 VUs, 91 complete and 0 interrupted iterations
+default   [  91% ] 1 VUs  00m48.8s/10m0s  091/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m50.0s), 1/1 VUs, 93 complete and 0 interrupted iterations
+default   [  93% ] 1 VUs  00m49.8s/10m0s  093/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m51.0s), 1/1 VUs, 95 complete and 0 interrupted iterations
+default   [  95% ] 1 VUs  00m50.8s/10m0s  095/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m52.0s), 1/1 VUs, 97 complete and 0 interrupted iterations
+default   [  97% ] 1 VUs  00m51.8s/10m0s  097/100 shared iters
 
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
-
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m53.0s), 1/1 VUs, 99 complete and 0 interrupted iterations
+default   [  99% ] 1 VUs  00m52.8s/10m0s  099/100 shared iters
 
 
   █ THRESHOLDS 
 
     http_req_duration
-    ✓ 'p(95)<5000' p(95)=0s
+    ✓ 'p(95)<5000' p(95)=65.74ms
 
     jwt_confusion_attack_block_rate
-    ✓ 'rate==1.0' rate=0.00%
+    ✓ 'rate==1.0' rate=100.00%
 
     token_generation_time
-    ✓ 'p(95)<5000' p(95)=0s
+    ✓ 'p(95)<5000' p(95)=72.69ms
 
     token_verification_time
-    ✓ 'p(95)<2000' p(95)=0s
+    ✓ 'p(95)<2000' p(95)=29.16ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 1       0.016667/s
-    checks_succeeded...: 0.00%   0 out of 1
-    checks_failed......: 100.00% 1 out of 1
+    checks_total.......: 2502    46.799032/s
+    checks_succeeded...: 100.00% 2502 out of 2502
+    checks_failed......: 0.00%   0 out of 2502
 
-    ✗ register: status 201
-      ↳  0% — ✓ 0 / ✗ 1
+    ✓ register: status 201
+    ✓ setup sign-in: status 200
+    ✓ sign-in: status 200
+    ✓ sign-in: has access_token
+    ✓ sign-in: has refresh_token
+    ✓ profile: status 200
+    ✓ profile: has user data
+    ✓ create task: status 201
+    ✓ list tasks: status 200
+    ✓ get task: status 200
+    ✓ update task: status 200
+    ✓ delete task: status 200
+    ✓ refresh: status 200
+    ✓ attack: no token → rejected
+    ✓ attack: alg=none → rejected
+    ✓ attack: alg=HS256 → rejected
+    ✓ attack: alg=RS256 → rejected
+    ✓ attack: alg=ES256 → rejected
+    ✓ attack: alg=Falcon-512 → rejected
+    ✓ attack: alg=Falcon-1024 → rejected
+    ✓ attack: signature stripped → rejected
+    ✓ attack: expired token → rejected
+    ✓ attack: issuer spoof → rejected
+    ✓ attack: malformed (2 segments) → rejected
+    ✓ attack: random garbage → rejected
+    ✓ attack: tampered payload → rejected
+    ✓ valid token: accepted (200)
 
     CUSTOM
-    jwt_confusion_attack_block_rate...: 0.00%   0 out of 0
-    token_generation_time.............: avg=0s min=0s med=0s max=0s p(90)=0s p(95)=0s
-    token_verification_time...........: avg=0s min=0s med=0s max=0s p(90)=0s p(95)=0s
+    jwt_confusion_attack_block_rate...: 100.00% 1300 out of 1300
+    jwt_confusion_attack_blocked......: 1300    24.316044/s
+    request_header_size...............: avg=844.666667 min=32       med=1251     max=1251     p(90)=1251    p(95)=1251    
+    response_body_size................: avg=730.375    min=39       med=218.5    max=2503     p(90)=2503    p(95)=2503    
+    successful_requests...............: 900     16.834184/s
+    token_generation_time.............: avg=42.76ms    min=12.34ms  med=62.44ms  max=155.09ms p(90)=70.39ms p(95)=72.69ms 
+    token_verification_time...........: avg=19.96ms    min=15.87ms  med=18.24ms  max=78.45ms  p(90)=22.52ms p(95)=29.16ms 
 
     HTTP
-    http_req_duration.................: avg=0s min=0s med=0s max=0s p(90)=0s p(95)=0s
-    http_req_failed...................: 100.00% 1 out of 1
-    http_reqs.........................: 1       0.016667/s
+    http_req_duration.................: avg=19.22ms    min=10.08ms  med=14.12ms  max=241.82ms p(90)=22.64ms p(95)=65.74ms 
+      { expected_response:true }......: avg=25.98ms    min=12.34ms  med=18.6ms   max=241.82ms p(90)=66.2ms  p(95)=68.54ms 
+    http_req_failed...................: 59.03%  1300 out of 2202
+    http_reqs.........................: 2202    41.187637/s
 
     EXECUTION
-    vus...............................: 0       min=0      max=0
-    vus_max...........................: 1       min=1      max=1
+    iteration_duration................: avg=532.72ms   min=447.94ms med=496.35ms max=979.61ms p(90)=706.6ms p(95)=717.22ms
+    iterations........................: 100     1.870465/s
+    vus...............................: 1       min=1            max=1
+    vus_max...........................: 1       min=1            max=1
 
     NETWORK
-    data_received.....................: 0 B     0 B/s
-    data_sent.........................: 0 B     0 B/s
+    data_received.....................: 837 kB  16 kB/s
+    data_sent.........................: 639 kB  12 kB/s
 
 
 
 
-Run       [ 100% ] setup()
-default   [   0% ]
+running (00m53.5s), 0/1 VUs, 100 complete and 0 interrupted iterations
+default ✓ [ 100% ] 1 VUs  00m53.3s/10m0s  100/100 shared iters
