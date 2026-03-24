@@ -7,6 +7,7 @@ import (
 
 	"todo-service/internal/config"
 	"todo-service/internal/delivery/grpc/interceptor"
+	"todo-service/internal/entity"
 )
 
 func main() {
@@ -15,6 +16,8 @@ func main() {
 	db := config.NewDB(viperConfig, log)
 	validate := config.NewValidator(viperConfig)
 	srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor.AuthInterceptor))
+
+	db.AutoMigrate(&entity.Task{})
 
 	config.Bootstrap(&config.BootstrapConfig{
 		DB:         db,

@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 
 	"auth-service/internal/config"
+	"auth-service/internal/entity"
 )
 
 func main() {
@@ -14,6 +15,8 @@ func main() {
 	db := config.NewDB(viperConfig, log)
 	validate := config.NewValidator(viperConfig)
 	srv := grpc.NewServer()
+
+	db.AutoMigrate(&entity.Task{})
 
 	config.Bootstrap(&config.BootstrapConfig{
 		DB:         db,
