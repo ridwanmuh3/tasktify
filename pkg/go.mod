@@ -1,6 +1,6 @@
 module github.com/ridwanmuh3/tasktify/pkg
 
-go 1.25.8
+go 1.25.7
 
 require (
 	github.com/cloudflare/circl v1.6.3

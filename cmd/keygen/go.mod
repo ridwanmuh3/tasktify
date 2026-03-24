@@ -1,6 +1,6 @@
 module github.com/ridwanmuh3/tasktify/cmd/keygen
 
-go 1.25.8
+go 1.25.7
 
 require github.com/ridwanmuh3/tasktify/pkg v0.0.0
 

@@ -1,6 +1,6 @@
 module github.com/ridwanmuh3/tasktify/gateway
 
-go 1.25.8
+go 1.25.7
 
 require (
 	github.com/bytedance/sonic v1.15.0
