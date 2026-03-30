@@ -73,7 +73,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     depends_on:
       bench-postgres:
         condition: service_healthy
@@ -97,7 +97,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     ports:
       - "5001:3000"
     depends_on:
@@ -134,7 +134,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     depends_on:
       bench-postgres:
         condition: service_healthy
@@ -158,7 +158,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     ports:
       - "5002:3000"
     depends_on:
@@ -195,7 +195,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     depends_on:
       bench-postgres:
         condition: service_healthy
@@ -219,7 +219,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     ports:
       - "5003:3000"
     depends_on:
@@ -256,7 +256,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     depends_on:
       bench-postgres:
         condition: service_healthy
@@ -280,7 +280,7 @@ services:
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
     volumes:
-      - ./keys:/app/keys:ro
+      - ./keys:/app/keys
     ports:
       - "5004:3000"
     depends_on:
