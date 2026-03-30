@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/viper"
@@ -14,7 +12,6 @@ import (
 	"github.com/ridwanmuh3/tasktify/gateway/internal/delivery/http/route"
 	"github.com/ridwanmuh3/tasktify/gateway/internal/model"
 
-	"github.com/ridwanmuh3/tasktify/pkg/jwt"
 	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 )
 
@@ -27,20 +24,40 @@ type BootstrapConfig struct {
 	TodoServiceConn *grpc.ClientConn
 }
 
+// Supported algorithms for multi-algorithm JWT verification
+var supportedAlgorithms = []string{
+	"Falcon-512",
+	"Falcon-Precomputed-512",
+	"ML-DSA-44",
+	"SLH-DSA-SHA2-128f",
+	"ES256",
+	"RS256",
+	"HS256",
+	"EdDSA",
+}
+
 func Bootstrap(config *BootstrapConfig) {
-	// Load Falcon public key once for JWT verification
-	vkPath := config.Config.GetString("JWT_PUBLIC_KEY_PATH")
-	vkBytes, err := os.ReadFile(vkPath)
-	if err != nil {
-		config.Log.Fatalf("failed to read public key file: %v", err)
-	}
-	verifyKey, err := jwt.ParseFalconPublicKeyFromPEM(vkBytes)
-	if err != nil {
-		config.Log.Fatalf("failed to parse public key: %v", err)
+	keysDir := config.Config.GetString("KEYS_DIR")
+	if keysDir == "" {
+		keysDir = "./keys"
 	}
 
-	// JWT util for token verification (PQC Falcon - public key loaded once)
-	jwtUtil := jwtutils.NewJwtUtil(config.Config, verifyKey)
+	defaultAlg := config.Config.GetString("JWT_DEFAULT_ALG")
+	if defaultAlg == "" {
+		defaultAlg = "Falcon-Precomputed-512"
+	}
+
+	// Load all algorithm configurations (sign mode = false for gateway, verification only)
+	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, false)
+	if err != nil {
+		config.Log.Fatalf("failed to load algorithm configs: %v", err)
+	}
+
+	issuer := config.Config.GetString("JWT_ISSUER")
+	duration := config.Config.GetInt("JWT_TOKEN_DURATION")
+
+	// Multi-algorithm JWT util for token verification
+	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, algConfigs)
 
 	// gRPC clients
 	authClient := model.NewAuthServiceClient(config.AuthServiceConn)

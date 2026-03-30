@@ -1,0 +1,541 @@
+services:
+  # =========================
+  # Shared Infrastructure
+  # =========================
+  bench-postgres:
+    image: postgres:18-alpine
+    container_name: bench-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tasktify_bench
+    volumes:
+      - bench_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bench-backend
+
+  bench-todo:
+    build:
+      context: .
+      dockerfile: todo-service/Dockerfile
+    container_name: bench-todo
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 10
+      DB_MAX_POOL: 100
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-todo
+      APP_MODE: production
+      GRPC_PORT: 3002
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 1. Falcon-Precomputed-512 (FN-DSA-512 + LDL Precomputed)
+  # Gateway: :5001 | Auth gRPC: :6001
+  # ══════════════════════════════════════════════════════
+  bench-auth-fnp512:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-fnp512
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-fnp512
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-fnp512:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-fnp512
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-fnp512
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-fnp512:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5001:3000"
+    depends_on:
+      - bench-auth-fnp512
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 2. Falcon-512 (FN-DSA-512 original, tanpa precomputed)
+  # Gateway: :5002 | Auth gRPC: :6002
+  # ══════════════════════════════════════════════════════
+  bench-auth-fn512:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-fn512
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-fn512
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: Falcon-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-fn512:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-fn512
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-fn512
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-fn512:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: Falcon-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5002:3000"
+    depends_on:
+      - bench-auth-fn512
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 3. ML-DSA-44 (NIST FIPS 204 / Dilithium2)
+  # Gateway: :5003 | Auth gRPC: :6003
+  # ══════════════════════════════════════════════════════
+  bench-auth-mldsa44:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-mldsa44
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-mldsa44
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: ML-DSA-44
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-mldsa44:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-mldsa44
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-mldsa44
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-mldsa44:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: ML-DSA-44
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5003:3000"
+    depends_on:
+      - bench-auth-mldsa44
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 4. SLH-DSA-SHA2-128f (NIST FIPS 205 / SPHINCS+)
+  # Gateway: :5004 | Auth gRPC: :6004
+  # ══════════════════════════════════════════════════════
+  bench-auth-slhdsa:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-slhdsa
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-slhdsa
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-slhdsa:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-slhdsa
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-slhdsa
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-slhdsa:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5004:3000"
+    depends_on:
+      - bench-auth-slhdsa
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 5. ES256 (ECDSA P-256) — Algoritma klasik
+  # Gateway: :5005 | Auth gRPC: :6005
+  # ══════════════════════════════════════════════════════
+  bench-auth-es256:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-es256
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-es256
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: ES256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-es256:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-es256
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-es256
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-es256:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: ES256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5005:3000"
+    depends_on:
+      - bench-auth-es256
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 6. RS256 (RSA-2048) — Algoritma klasik
+  # Gateway: :5006 | Auth gRPC: :6006
+  # ══════════════════════════════════════════════════════
+  bench-auth-rs256:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-rs256
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-rs256
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: RS256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-rs256:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-rs256
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-rs256
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-rs256:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: RS256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5006:3000"
+    depends_on:
+      - bench-auth-rs256
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 7. HS256 (HMAC-SHA256) — Algoritma klasik simetris
+  # Gateway: :5007 | Auth gRPC: :6007
+  # ══════════════════════════════════════════════════════
+  bench-auth-hs256:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-hs256
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-hs256
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: HS256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-hs256:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-hs256
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-hs256
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-hs256:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: HS256
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5007:3000"
+    depends_on:
+      - bench-auth-hs256
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # ══════════════════════════════════════════════════════
+  # 8. EdDSA (Ed25519) — Algoritma klasik
+  # Gateway: :5008 | Auth gRPC: :6008
+  # ══════════════════════════════════════════════════════
+  bench-auth-eddsa:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-eddsa
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-eddsa
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: EdDSA
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-eddsa:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-eddsa
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-eddsa
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-eddsa:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: EdDSA
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys:ro
+    ports:
+      - "5008:3000"
+    depends_on:
+      - bench-auth-eddsa
+      - bench-todo
+    networks:
+      - bench-backend
+
+networks:
+  bench-backend:
+    driver: bridge
+
+volumes:
+  bench_postgres_data:

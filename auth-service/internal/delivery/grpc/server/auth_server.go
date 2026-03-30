@@ -24,7 +24,7 @@ func NewAuthServer(log *zap.SugaredLogger, authService *service.AuthService) *Au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (*model.AuthResponse, error) {
-	accessToken, refreshToken, err := s.authService.SignIn(ctx, request.Email, request.Password)
+	accessToken, refreshToken, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,10 @@ module github.com/ridwanmuh3/tasktify/cmd/keygen
 
 go 1.25.7
 
-require github.com/ridwanmuh3/tasktify/pkg v0.0.0
+require (
+	github.com/cloudflare/circl v1.6.3
+	github.com/ridwanmuh3/tasktify/pkg v0.0.0
+)
 
 require (
 	golang.org/x/crypto v0.49.0 // indirect

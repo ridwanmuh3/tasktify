@@ -5,10 +5,16 @@
 COMPOSE = docker compose
 
 # --- Key Generation ---
+# keygen: generate semua keys ke auth-service/keys dan copy ke gateway/keys (production)
 keygen:
 	mkdir -p auth-service/keys gateway/keys
 	cd cmd/keygen && go run main.go ../../auth-service/keys
-	cp auth-service/keys/falcon512_vk.pem gateway/keys/
+	cp -r auth-service/keys/. gateway/keys/
+
+# keygen-all: generate semua keys ke ./keys untuk benchmark (shared oleh semua service)
+keygen-all:
+	mkdir -p keys
+	cd cmd/keygen && go run main.go ../../keys
 
 # --- Proto Compilation ---
 compile-proto:
@@ -79,4 +85,23 @@ vendor:
 	cd gateway && go mod vendor
 	cd todo-service && go mod vendor
 
-.PHONY: keygen compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor
+# --- Benchmark ---
+bench-up: vendor
+	$(COMPOSE) -f docker-compose.benchmark.yml up -d --build
+
+bench-down:
+	$(COMPOSE) -f docker-compose.benchmark.yml down -v
+
+bench-logs:
+	$(COMPOSE) -f docker-compose.benchmark.yml logs -f
+
+bench-run:
+	k6 run -e HOST=localhost k6/benchmark_compare.js
+
+# keygen-all + vendor + bench-up + jalankan k6
+bench: keygen-all vendor bench-up
+	@echo "Menunggu services siap (30s)..."
+	sleep 30
+	k6 run -e HOST=localhost k6/benchmark_compare.js
+
+.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench

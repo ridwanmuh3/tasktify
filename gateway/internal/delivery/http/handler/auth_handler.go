@@ -21,8 +21,9 @@ func NewAuthHandler(log *zap.SugaredLogger, authClient model.AuthServiceClient) 
 }
 
 type SignInRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required"`
+	Algorithm string `json:"algorithm"`
 }
 
 type RefreshTokenRequest struct {
@@ -39,8 +40,9 @@ func (h *AuthHandler) SignIn(c fiber.Ctx) error {
 
 	// Forward Kredensial Login ke Auth Service via gRPC
 	resp, err := h.authClient.SignIn(c.Context(), &model.SignInRequest{
-		Email:    req.Email,
-		Password: req.Password,
+		Email:     req.Email,
+		Password:  req.Password,
+		Algorithm: req.Algorithm,
 	})
 	if err != nil {
 		st, ok := status.FromError(err)

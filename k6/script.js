@@ -26,7 +26,7 @@ const BASE_URL = __ENV.BASE_URL || "https://poc-ridwanmuh3.my.id";
 
 export const options = {
   iterations: 100,
-  vus: 1,
+  vus: 10,
   thresholds: {
     token_generation_time: ["p(95)<5000"],
     token_verification_time: ["p(95)<2000"],

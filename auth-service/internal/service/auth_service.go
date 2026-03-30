@@ -40,7 +40,7 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) SignIn(ctx context.Context, email, password string) (string, string, error) {
+func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm string) (string, string, error) {
 	db := s.db.WithContext(ctx)
 
 	user := new(entity.User)
@@ -55,8 +55,9 @@ func (s *AuthService) SignIn(ctx context.Context, email, password string) (strin
 	}
 
 	accessToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-		UserID: user.Id,
-		Email:  user.Email,
+		UserID:    user.Id,
+		Email:     user.Email,
+		Algorithm: algorithm,
 	})
 	if err != nil {
 		s.log.Errorf("failed to sign access token: %v", err)
@@ -64,8 +65,9 @@ func (s *AuthService) SignIn(ctx context.Context, email, password string) (strin
 	}
 
 	refreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-		UserID: user.Id,
-		Email:  user.Email,
+		UserID:    user.Id,
+		Email:     user.Email,
+		Algorithm: algorithm,
 	})
 	if err != nil {
 		s.log.Errorf("failed to sign refresh token: %v", err)

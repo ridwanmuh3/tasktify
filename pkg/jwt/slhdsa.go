@@ -54,7 +54,7 @@ func init() {
 	RegisterSigningMethod(SigningMethodSLHDSA_SHA2_256s.Alg(), func() SigningMethod {
 		return SigningMethodSLHDSA_SHA2_256s
 	})
-	RegisterSigningMethod(SigningMethodSLHDSA_SHA2_128f.Alg(), func() SigningMethod {
+	RegisterSigningMethod(SigningMethodSLHDSA_SHAKE_128f.Alg(), func() SigningMethod {
 		return SigningMethodSLHDSA_SHAKE_128f
 	})
 	RegisterSigningMethod(SigningMethodSLHDSA_SHAKE_128s.Alg(), func() SigningMethod {

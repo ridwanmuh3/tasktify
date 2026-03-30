@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -15,8 +13,6 @@ import (
 	"auth-service/internal/repository"
 	"auth-service/internal/service"
 
-	"github.com/ridwanmuh3/tasktify/pkg/fndsa"
-	"github.com/ridwanmuh3/tasktify/pkg/jwt"
 	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 )
 
@@ -28,39 +24,40 @@ type BootstrapConfig struct {
 	Config     *viper.Viper
 }
 
+// Supported algorithms for multi-algorithm JWT signing
+var supportedAlgorithms = []string{
+	"Falcon-512",
+	"Falcon-Precomputed-512",
+	"ML-DSA-44",
+	"SLH-DSA-SHA2-128f",
+	"ES256",
+	"RS256",
+	"HS256",
+	"EdDSA",
+}
+
 func Bootstrap(config *BootstrapConfig) {
-	// Load Falcon private key and create precomputed signer
-	skPath := config.Config.GetString("JWT_PRIVATE_KEY_PATH")
-	skBytes, err := os.ReadFile(skPath)
-	if err != nil {
-		config.Log.Fatalf("failed to read private key file: %v", err)
-	}
-	secretKey, err := jwt.ParseFalconPrivateKeyFromPEM(skBytes)
-	if err != nil {
-		config.Log.Fatalf("failed to parse private key: %v", err)
-	}
-	signer, err := fndsa.NewPrecomputedSigner(secretKey)
-	if err != nil {
-		config.Log.Fatalf("failed to create precomputed signer: %v", err)
+	keysDir := config.Config.GetString("KEYS_DIR")
+	if keysDir == "" {
+		keysDir = "./keys"
 	}
 
-	// Set precomputed signer on signing method (loaded once)
-	jwtMethod := jwt.SigningMethodFNP512
-	jwtMethod.SetPrecomputedSigner(signer)
-
-	// Load Falcon public key for verification
-	vkPath := config.Config.GetString("JWT_PUBLIC_KEY_PATH")
-	vkBytes, err := os.ReadFile(vkPath)
-	if err != nil {
-		config.Log.Fatalf("failed to read public key file: %v", err)
-	}
-	verifyKey, err := jwt.ParseFalconPublicKeyFromPEM(vkBytes)
-	if err != nil {
-		config.Log.Fatalf("failed to parse public key: %v", err)
+	defaultAlg := config.Config.GetString("JWT_DEFAULT_ALG")
+	if defaultAlg == "" {
+		defaultAlg = "Falcon-Precomputed-512"
 	}
 
-	// JWT util with precomputed signer
-	jwtUtil := jwtutils.NewJwtUtilWithSigner(config.Config, jwtMethod, verifyKey)
+	// Load all algorithm configurations (sign mode = true for auth-service)
+	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, true)
+	if err != nil {
+		config.Log.Fatalf("failed to load algorithm configs: %v", err)
+	}
+
+	issuer := config.Config.GetString("JWT_ISSUER")
+	duration := config.Config.GetInt("JWT_TOKEN_DURATION")
+
+	// Multi-algorithm JWT utility
+	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, algConfigs)
 
 	// repositories
 	userRepository := repository.NewUserRepository()

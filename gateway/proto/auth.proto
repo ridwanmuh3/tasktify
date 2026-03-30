@@ -19,6 +19,7 @@ message AuthResponse {
 message SignInRequest {
   string email = 1;
   string password = 2;
+  string algorithm = 3;
 }
 
 message RefreshTokenRequest {
