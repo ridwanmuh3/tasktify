@@ -25,13 +25,17 @@ import http from "k6/http";
 import { check, group, sleep } from "k6";
 import { Trend, Counter, Rate } from "k6/metrics";
 import encoding from "k6/encoding";
+import exec from "k6/execution";
 import { randomString } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
 
 // ═══════════════════════════════════════════════════════════════
 // Konfigurasi
 // ═══════════════════════════════════════════════════════════════
 
-const BASE_URL = __ENV.BASE_URL || "https://poc-ridwanmuh3.my.id";
+let BASE_URL = __ENV.BASE_URL || "https://poc-ridwanmuh3.my.id";
+if (!BASE_URL.startsWith("http://") && !BASE_URL.startsWith("https://")) {
+  BASE_URL = "http://" + BASE_URL;
+}
 
 const ALGORITHMS = [
   { id: "FNP512", name: "Falcon-Precomputed-512", category: "PQC" },
@@ -115,8 +119,7 @@ export function setup() {
     headers: { "Content-Type": "application/json" },
   });
   if (regRes.status !== 201) {
-    console.error(`Register gagal: ${regRes.status} — ${regRes.body}`);
-    return null;
+    exec.test.abort(`Register gagal: ${regRes.status} — ${regRes.body}`);
   }
   console.log(`User terdaftar: ${user.email}`);
 
