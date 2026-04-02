@@ -2,23 +2,23 @@ services:
   # =========================
   # Caddy Reverse Proxy (HTTPS)
   # =========================
-  # caddy:
-  #   image: caddy:2-alpine
-  #   container_name: tasktify-caddy
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #     - "443:443/udp"
-  #   volumes:
-  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
-  #     - caddy_data:/data
-  #     - caddy_config:/config
-  #     - caddy_logs:/data/logs
-  #   depends_on:
-  #     - gateway
-  #   networks:
-  #     - frontend
+  caddy:
+    image: caddy:2-alpine
+    container_name: tasktify-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/data/logs
+    depends_on:
+      - gateway
+    networks:
+      - frontend
 
   # =========================
   # PostgreSQL Database
