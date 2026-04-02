@@ -71,8 +71,20 @@ const ALGORITHMS = [
     port: 5003,
     scenarioDuration: 30,
   },
-  // { id: "SLHDSA128f", name: "SLH-DSA-SHA2-128f",      category: "PQC", port: 5004, scenarioDuration: 90  },
-  // { id: "SLHDSA128s", name: "SLH-DSA-SHA2-128s",      category: "PQC", port: 5005, scenarioDuration: 180 },
+  {
+    id: "SLHDSA128f",
+    name: "SLH-DSA-SHA2-128f",
+    category: "PQC",
+    port: 5004,
+    scenarioDuration: 90,
+  },
+  {
+    id: "SLHDSA128s",
+    name: "SLH-DSA-SHA2-128s",
+    category: "PQC",
+    port: 5005,
+    scenarioDuration: 180,
+  },
   // { id: "SLHSHK128f", name: "SLH-DSA-SHAKE-128f",     category: "PQC", port: 5006, scenarioDuration: 90  },
   // { id: "SLHSHK128s", name: "SLH-DSA-SHAKE-128s",     category: "PQC", port: 5007, scenarioDuration: 180 },
   // { id: "ES256",  name: "ES256",  category: "Classic", port: 5008, scenarioDuration: 30 },
@@ -83,7 +95,7 @@ const ALGORITHMS = [
 
 // Level konkuren yang diuji
 // Smoke test: [1] — Full benchmark: [10, 50, 100]
-const CONCURRENCY_LEVELS = [10, 50, 100];
+const CONCURRENCY_LEVELS = [10, 30, 50];
 
 // Default durasi per skenario (detik) dan jeda antar skenario
 const SCENARIO_DURATION_S = 30;
@@ -146,8 +158,8 @@ const ALG_BUDGET = {
   "Falcon-Precomputed-512": { gen: 60000, ver: 30000, resp: 60000 },
   "Falcon-512": { gen: 60000, ver: 30000, resp: 60000 },
   "ML-DSA-44": { gen: 60000, ver: 30000, resp: 60000 },
-  // "SLH-DSA-SHA2-128f":      { gen: 300000, ver: 60000, resp: 300000 },
-  // "SLH-DSA-SHA2-128s":      { gen: 600000, ver: 60000, resp: 600000 },
+  "SLH-DSA-SHA2-128f": { gen: 300000, ver: 60000, resp: 300000 },
+  "SLH-DSA-SHA2-128s": { gen: 600000, ver: 60000, resp: 600000 },
   // "SLH-DSA-SHAKE-128f":     { gen: 300000, ver: 60000, resp: 300000 },
   // "SLH-DSA-SHAKE-128s":     { gen: 600000, ver: 60000, resp: 600000 },
 };
@@ -436,6 +448,7 @@ export function benchmark(data) {
     if (taskId) {
       const getRes = http.get(`${BASE}/api/tasks/${taskId}`, {
         headers: authHdr,
+        tags: { name: "/api/tasks/:id" },
       });
       respDuration.add(getRes.timings.duration, tags);
       check(getRes, {
@@ -452,7 +465,7 @@ export function benchmark(data) {
           status: "IN_PROGRESS",
           due_date: Date.now() + 172800000,
         }),
-        { headers: authHdr },
+        { headers: authHdr, tags: { name: "/api/tasks/:id" } },
       );
       respDuration.add(updRes.timings.duration, tags);
       check(updRes, {
@@ -463,6 +476,7 @@ export function benchmark(data) {
 
       const delRes = http.del(`${BASE}/api/tasks/${taskId}`, null, {
         headers: authHdr,
+        tags: { name: "/api/tasks/:id" },
       });
       respDuration.add(delRes.timings.duration, tags);
       check(delRes, {

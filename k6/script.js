@@ -223,6 +223,7 @@ export default function (data) {
       // Get single
       const getRes = http.get(`${BASE_URL}/api/tasks/${taskId}`, {
         headers: authHeaders,
+        tags: { name: "/api/tasks/:id" },
       });
       responseBodySize.add(getRes.body.length);
       check(getRes, { "get task: status 200": (r) => r.status === 200 })
@@ -238,7 +239,7 @@ export default function (data) {
           status: "IN_PROGRESS",
           due_date: Date.now() + 172800000,
         }),
-        { headers: authHeaders },
+        { headers: authHeaders, tags: { name: "/api/tasks/:id" } },
       );
       responseBodySize.add(updateRes.body.length);
       check(updateRes, { "update task: status 200": (r) => r.status === 200 })
@@ -248,6 +249,7 @@ export default function (data) {
       // Delete
       const deleteRes = http.del(`${BASE_URL}/api/tasks/${taskId}`, null, {
         headers: authHeaders,
+        tags: { name: "/api/tasks/:id" },
       });
       responseBodySize.add(deleteRes.body.length);
       check(deleteRes, { "delete task: status 200": (r) => r.status === 200 })
