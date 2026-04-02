@@ -69,6 +69,7 @@ services:
       APP_MODE: production
       GRPC_PORT: 3001
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -93,6 +94,7 @@ services:
       AUTH_SERVICE_ADDR: bench-auth-fnp512:3001
       TODO_SERVICE_ADDR: bench-todo:3002
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -130,6 +132,7 @@ services:
       APP_MODE: production
       GRPC_PORT: 3001
       JWT_DEFAULT_ALG: Falcon-512
+      JWT_ALLOWED_ALGS: Falcon-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -154,6 +157,7 @@ services:
       AUTH_SERVICE_ADDR: bench-auth-fn512:3001
       TODO_SERVICE_ADDR: bench-todo:3002
       JWT_DEFAULT_ALG: Falcon-512
+      JWT_ALLOWED_ALGS: Falcon-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -191,6 +195,7 @@ services:
       APP_MODE: production
       GRPC_PORT: 3001
       JWT_DEFAULT_ALG: ML-DSA-44
+      JWT_ALLOWED_ALGS: ML-DSA-44
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -215,6 +220,7 @@ services:
       AUTH_SERVICE_ADDR: bench-auth-mldsa44:3001
       TODO_SERVICE_ADDR: bench-todo:3002
       JWT_DEFAULT_ALG: ML-DSA-44
+      JWT_ALLOWED_ALGS: ML-DSA-44
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -232,66 +238,257 @@ services:
   # 4. SLH-DSA-SHA2-128f (NIST FIPS 205 / SPHINCS+)
   # Gateway: :5004 | Auth gRPC: :6004
   # ══════════════════════════════════════════════════════
-  bench-auth-slhdsa:
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
-    container_name: bench-auth-slhdsa
-    restart: unless-stopped
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: tasktify_bench
-      DB_HOST: bench-postgres
-      DB_PORT: 5432
-      DB_SSL_MODE: disable
-      DB_POOL_IDLE: 5
-      DB_MAX_POOL: 50
-      DB_MAX_LIFETIME: 300
-      APP_NAME: bench-auth-slhdsa
-      APP_MODE: production
-      GRPC_PORT: 3001
-      JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
-      JWT_ISSUER: tasktify
-      JWT_TOKEN_DURATION: 60
-      KEYS_DIR: /app/keys
-    volumes:
-      - ./keys:/app/keys
-    depends_on:
-      bench-postgres:
-        condition: service_healthy
-    networks:
-      - bench-backend
+  # bench-auth-slhdsa128f:
+  #   build:
+  #     context: .
+  #     dockerfile: auth-service/Dockerfile
+  #   container_name: bench-auth-slhdsa128f
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     DB_NAME: tasktify_bench
+  #     DB_HOST: bench-postgres
+  #     DB_PORT: 5432
+  #     DB_SSL_MODE: disable
+  #     DB_POOL_IDLE: 5
+  #     DB_MAX_POOL: 50
+  #     DB_MAX_LIFETIME: 300
+  #     APP_NAME: bench-auth-slhdsa128f
+  #     APP_MODE: production
+  #     GRPC_PORT: 3001
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHA2-128f
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   depends_on:
+  #     bench-postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - bench-backend
 
-  bench-gw-slhdsa:
-    build:
-      context: .
-      dockerfile: gateway/Dockerfile
-    container_name: bench-gw-slhdsa
-    restart: unless-stopped
-    environment:
-      APP_NAME: bench-gw-slhdsa
-      APP_PORT: 3000
-      APP_MODE: production
-      AUTH_SERVICE_ADDR: bench-auth-slhdsa:3001
-      TODO_SERVICE_ADDR: bench-todo:3002
-      JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
-      JWT_ISSUER: tasktify
-      JWT_TOKEN_DURATION: 60
-      KEYS_DIR: /app/keys
-    volumes:
-      - ./keys:/app/keys
-    ports:
-      - "5004:3000"
-    depends_on:
-      - bench-auth-slhdsa
-      - bench-todo
-    networks:
-      - bench-backend
+  # bench-gw-slhdsa128f:
+  #   build:
+  #     context: .
+  #     dockerfile: gateway/Dockerfile
+  #   container_name: bench-gw-slhdsa128f
+  #   restart: unless-stopped
+  #   environment:
+  #     APP_NAME: bench-gw-slhdsa128f
+  #     APP_PORT: 3000
+  #     APP_MODE: production
+  #     AUTH_SERVICE_ADDR: bench-auth-slhdsa128f:3001
+  #     TODO_SERVICE_ADDR: bench-todo:3002
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHA2-128f
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHA2-128f
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   ports:
+  #     - "5004:3000"
+  #   depends_on:
+  #     - bench-auth-slhdsa128f
+  #     - bench-todo
+  #   networks:
+  #     - bench-backend
+
+  # # ══════════════════════════════════════════════════════
+  # # 5. SLH-DSA-SHA2-128s (NIST FIPS 205 / SPHINCS+)
+  # # Gateway: :5005 | Auth gRPC: :6005
+  # # ══════════════════════════════════════════════════════
+  # bench-auth-slhdsa128s:
+  #   build:
+  #     context: .
+  #     dockerfile: auth-service/Dockerfile
+  #   container_name: bench-auth-slhdsa128s
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     DB_NAME: tasktify_bench
+  #     DB_HOST: bench-postgres
+  #     DB_PORT: 5432
+  #     DB_SSL_MODE: disable
+  #     DB_POOL_IDLE: 5
+  #     DB_MAX_POOL: 50
+  #     DB_MAX_LIFETIME: 300
+  #     APP_NAME: bench-auth-slhdsa128s
+  #     APP_MODE: production
+  #     GRPC_PORT: 3001
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHA2-128s
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHA2-128s
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   depends_on:
+  #     bench-postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - bench-backend
+
+  # bench-gw-slhdsa128s:
+  #   build:
+  #     context: .
+  #     dockerfile: gateway/Dockerfile
+  #   container_name: bench-gw-slhdsa128s
+  #   restart: unless-stopped
+  #   environment:
+  #     APP_NAME: bench-gw-slhdsa128s
+  #     APP_PORT: 3000
+  #     APP_MODE: production
+  #     AUTH_SERVICE_ADDR: bench-auth-slhdsa128s:3001
+  #     TODO_SERVICE_ADDR: bench-todo:3002
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHA2-128s
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHA2-128s
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   ports:
+  #     - "5005:3000"
+  #   depends_on:
+  #     - bench-auth-slhdsa128s
+  #     - bench-todo
+  #   networks:
+  #     - bench-backend
+
+  # # ══════════════════════════════════════════════════════
+  # # 6. SLH-DSA-SHAKE-128f (NIST FIPS 205 / SPHINCS+)
+  # # Gateway: :5006 | Auth gRPC: :6006
+  # # ══════════════════════════════════════════════════════
+  # bench-auth-slhshake128f:
+  #   build:
+  #     context: .
+  #     dockerfile: auth-service/Dockerfile
+  #   container_name: bench-auth-slhshake128f
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     DB_NAME: tasktify_bench
+  #     DB_HOST: bench-postgres
+  #     DB_PORT: 5432
+  #     DB_SSL_MODE: disable
+  #     DB_POOL_IDLE: 5
+  #     DB_MAX_POOL: 50
+  #     DB_MAX_LIFETIME: 300
+  #     APP_NAME: bench-auth-slhshake128f
+  #     APP_MODE: production
+  #     GRPC_PORT: 3001
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHAKE-128f
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHAKE-128f
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   depends_on:
+  #     bench-postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - bench-backend
+
+  # bench-gw-slhshake128f:
+  #   build:
+  #     context: .
+  #     dockerfile: gateway/Dockerfile
+  #   container_name: bench-gw-slhshake128f
+  #   restart: unless-stopped
+  #   environment:
+  #     APP_NAME: bench-gw-slhshake128f
+  #     APP_PORT: 3000
+  #     APP_MODE: production
+  #     AUTH_SERVICE_ADDR: bench-auth-slhshake128f:3001
+  #     TODO_SERVICE_ADDR: bench-todo:3002
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHAKE-128f
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHAKE-128f
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   ports:
+  #     - "5006:3000"
+  #   depends_on:
+  #     - bench-auth-slhshake128f
+  #     - bench-todo
+  #   networks:
+  #     - bench-backend
+
+  # # ══════════════════════════════════════════════════════
+  # # 7. SLH-DSA-SHAKE-128s (NIST FIPS 205 / SPHINCS+)
+  # # Gateway: :5007 | Auth gRPC: :6007
+  # # ══════════════════════════════════════════════════════
+  # bench-auth-slhshake128s:
+  #   build:
+  #     context: .
+  #     dockerfile: auth-service/Dockerfile
+  #   container_name: bench-auth-slhshake128s
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     DB_NAME: tasktify_bench
+  #     DB_HOST: bench-postgres
+  #     DB_PORT: 5432
+  #     DB_SSL_MODE: disable
+  #     DB_POOL_IDLE: 5
+  #     DB_MAX_POOL: 50
+  #     DB_MAX_LIFETIME: 300
+  #     APP_NAME: bench-auth-slhshake128s
+  #     APP_MODE: production
+  #     GRPC_PORT: 3001
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHAKE-128s
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHAKE-128s
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   depends_on:
+  #     bench-postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - bench-backend
+
+  # bench-gw-slhshake128s:
+  #   build:
+  #     context: .
+  #     dockerfile: gateway/Dockerfile
+  #   container_name: bench-gw-slhshake128s
+  #   restart: unless-stopped
+  #   environment:
+  #     APP_NAME: bench-gw-slhshake128s
+  #     APP_PORT: 3000
+  #     APP_MODE: production
+  #     AUTH_SERVICE_ADDR: bench-auth-slhshake128s:3001
+  #     TODO_SERVICE_ADDR: bench-todo:3002
+  #     JWT_DEFAULT_ALG: SLH-DSA-SHAKE-128s
+  #     JWT_ALLOWED_ALGS: SLH-DSA-SHAKE-128s
+  #     JWT_ISSUER: tasktify
+  #     JWT_TOKEN_DURATION: 60
+  #     KEYS_DIR: /app/keys
+  #   volumes:
+  #     - ./keys:/app/keys
+  #   ports:
+  #     - "5007:3000"
+  #   depends_on:
+  #     - bench-auth-slhshake128s
+  #     - bench-todo
+  #   networks:
+  #     - bench-backend
 
   # ══════════════════════════════════════════════════════
-  # 5. ES256 (ECDSA P-256) — Algoritma klasik
-  # Gateway: :5005 | Auth gRPC: :6005
+  # 8. ES256 (ECDSA P-256) — Algoritma klasik
+  # Gateway: :5008 | Auth gRPC: :6008
   # ══════════════════════════════════════════════════════
   # bench-auth-es256:
   #   build:
@@ -343,7 +540,7 @@ services:
   #   volumes:
   #     - ./keys:/app/keys:ro
   #   ports:
-  #     - "5005:3000"
+  #     - "5008:3000"
   #   depends_on:
   #     - bench-auth-es256
   #     - bench-todo
@@ -351,8 +548,8 @@ services:
   #     - bench-backend
 
   # # ══════════════════════════════════════════════════════
-  # # 6. RS256 (RSA-2048) — Algoritma klasik
-  # # Gateway: :5006 | Auth gRPC: :6006
+  # # 9. RS256 (RSA-2048) — Algoritma klasik
+  # # Gateway: :5009 | Auth gRPC: :6009
   # # ══════════════════════════════════════════════════════
   # bench-auth-rs256:
   #   build:
@@ -404,7 +601,7 @@ services:
   #   volumes:
   #     - ./keys:/app/keys:ro
   #   ports:
-  #     - "5006:3000"
+  #     - "5009:3000"
   #   depends_on:
   #     - bench-auth-rs256
   #     - bench-todo
@@ -412,8 +609,8 @@ services:
   #     - bench-backend
 
   # # ══════════════════════════════════════════════════════
-  # # 7. HS256 (HMAC-SHA256) — Algoritma klasik simetris
-  # # Gateway: :5007 | Auth gRPC: :6007
+  # # 10. HS256 (HMAC-SHA256) — Algoritma klasik simetris
+  # # Gateway: :5010 | Auth gRPC: :6010
   # # ══════════════════════════════════════════════════════
   # bench-auth-hs256:
   #   build:
@@ -465,7 +662,7 @@ services:
   #   volumes:
   #     - ./keys:/app/keys:ro
   #   ports:
-  #     - "5007:3000"
+  #     - "5010:3000"
   #   depends_on:
   #     - bench-auth-hs256
   #     - bench-todo
@@ -473,8 +670,8 @@ services:
   #     - bench-backend
 
   # # ══════════════════════════════════════════════════════
-  # # 8. EdDSA (Ed25519) — Algoritma klasik
-  # # Gateway: :5008 | Auth gRPC: :6008
+  # # 11. EdDSA (Ed25519) — Algoritma klasik
+  # # Gateway: :5011 | Auth gRPC: :6011
   # # ══════════════════════════════════════════════════════
   # bench-auth-eddsa:
   #   build:
@@ -526,7 +723,7 @@ services:
   #   volumes:
   #     - ./keys:/app/keys:ro
   #   ports:
-  #     - "5008:3000"
+  #     - "5011:3000"
   #   depends_on:
   #     - bench-auth-eddsa
   #     - bench-todo

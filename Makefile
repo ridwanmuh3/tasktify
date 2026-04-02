@@ -96,12 +96,15 @@ bench-logs:
 	$(COMPOSE) -f docker-compose.benchmark.yml logs -f
 
 bench-run:
-	k6 run -e HOST=localhost k6/benchmark_compare.js
+	k6 run -e BENCH_HOST=localhost k6/benchmark_compare.js
 
 # keygen-all + vendor + bench-up + jalankan k6
 bench: keygen-all vendor bench-up
-	@echo "Menunggu services siap (30s)..."
-	sleep 30
-	k6 run -e HOST=localhost k6/benchmark_compare.js
+	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
+	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
+		printf "."; sleep 3; \
+	done
+	@echo " ready!"
+	k6 run -e BENCH_HOST=localhost k6/benchmark_compare.js
 
 .PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench

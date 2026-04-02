@@ -27,14 +27,12 @@ func (c *RouteConfig) Setup() {
 
 	// Public routes
 	auth := api.Group("/auth")
-	auth.Post("/sign-in", c.AuthHandler.SignIn)
-	auth.Post("/refresh-token", c.AuthHandler.RefreshToken)
-
-	// Public - user registration
-	api.Post("/register", c.UserHandler.Register)
+	auth.Post("/signin", c.AuthHandler.SignIn)
+	// auth.Post("/refresh", c.AuthHandler.RefreshToken)
+	auth.Post("/register", c.UserHandler.Register)
 
 	// Protected routes - Verifikasi Signature PQC Falcon di middleware
-	protected := api.Use(c.AuthMiddleware.Handle)
+	protected := api.Group("/", c.AuthMiddleware.Handle)
 
 	// User profile
 	protected.Get("/profile", c.UserHandler.GetProfile)

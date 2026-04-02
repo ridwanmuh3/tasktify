@@ -58,6 +58,36 @@ func main() {
 	writePEM(outDir+"/SLH-DSA-SHA2-128f_pk.pem", "SLH-DSA-SHA2-128f PUBLIC KEY", slhpkBytes, 0644)
 	writePEM(outDir+"/SLH-DSA-SHA2-128f_sk.pem", "SLH-DSA-SHA2-128f PRIVATE KEY", slhskBytes, 0600)
 
+	// ── SLH-DSA-SHA2-128s (NIST FIPS 205) ──
+	slh128spk, slh128ssk, err := slhdsa.SHA2_128s.Scheme().GenerateKey()
+	if err != nil {
+		fatal("SLH-DSA-SHA2-128s keygen failed: %v", err)
+	}
+	slh128spkBytes, _ := slh128spk.MarshalBinary()
+	slh128sskBytes, _ := slh128ssk.MarshalBinary()
+	writePEM(outDir+"/SLH-DSA-SHA2-128s_pk.pem", "SLH-DSA-SHA2-128s PUBLIC KEY", slh128spkBytes, 0644)
+	writePEM(outDir+"/SLH-DSA-SHA2-128s_sk.pem", "SLH-DSA-SHA2-128s PRIVATE KEY", slh128sskBytes, 0600)
+
+	// ── SLH-DSA-SHAKE-128f (NIST FIPS 205) ──
+	slhshk128fpk, slhshk128fsk, err := slhdsa.SHAKE_128f.Scheme().GenerateKey()
+	if err != nil {
+		fatal("SLH-DSA-SHAKE-128f keygen failed: %v", err)
+	}
+	slhshk128fpkBytes, _ := slhshk128fpk.MarshalBinary()
+	slhshk128fskBytes, _ := slhshk128fsk.MarshalBinary()
+	writePEM(outDir+"/SLH-DSA-SHAKE-128f_pk.pem", "SLH-DSA-SHAKE-128f PUBLIC KEY", slhshk128fpkBytes, 0644)
+	writePEM(outDir+"/SLH-DSA-SHAKE-128f_sk.pem", "SLH-DSA-SHAKE-128f PRIVATE KEY", slhshk128fskBytes, 0600)
+
+	// ── SLH-DSA-SHAKE-128s (NIST FIPS 205) ──
+	slhshk128spk, slhshk128ssk, err := slhdsa.SHAKE_128s.Scheme().GenerateKey()
+	if err != nil {
+		fatal("SLH-DSA-SHAKE-128s keygen failed: %v", err)
+	}
+	slhshk128spkBytes, _ := slhshk128spk.MarshalBinary()
+	slhshk128sskBytes, _ := slhshk128ssk.MarshalBinary()
+	writePEM(outDir+"/SLH-DSA-SHAKE-128s_pk.pem", "SLH-DSA-SHAKE-128s PUBLIC KEY", slhshk128spkBytes, 0644)
+	writePEM(outDir+"/SLH-DSA-SHAKE-128s_sk.pem", "SLH-DSA-SHAKE-128s PRIVATE KEY", slhshk128sskBytes, 0600)
+
 	// ── ES256 (ECDSA P-256) ──
 	ecKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {

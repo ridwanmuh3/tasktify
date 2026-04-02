@@ -26,9 +26,9 @@ type SignInRequest struct {
 	Algorithm string `json:"algorithm"`
 }
 
-type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
+// type RefreshTokenRequest struct {
+// 	RefreshToken string `json:"refresh_token" validate:"required"`
+// }
 
 // SignIn - Permintaan Login (Username, Password)
 // Flow: Client -> Gateway -> Auth Service (gRPC) -> Validate -> Generate JWT (Falcon + Precomputed LDL Tree) -> Return Token
@@ -58,39 +58,39 @@ func (h *AuthHandler) SignIn(c fiber.Ctx) error {
 		Status:  fiber.StatusOK,
 		Message: "sign in successful",
 		Data: fiber.Map{
-			"token_type":    resp.Auth.TokenType,
-			"access_token":  resp.Auth.AccessToken,
-			"refresh_token": resp.Auth.RefreshToken,
+			"token_type":   resp.Auth.TokenType,
+			"access_token": resp.Auth.AccessToken,
+			// "refresh_token": resp.Auth.RefreshToken,
 		},
 	})
 }
 
-// RefreshToken - Refresh access token menggunakan refresh token
-func (h *AuthHandler) RefreshToken(c fiber.Ctx) error {
-	var req RefreshTokenRequest
-	if err := c.Bind().JSON(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
-	}
+// // RefreshToken - Refresh access token menggunakan refresh token
+// func (h *AuthHandler) RefreshToken(c fiber.Ctx) error {
+// 	var req RefreshTokenRequest
+// 	if err := c.Bind().JSON(&req); err != nil {
+// 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+// 	}
 
-	resp, err := h.authClient.RefreshToken(c.Context(), &model.RefreshTokenRequest{
-		RefreshToken: req.RefreshToken,
-	})
-	if err != nil {
-		st, ok := status.FromError(err)
-		if ok {
-			return fiber.NewError(fiber.StatusUnauthorized, st.Message())
-		}
-		h.log.Errorf("refresh token failed: %v", err)
-		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
-	}
+// 	resp, err := h.authClient.RefreshToken(c.Context(), &model.RefreshTokenRequest{
+// 		RefreshToken: req.RefreshToken,
+// 	})
+// 	if err != nil {
+// 		st, ok := status.FromError(err)
+// 		if ok {
+// 			return fiber.NewError(fiber.StatusUnauthorized, st.Message())
+// 		}
+// 		h.log.Errorf("refresh token failed: %v", err)
+// 		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
+// 	}
 
-	return c.JSON(model.Response[any]{
-		Status:  fiber.StatusOK,
-		Message: "token refreshed",
-		Data: fiber.Map{
-			"token_type":    resp.Auth.TokenType,
-			"access_token":  resp.Auth.AccessToken,
-			"refresh_token": resp.Auth.RefreshToken,
-		},
-	})
-}
+// 	return c.JSON(model.Response[any]{
+// 		Status:  fiber.StatusOK,
+// 		Message: "token refreshed",
+// 		Data: fiber.Map{
+// 			"token_type":    resp.Auth.TokenType,
+// 			"access_token":  resp.Auth.AccessToken,
+// 			"refresh_token": resp.Auth.RefreshToken,
+// 		},
+// 	})
+// }

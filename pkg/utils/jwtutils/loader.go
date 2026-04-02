@@ -21,7 +21,7 @@ func LoadAlgConfig(keysDir string, alg string, signMode bool) (*AlgConfig, error
 		return loadFalconPrecomputed(keysDir, alg, signMode)
 	case "ML-DSA-44", "ML-DSA-65", "ML-DSA-87":
 		return loadMLDSA(keysDir, alg, signMode)
-	case "SLH-DSA-SHA2-128f":
+	case "SLH-DSA-SHA2-128f", "SLH-DSA-SHA2-128s", "SLH-DSA-SHAKE-128f", "SLH-DSA-SHAKE-128s":
 		return loadSLHDSA(keysDir, alg, signMode)
 	case "ES256":
 		return loadECDSA(keysDir, alg, signMode)
@@ -158,7 +158,20 @@ func loadMLDSA(keysDir, alg string, signMode bool) (*AlgConfig, error) {
 }
 
 func loadSLHDSA(keysDir, alg string, signMode bool) (*AlgConfig, error) {
-	cfg := &AlgConfig{Method: jwt.SigningMethodSLHDSA_SHA2_128f}
+	var method jwt.SigningMethod
+	switch alg {
+	case "SLH-DSA-SHA2-128f":
+		method = jwt.SigningMethodSLHDSA_SHA2_128f
+	case "SLH-DSA-SHA2-128s":
+		method = jwt.SigningMethodSLHDSA_SHA2_128s
+	case "SLH-DSA-SHAKE-128f":
+		method = jwt.SigningMethodSLHDSA_SHAKE_128f
+	case "SLH-DSA-SHAKE-128s":
+		method = jwt.SigningMethodSLHDSA_SHAKE_128s
+	default:
+		return nil, fmt.Errorf("unsupported SLH-DSA variant: %s", alg)
+	}
+	cfg := &AlgConfig{Method: method}
 
 	vkBytes, err := readFile(filepath.Join(keysDir, alg+"_pk.pem"))
 	if err != nil {

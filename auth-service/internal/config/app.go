@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/go-playground/validator/v10"
+	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -12,8 +13,6 @@ import (
 	"auth-service/internal/model"
 	"auth-service/internal/repository"
 	"auth-service/internal/service"
-
-	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 )
 
 type BootstrapConfig struct {
@@ -30,6 +29,9 @@ var supportedAlgorithms = []string{
 	"Falcon-Precomputed-512",
 	"ML-DSA-44",
 	"SLH-DSA-SHA2-128f",
+	"SLH-DSA-SHA2-128s",
+	"SLH-DSA-SHAKE-128f",
+	"SLH-DSA-SHAKE-128s",
 	"ES256",
 	"RS256",
 	"HS256",
@@ -47,8 +49,16 @@ func Bootstrap(config *BootstrapConfig) {
 		defaultAlg = "Falcon-Precomputed-512"
 	}
 
+	// Determine which algorithms to load.
+	// JWT_ALLOWED_ALGS narrows the set (useful for benchmark services that only
+	// need one algorithm). Falls back to the full supportedAlgorithms list.
+	algsToLoad := config.Config.GetStringSlice("JWT_ALLOWED_ALGS")
+	if len(algsToLoad) == 0 {
+		algsToLoad = supportedAlgorithms
+	}
+
 	// Load all algorithm configurations (sign mode = true for auth-service)
-	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, true)
+	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, algsToLoad, true)
 	if err != nil {
 		config.Log.Fatalf("failed to load algorithm configs: %v", err)
 	}

@@ -38,20 +38,20 @@ func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (
 	}, nil
 }
 
-func (s *AuthServer) RefreshToken(ctx context.Context, request *model.RefreshTokenRequest) (*model.AuthResponse, error) {
-	accessToken, refreshToken, err := s.authService.RefreshToken(ctx, request.RefreshToken)
-	if err != nil {
-		return nil, err
-	}
+// func (s *AuthServer) RefreshToken(ctx context.Context, request *model.RefreshTokenRequest) (*model.AuthResponse, error) {
+// 	accessToken, refreshToken, err := s.authService.RefreshToken(ctx, request.RefreshToken)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &model.AuthResponse{
-		Auth: &model.Auth{
-			TokenType:    "Bearer",
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		},
-	}, nil
-}
+// 	return &model.AuthResponse{
+// 		Auth: &model.Auth{
+// 			TokenType:    "Bearer",
+// 			AccessToken:  accessToken,
+// 			RefreshToken: refreshToken,
+// 		},
+// 	}, nil
+// }
 
 func (s *AuthServer) Verify(ctx context.Context, request *model.VerifyRequest) (*emptypb.Empty, error) {
 	if err := s.authService.Verify(ctx, request.Token); err != nil {

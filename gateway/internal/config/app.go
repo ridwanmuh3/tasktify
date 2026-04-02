@@ -30,6 +30,9 @@ var supportedAlgorithms = []string{
 	"Falcon-Precomputed-512",
 	"ML-DSA-44",
 	"SLH-DSA-SHA2-128f",
+	"SLH-DSA-SHA2-128s",
+	"SLH-DSA-SHAKE-128f",
+	"SLH-DSA-SHAKE-128s",
 	"ES256",
 	"RS256",
 	"HS256",
@@ -47,8 +50,16 @@ func Bootstrap(config *BootstrapConfig) {
 		defaultAlg = "Falcon-Precomputed-512"
 	}
 
+	// Determine which algorithms to load.
+	// JWT_ALLOWED_ALGS narrows the set (useful for benchmark gateways that only
+	// need to verify tokens from one algorithm). Falls back to full list.
+	algsToLoad := config.Config.GetStringSlice("JWT_ALLOWED_ALGS")
+	if len(algsToLoad) == 0 {
+		algsToLoad = supportedAlgorithms
+	}
+
 	// Load all algorithm configurations (sign mode = false for gateway, verification only)
-	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, false)
+	algConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, algsToLoad, false)
 	if err != nil {
 		config.Log.Fatalf("failed to load algorithm configs: %v", err)
 	}
