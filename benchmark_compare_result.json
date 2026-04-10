@@ -1,146 +1,1409 @@
 {
-  "setup_data": {
-    "user": {
-      "email": "bench-zaiflrde@bench.test",
-      "name": "bench-zaiflrde",
-      "password": "BenchPass!123"
-    }
-  },
   "root_group": {
-    "name": "",
     "path": "",
     "id": "d41d8cd98f00b204e9800998ecf8427e",
     "groups": [
       {
+        "path": "::1. Token Generation",
+        "id": "dfc505b2711272e0312a9705d8174f31",
+        "groups": [],
         "checks": [
           {
-            "passes": 105,
             "fails": 0,
             "name": "[Falcon-Precomputed-512|10VU] sign-in 200",
             "path": "::1. Token Generation::[Falcon-Precomputed-512|10VU] sign-in 200",
-            "id": "035b02834d723175efb508a058e8fce6"
+            "id": "035b02834d723175efb508a058e8fce6",
+            "passes": 505
           },
           {
             "name": "[Falcon-Precomputed-512|10VU] has access_token",
             "path": "::1. Token Generation::[Falcon-Precomputed-512|10VU] has access_token",
             "id": "f1e8420cbabbf9fcdf1a2a70be05b73f",
-            "passes": 105,
+            "passes": 505,
             "fails": 0
+          },
+          {
+            "id": "6d5f2498d268b9d0fcd3a234c17cb311",
+            "passes": 520,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|30VU] sign-in 200",
+            "path": "::1. Token Generation::[Falcon-Precomputed-512|30VU] sign-in 200"
+          },
+          {
+            "id": "61a6488698e320229f0667248bbae4a9",
+            "passes": 520,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|30VU] has access_token",
+            "path": "::1. Token Generation::[Falcon-Precomputed-512|30VU] has access_token"
+          },
+          {
+            "path": "::1. Token Generation::[Falcon-Precomputed-512|50VU] sign-in 200",
+            "id": "a59696fb189c95ec0f0e47e7f82c40f1",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] sign-in 200"
+          },
+          {
+            "id": "a05f461702bff630cbeebb77f1ad0bd4",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] has access_token",
+            "path": "::1. Token Generation::[Falcon-Precomputed-512|50VU] has access_token"
+          },
+          {
+            "name": "[Falcon-512|10VU] sign-in 200",
+            "path": "::1. Token Generation::[Falcon-512|10VU] sign-in 200",
+            "id": "66fb0681a2de530c82cda5653b1c9477",
+            "passes": 482,
+            "fails": 0
+          },
+          {
+            "path": "::1. Token Generation::[Falcon-512|10VU] has access_token",
+            "id": "586b3eb40292aa55bb5f3ad9831d5a45",
+            "passes": 482,
+            "fails": 0,
+            "name": "[Falcon-512|10VU] has access_token"
+          },
+          {
+            "name": "[Falcon-512|30VU] sign-in 200",
+            "path": "::1. Token Generation::[Falcon-512|30VU] sign-in 200",
+            "id": "066bc43c1d8276ac8497f0f9a0776358",
+            "passes": 501,
+            "fails": 0
+          },
+          {
+            "path": "::1. Token Generation::[Falcon-512|30VU] has access_token",
+            "id": "586d07413ab57611d10c21851f697579",
+            "passes": 501,
+            "fails": 0,
+            "name": "[Falcon-512|30VU] has access_token"
+          },
+          {
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512|50VU] sign-in 200",
+            "path": "::1. Token Generation::[Falcon-512|50VU] sign-in 200",
+            "id": "0aed8a9009d1fc4e05ea18e3e37c5265"
+          },
+          {
+            "id": "dfe011b7621945563c15b16e4d6ce4f2",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512|50VU] has access_token",
+            "path": "::1. Token Generation::[Falcon-512|50VU] has access_token"
+          },
+          {
+            "name": "[ML-DSA-44|10VU] sign-in 200",
+            "path": "::1. Token Generation::[ML-DSA-44|10VU] sign-in 200",
+            "id": "29609bee213d7217914ae06e541d4615",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|10VU] has access_token",
+            "path": "::1. Token Generation::[ML-DSA-44|10VU] has access_token",
+            "id": "fb7c47698d88b2df635f125d0fe8a23b",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "id": "8e9477a3373dfcd05a03ecb8896d4740",
+            "passes": 500,
+            "fails": 0,
+            "name": "[ML-DSA-44|30VU] sign-in 200",
+            "path": "::1. Token Generation::[ML-DSA-44|30VU] sign-in 200"
+          },
+          {
+            "path": "::1. Token Generation::[ML-DSA-44|30VU] has access_token",
+            "id": "a28d2ea3ee93a9cb3b67278790fffc94",
+            "passes": 500,
+            "fails": 0,
+            "name": "[ML-DSA-44|30VU] has access_token"
+          },
+          {
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] sign-in 200",
+            "path": "::1. Token Generation::[ML-DSA-44|50VU] sign-in 200",
+            "id": "0179d348868c4b208c62bd5901b088ae",
+            "passes": 416
+          },
+          {
+            "name": "[ML-DSA-44|50VU] has access_token",
+            "path": "::1. Token Generation::[ML-DSA-44|50VU] has access_token",
+            "id": "2a96873476664ef0fe600a9f38fdc3cc",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "id": "f8fb1df1b504f240f38ba4a06e5806f6",
+            "passes": 1886,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f|10VU] sign-in 200",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|10VU] sign-in 200"
+          },
+          {
+            "passes": 1886,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f|10VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|10VU] has access_token",
+            "id": "8b5b7ef1f40afce4c2028828e9769a3f"
+          },
+          {
+            "passes": 1929,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f|30VU] sign-in 200",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|30VU] sign-in 200",
+            "id": "f2bee303e4a23cc3c8f1441439146f27"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|30VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|30VU] has access_token",
+            "id": "afe22ddce14584d08e8907fa23c31db0",
+            "passes": 1929,
+            "fails": 0
+          },
+          {
+            "passes": 1875,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f|50VU] sign-in 200",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|50VU] sign-in 200",
+            "id": "c6aa4b6ac7ee24a0951f9181cd634045"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|50VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128f|50VU] has access_token",
+            "id": "446dffaa45ae495fdd66855d168352d2",
+            "passes": 1875,
+            "fails": 0
+          },
+          {
+            "passes": 648,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s|10VU] sign-in 200",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|10VU] sign-in 200",
+            "id": "3febfa497bb9a744e861729e2ddc3de3"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|10VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|10VU] has access_token",
+            "id": "f57b8c4de9b1442e5750ff7a28ad0a8d",
+            "passes": 648,
+            "fails": 0
+          },
+          {
+            "passes": 665,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s|30VU] sign-in 200",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|30VU] sign-in 200",
+            "id": "16687fa4023d1c9f9016d229fcc4e9af"
+          },
+          {
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s|30VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|30VU] has access_token",
+            "id": "0d8d55a694183484a3fb57df794fecc9",
+            "passes": 665
+          },
+          {
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|50VU] sign-in 200",
+            "id": "288c17d5cece8ec993d00aa6d96ec218",
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s|50VU] sign-in 200"
+          },
+          {
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s|50VU] has access_token",
+            "path": "::1. Token Generation::[SLH-DSA-SHA2-128s|50VU] has access_token",
+            "id": "17931b1475a44024cc1ad7df14431910"
           }
         ],
-        "name": "1. Token Generation",
-        "path": "::1. Token Generation",
-        "id": "dfc505b2711272e0312a9705d8174f31",
-        "groups": []
+        "name": "1. Token Generation"
       },
       {
-        "name": "2. Token Verification",
         "path": "::2. Token Verification",
         "id": "109c4e2e86a8dd2dcb63c8468509cd66",
         "groups": [],
         "checks": [
-            {
-              "path": "::2. Token Verification::[Falcon-Precomputed-512|10VU] profile 200",
-              "id": "1eb19462f144e337b29b1a41c6e31d48",
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] profile 200"
-            },
-            {
-              "name": "[Falcon-Precomputed-512|10VU] profile has email",
-              "path": "::2. Token Verification::[Falcon-Precomputed-512|10VU] profile has email",
-              "id": "a33ef773644310b05361ebf0c63c1ffe",
-              "passes": 105,
-              "fails": 0
-            }
-          ]
+          {
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|10VU] profile 200",
+            "id": "1eb19462f144e337b29b1a41c6e31d48",
+            "passes": 505,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|10VU] profile 200"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|10VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|10VU] profile has email",
+            "id": "a33ef773644310b05361ebf0c63c1ffe",
+            "passes": 505,
+            "fails": 0
+          },
+          {
+            "passes": 520,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|30VU] profile 200",
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|30VU] profile 200",
+            "id": "e719a610cba27c3ec1678375892146e9"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|30VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|30VU] profile has email",
+            "id": "2e93730525863a4db7c1433972b6f5c5",
+            "passes": 520,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] profile 200",
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|50VU] profile 200",
+            "id": "8c20154a6981bc970b6d834a7667e3c9",
+            "passes": 430
+          },
+          {
+            "name": "[Falcon-Precomputed-512|50VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-Precomputed-512|50VU] profile has email",
+            "id": "2f8998faa76987eacfedc6e9c80704eb",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "id": "4531ffedb2dd5a1a5ba8fd4a33b6607f",
+            "passes": 482,
+            "fails": 0,
+            "name": "[Falcon-512|10VU] profile 200",
+            "path": "::2. Token Verification::[Falcon-512|10VU] profile 200"
+          },
+          {
+            "name": "[Falcon-512|10VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-512|10VU] profile has email",
+            "id": "9a5ef4f2114ce03974c2e10a9a2397a4",
+            "passes": 482,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-512|30VU] profile 200",
+            "path": "::2. Token Verification::[Falcon-512|30VU] profile 200",
+            "id": "cf5ab8f066a9eac7b90f0f98ec24dfc1",
+            "passes": 501,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-512|30VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-512|30VU] profile has email",
+            "id": "9582027d080593f294465e2b45711d04",
+            "passes": 501,
+            "fails": 0
+          },
+          {
+            "path": "::2. Token Verification::[Falcon-512|50VU] profile 200",
+            "id": "e8bd1bf6f8401b1a1cb3959658b7fe5f",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512|50VU] profile 200"
+          },
+          {
+            "name": "[Falcon-512|50VU] profile has email",
+            "path": "::2. Token Verification::[Falcon-512|50VU] profile has email",
+            "id": "1a51091481c371d857a67d2fb19111e7",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "id": "929cb19151abc2727c72a7e3fda2d340",
+            "passes": 483,
+            "fails": 0,
+            "name": "[ML-DSA-44|10VU] profile 200",
+            "path": "::2. Token Verification::[ML-DSA-44|10VU] profile 200"
+          },
+          {
+            "name": "[ML-DSA-44|10VU] profile has email",
+            "path": "::2. Token Verification::[ML-DSA-44|10VU] profile has email",
+            "id": "44febc483dfbee1d0fc9519a9ae0b476",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "passes": 500,
+            "fails": 0,
+            "name": "[ML-DSA-44|30VU] profile 200",
+            "path": "::2. Token Verification::[ML-DSA-44|30VU] profile 200",
+            "id": "5d5737a0f4b4d01b7dca9f11490bffdc"
+          },
+          {
+            "fails": 0,
+            "name": "[ML-DSA-44|30VU] profile has email",
+            "path": "::2. Token Verification::[ML-DSA-44|30VU] profile has email",
+            "id": "67a9e307e664cc341c5d1b0ddd845b12",
+            "passes": 500
+          },
+          {
+            "path": "::2. Token Verification::[ML-DSA-44|50VU] profile 200",
+            "id": "75e3a9cbf02439edd138f12062fd959e",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] profile 200"
+          },
+          {
+            "name": "[ML-DSA-44|50VU] profile has email",
+            "path": "::2. Token Verification::[ML-DSA-44|50VU] profile has email",
+            "id": "d31003588a87d8e26c16071a6c225516",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|10VU] profile 200",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|10VU] profile 200",
+            "id": "e0d62a31081490469feb0f498c686426",
+            "passes": 0,
+            "fails": 1868
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|10VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|10VU] profile has email",
+            "id": "988e47f340a957a9605e7f1bf07a4d7f",
+            "passes": 0,
+            "fails": 1868
+          },
+          {
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|30VU] profile 200",
+            "id": "78bddc944f8852bf250a4f05ee18dd38",
+            "passes": 0,
+            "fails": 1921,
+            "name": "[SLH-DSA-SHA2-128f|30VU] profile 200"
+          },
+          {
+            "id": "1e13c5bfc7f1e1d2b26176beec63402c",
+            "passes": 0,
+            "fails": 1921,
+            "name": "[SLH-DSA-SHA2-128f|30VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|30VU] profile has email"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|50VU] profile 200",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|50VU] profile 200",
+            "id": "af3ec0ff108b19c3198b2ca695391d05",
+            "passes": 0,
+            "fails": 1852
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|50VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128f|50VU] profile has email",
+            "id": "ebfe5e5487ddcce5eb9c79a66d17ab00",
+            "passes": 0,
+            "fails": 1852
+          },
+          {
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|10VU] profile 200",
+            "id": "e6cfd7f8c18f2456db1222a638de8244",
+            "passes": 0,
+            "fails": 648,
+            "name": "[SLH-DSA-SHA2-128s|10VU] profile 200"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|10VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|10VU] profile has email",
+            "id": "2aa74c2c3d3428fb216680254311e6fa",
+            "passes": 0,
+            "fails": 648
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|30VU] profile 200",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|30VU] profile 200",
+            "id": "bc49084217218684eaf9f5710cb1d0e6",
+            "passes": 0,
+            "fails": 665
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|30VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|30VU] profile has email",
+            "id": "794970ba42f01a835273ac898993f387",
+            "passes": 0,
+            "fails": 665
+          },
+          {
+            "passes": 0,
+            "fails": 687,
+            "name": "[SLH-DSA-SHA2-128s|50VU] profile 200",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|50VU] profile 200",
+            "id": "f009362d4704ffa247cdbc033fcc1f0d"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|50VU] profile has email",
+            "path": "::2. Token Verification::[SLH-DSA-SHA2-128s|50VU] profile has email",
+            "id": "2fc2884a44c3211e038360287a643f37",
+            "passes": 0,
+            "fails": 687
+          }
+        ],
+        "name": "2. Token Verification"
       },
       {
-        "path": "::3. Task CRUD",
-        "id": "6c67d43a46b7ceeffbfccf0d450fdc25",
         "groups": [],
         "checks": [
-            {
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] create 201",
-              "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] create 201",
-              "id": "128af506145a7799657c76ad215c29d5"
-            },
-            {
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] list 200",
-              "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] list 200",
-              "id": "f6a6a9880fc4cd998596d2cd0e92907f"
-            },
-            {
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] get 200",
-              "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] get 200",
-              "id": "910f8009712a057c170ca7a6c3be4de0"
-            },
-            {
-              "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] update 200",
-              "id": "7e2b476e90cc77bc506b20a6dc608cc5",
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] update 200"
-            },
-            {
-              "passes": 105,
-              "fails": 0,
-              "name": "[Falcon-Precomputed-512|10VU] delete 200",
-              "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] delete 200",
-              "id": "bf955d32b2915aa3955d6b07d74e560f"
-            }
-          ],
-        "name": "3. Task CRUD"
+          {
+            "passes": 505,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|10VU] create 201",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] create 201",
+            "id": "128af506145a7799657c76ad215c29d5"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|10VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] list 200",
+            "id": "f6a6a9880fc4cd998596d2cd0e92907f",
+            "passes": 505,
+            "fails": 0
+          },
+          {
+            "id": "910f8009712a057c170ca7a6c3be4de0",
+            "passes": 505,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|10VU] get 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] get 200"
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] update 200",
+            "id": "7e2b476e90cc77bc506b20a6dc608cc5",
+            "passes": 505,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|10VU] update 200"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|10VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|10VU] delete 200",
+            "id": "bf955d32b2915aa3955d6b07d74e560f",
+            "passes": 505,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512|30VU] create 201",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|30VU] create 201",
+            "id": "178b3259b4252a0ab1551af6a19d3928",
+            "passes": 520,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512|30VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|30VU] list 200",
+            "id": "576507412f2e45346af2942832717fba",
+            "passes": 520,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512|30VU] get 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|30VU] get 200",
+            "id": "88189d9f3c8d66ec0f16a5079b44fdbd",
+            "passes": 520,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|30VU] update 200",
+            "id": "30b01ed374146ba95e607a68a36bb9e2",
+            "passes": 520,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|30VU] update 200"
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|30VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|30VU] delete 200",
+            "id": "4ed8bfb5f5cd923e3cb967eecc060972",
+            "passes": 520
+          },
+          {
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] create 201",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|50VU] create 201",
+            "id": "219019a1a9d14b22878a780300af71a7"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|50VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|50VU] list 200",
+            "id": "507b34160f76df221c6e3fd2f48d74fb",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|50VU] get 200",
+            "id": "0b1198a0c72d0fb95a018b76c038a375",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] get 200"
+          },
+          {
+            "name": "[Falcon-Precomputed-512|50VU] update 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|50VU] update 200",
+            "id": "d143b6a24192d1f2c0c139dda2c0bcbb",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512|50VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-Precomputed-512|50VU] delete 200",
+            "id": "54a5dbdb5c4e36e222a4aeff52f82fbc",
+            "passes": 430
+          },
+          {
+            "name": "[Falcon-512|10VU] create 201",
+            "path": "::3. Task CRUD::[Falcon-512|10VU] create 201",
+            "id": "379889b04bb4aa5891bd2b2a38749c96",
+            "passes": 482,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512|10VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-512|10VU] list 200",
+            "id": "77305efb753ed7c1dc8184eefe29f930",
+            "passes": 482
+          },
+          {
+            "passes": 482,
+            "fails": 0,
+            "name": "[Falcon-512|10VU] get 200",
+            "path": "::3. Task CRUD::[Falcon-512|10VU] get 200",
+            "id": "34dd3690790bfbc11bcda50f86e8fa03"
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-512|10VU] update 200",
+            "id": "e8ae3c5539fa60693b59558bbc1f434c",
+            "passes": 482,
+            "fails": 0,
+            "name": "[Falcon-512|10VU] update 200"
+          },
+          {
+            "name": "[Falcon-512|10VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-512|10VU] delete 200",
+            "id": "9ca656df21145341d03d837105a4fae3",
+            "passes": 482,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-512|30VU] create 201",
+            "id": "81dd908f0f84b25376e01d982cb2b90a",
+            "passes": 501,
+            "fails": 0,
+            "name": "[Falcon-512|30VU] create 201"
+          },
+          {
+            "name": "[Falcon-512|30VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-512|30VU] list 200",
+            "id": "215d49deb0569860758f33f8ad5a8787",
+            "passes": 501,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-512|30VU] get 200",
+            "id": "c94263d8cc33f4156c2be5a610463831",
+            "passes": 501,
+            "fails": 0,
+            "name": "[Falcon-512|30VU] get 200"
+          },
+          {
+            "passes": 501,
+            "fails": 0,
+            "name": "[Falcon-512|30VU] update 200",
+            "path": "::3. Task CRUD::[Falcon-512|30VU] update 200",
+            "id": "4c27d236adf6c37c1ab9dc67e895d901"
+          },
+          {
+            "name": "[Falcon-512|30VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-512|30VU] delete 200",
+            "id": "b2fac50b8b9e15f7e5132309d2f61800",
+            "passes": 501,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[Falcon-512|50VU] create 201",
+            "id": "24e88b3a24bf411f006688e9e91f038b",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512|50VU] create 201"
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512|50VU] list 200",
+            "path": "::3. Task CRUD::[Falcon-512|50VU] list 200",
+            "id": "6ee68e50da91e74aa7ad11be3c794d69",
+            "passes": 428
+          },
+          {
+            "name": "[Falcon-512|50VU] get 200",
+            "path": "::3. Task CRUD::[Falcon-512|50VU] get 200",
+            "id": "d6d18b913c4959d1d18a057fad9d718a",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-512|50VU] update 200",
+            "path": "::3. Task CRUD::[Falcon-512|50VU] update 200",
+            "id": "c453618c9352d6fdefce168efdffecbb",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512|50VU] delete 200",
+            "path": "::3. Task CRUD::[Falcon-512|50VU] delete 200",
+            "id": "f640a80d0c0522933cc08c1479d5eed9"
+          },
+          {
+            "path": "::3. Task CRUD::[ML-DSA-44|10VU] create 201",
+            "id": "e7f8afe3ab910fa1b5a9c289f853df37",
+            "passes": 483,
+            "fails": 0,
+            "name": "[ML-DSA-44|10VU] create 201"
+          },
+          {
+            "name": "[ML-DSA-44|10VU] list 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|10VU] list 200",
+            "id": "9e0d3684bba97f62d00af570e1ce32a6",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|10VU] get 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|10VU] get 200",
+            "id": "dc106ede595f48b86a5b4141ef7c4716",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|10VU] update 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|10VU] update 200",
+            "id": "7a22a10f70d284e47d193f711fd1f83d",
+            "passes": 483,
+            "fails": 0
+          },
+          {
+            "path": "::3. Task CRUD::[ML-DSA-44|10VU] delete 200",
+            "id": "0586b4212885b4d9cec377581ec1a0b0",
+            "passes": 483,
+            "fails": 0,
+            "name": "[ML-DSA-44|10VU] delete 200"
+          },
+          {
+            "name": "[ML-DSA-44|30VU] create 201",
+            "path": "::3. Task CRUD::[ML-DSA-44|30VU] create 201",
+            "id": "64308f7390ca124a1df45cffe427ab9a",
+            "passes": 500,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|30VU] list 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|30VU] list 200",
+            "id": "06372f01cf39ff5431e973d1ea497a3a",
+            "passes": 500,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[ML-DSA-44|30VU] get 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|30VU] get 200",
+            "id": "778a2c8bed193e898cf3ebed80ee8e17",
+            "passes": 500
+          },
+          {
+            "name": "[ML-DSA-44|30VU] update 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|30VU] update 200",
+            "id": "462b6b2e5fc17eeaae4343db5e9c2ae7",
+            "passes": 500,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|30VU] delete 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|30VU] delete 200",
+            "id": "782900fe3944582012c8a685f7698cb5",
+            "passes": 500,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44|50VU] create 201",
+            "path": "::3. Task CRUD::[ML-DSA-44|50VU] create 201",
+            "id": "da28271c5d6296bb6e2225e2341dbf82",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] list 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|50VU] list 200",
+            "id": "28d83e8eb5f0d92207d991c399c1ef8c"
+          },
+          {
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] get 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|50VU] get 200",
+            "id": "e687ae2039dcc57a9a8c13888ef323d8"
+          },
+          {
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] update 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|50VU] update 200",
+            "id": "6c05339876b902d06112416f620e1c73",
+            "passes": 416
+          },
+          {
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44|50VU] delete 200",
+            "path": "::3. Task CRUD::[ML-DSA-44|50VU] delete 200",
+            "id": "b8e93156801963756d123473dd22b6c6"
+          },
+          {
+            "fails": 1824,
+            "name": "[SLH-DSA-SHA2-128f|10VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|10VU] create 201",
+            "id": "68b4da86a2570c62bb249ce25e184f57",
+            "passes": 0
+          },
+          {
+            "fails": 1790,
+            "name": "[SLH-DSA-SHA2-128f|10VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|10VU] list 200",
+            "id": "75f0ff30dc19ae652d3c6d72b56fc1b4",
+            "passes": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|30VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|30VU] create 201",
+            "id": "4cffc3a75b7bf720b1814de21c8f1c57",
+            "passes": 0,
+            "fails": 1885
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|30VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|30VU] list 200",
+            "id": "2eae2c97cc6fb83bf767e3767eaab3e7",
+            "passes": 0,
+            "fails": 1858
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|50VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|50VU] create 201",
+            "id": "0f4288d6724b93c2c115f7eb983d6ebd",
+            "passes": 0,
+            "fails": 1830
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f|50VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128f|50VU] list 200",
+            "id": "11427f2050d079a24512e9d8549c047b",
+            "passes": 0,
+            "fails": 1798
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|10VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|10VU] create 201",
+            "id": "571abd2c2145153a2be3ccb5405f8b45",
+            "passes": 0,
+            "fails": 648
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|10VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|10VU] list 200",
+            "id": "16b271631bfa94f13492430d530e5da2",
+            "passes": 0,
+            "fails": 648
+          },
+          {
+            "fails": 665,
+            "name": "[SLH-DSA-SHA2-128s|30VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|30VU] create 201",
+            "id": "a33c0b39ec9d1d7313ab7fe5af28ce67",
+            "passes": 0
+          },
+          {
+            "id": "49fec7f112618ce9dc3ece5ea2cb5c9f",
+            "passes": 0,
+            "fails": 665,
+            "name": "[SLH-DSA-SHA2-128s|30VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|30VU] list 200"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|50VU] create 201",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|50VU] create 201",
+            "id": "f6ef97533cee2a2379a81fba03a3dd86",
+            "passes": 0,
+            "fails": 687
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s|50VU] list 200",
+            "path": "::3. Task CRUD::[SLH-DSA-SHA2-128s|50VU] list 200",
+            "id": "fc2378421ce0125ea681a6539e7c4572",
+            "passes": 0,
+            "fails": 687
+          }
+        ],
+        "name": "3. Task CRUD",
+        "path": "::3. Task CRUD",
+        "id": "6c67d43a46b7ceeffbfccf0d450fdc25"
+      },
+      {
+        "path": "::5. JWT Confusion Attacks",
+        "id": "a34dc56ea020055c3a9866354cdec4a2",
+        "groups": [],
+        "checks": [
+          {
+            "name": "[Falcon-Precomputed-512] attack:alg=none → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=none → blocked",
+            "id": "af6d806ad9f23ee7626a85b195a11b24",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:alg=HS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=HS256 → blocked",
+            "id": "5730b89bffd2b6b513474af7259e290e",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:alg=RS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=RS256 → blocked",
+            "id": "b15e7ecce2685ed31c4988445c3f3f8a",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:alg=ES256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=ES256 → blocked",
+            "id": "09b34d4e55bc891b22331986a9ea2e9c",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "id": "118e45e9c68213b272b6d9b35133ca29",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] attack:alg=Falcon-512 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=Falcon-512 → blocked"
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:alg=ML-DSA-44 → blocked",
+            "id": "0885dcc7cff3516d9c0c675a398f4d4a",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] attack:alg=ML-DSA-44 → blocked"
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:sig stripped → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:sig stripped → blocked",
+            "id": "f90f24bc7058f3d2f558632dfe093b59",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:random sig → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:random sig → blocked",
+            "id": "745fd262a9b8af15dc796ce4dd828108",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] attack:expired → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:expired → blocked",
+            "id": "894df57ce894f439d4f90e64e1ba2a01"
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] attack:future iat → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:future iat → blocked",
+            "id": "8ab904d9cf09f51610098db1ff41c8fb",
+            "passes": 430
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:iss spoof → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:iss spoof → blocked",
+            "id": "1c5d44aa90185dc750c7da34386bb888",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:2 segments → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:2 segments → blocked",
+            "id": "f072bd1e9fb8da010d86c45d2924d405",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] attack:random garbage → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:random garbage → blocked",
+            "id": "5130a79c0179d4eed0d00a142b1b4e93"
+          },
+          {
+            "name": "[Falcon-Precomputed-512] attack:tampered payload → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] attack:tampered payload → blocked",
+            "id": "e94ce20426a069fdd3db5fb17ee1f28b",
+            "passes": 430,
+            "fails": 0
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[Falcon-Precomputed-512] valid token: accepted",
+            "id": "c36bd0452f22fc41538a55579e92489b",
+            "passes": 430,
+            "fails": 0,
+            "name": "[Falcon-Precomputed-512] valid token: accepted"
+          },
+          {
+            "name": "[Falcon-512] attack:alg=none → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=none → blocked",
+            "id": "dda14b4a5024a1338a50b4d3231fa348",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "name": "[Falcon-512] attack:alg=HS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=HS256 → blocked",
+            "id": "14efad90ba367457ce9e96c73a314653",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512] attack:alg=RS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=RS256 → blocked",
+            "id": "8db81cb4525307759f7d892c653ed2ad",
+            "passes": 428
+          },
+          {
+            "id": "b87a128aa0583ab165cefde76ec6fd15",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:alg=ES256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=ES256 → blocked"
+          },
+          {
+            "id": "8e50e960d971cb6f57d0ca583c8044b3",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:alg=Falcon-512 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=Falcon-512 → blocked"
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512] attack:alg=ML-DSA-44 → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:alg=ML-DSA-44 → blocked",
+            "id": "a0b8850a806e2a3b9c7d93b910738a6f",
+            "passes": 428
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512] attack:sig stripped → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:sig stripped → blocked",
+            "id": "318f70496031651e8281c05960d553ac",
+            "passes": 428
+          },
+          {
+            "name": "[Falcon-512] attack:random sig → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:random sig → blocked",
+            "id": "584357de91364e0f0bcc147137e5ce78",
+            "passes": 428,
+            "fails": 0
+          },
+          {
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:expired → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:expired → blocked",
+            "id": "f18cb91def02e2830f8c1c8c269d266f"
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:future iat → blocked",
+            "id": "c03380c325527ced75e9aa4e2d8a3a9a",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:future iat → blocked"
+          },
+          {
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:iss spoof → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:iss spoof → blocked",
+            "id": "2224c40dd322c3a88641793f36817614"
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512] attack:2 segments → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:2 segments → blocked",
+            "id": "4b273e5e7d0c47026cabccfb609f086f",
+            "passes": 428
+          },
+          {
+            "fails": 0,
+            "name": "[Falcon-512] attack:random garbage → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:random garbage → blocked",
+            "id": "49208392b768952e47a843dcf29cafea",
+            "passes": 428
+          },
+          {
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] attack:tampered payload → blocked",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] attack:tampered payload → blocked",
+            "id": "2f6f834190e0afd84464cc728a371d15"
+          },
+          {
+            "id": "4fdff355b9e8a9b3d4b4fa538512c6c3",
+            "passes": 428,
+            "fails": 0,
+            "name": "[Falcon-512] valid token: accepted",
+            "path": "::5. JWT Confusion Attacks::[Falcon-512] valid token: accepted"
+          },
+          {
+            "id": "d6b24ac65f3c5c5b89911d4c7e23fc95",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:alg=none → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=none → blocked"
+          },
+          {
+            "name": "[ML-DSA-44] attack:alg=HS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=HS256 → blocked",
+            "id": "12bba0b8ddc0ed2f4f7148b523920e1f",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:alg=RS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=RS256 → blocked",
+            "id": "cccb415a6abb6cbb592d78071b285d35"
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=ES256 → blocked",
+            "id": "e3cf7310e756b9174d0d95d6e13eccc3",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:alg=ES256 → blocked"
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=Falcon-512 → blocked",
+            "id": "2c33f80e556d681f163cb502051eae4c",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:alg=Falcon-512 → blocked"
+          },
+          {
+            "name": "[ML-DSA-44] attack:alg=ML-DSA-44 → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:alg=ML-DSA-44 → blocked",
+            "id": "dfb92e2fd7b369ac0cfcaea7d08fa1af",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:sig stripped → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:sig stripped → blocked",
+            "id": "bdb368cd8c0caa301a9e6edb7b144397",
+            "passes": 416
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:random sig → blocked",
+            "id": "1f0139bf59e0964d5b31c3d671622a6c",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:random sig → blocked"
+          },
+          {
+            "name": "[ML-DSA-44] attack:expired → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:expired → blocked",
+            "id": "e51b2aa02c22918ecf6cbb877d985174",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44] attack:future iat → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:future iat → blocked",
+            "id": "d3d7c2b66cb4d3b21e8da9628510df83",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44] attack:iss spoof → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:iss spoof → blocked",
+            "id": "e3f086d3ecb62bbd52f47fc6c131fea3",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "id": "d1046b9e20d6f4a235bd566cd899216e",
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:2 segments → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:2 segments → blocked"
+          },
+          {
+            "passes": 416,
+            "fails": 0,
+            "name": "[ML-DSA-44] attack:random garbage → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:random garbage → blocked",
+            "id": "3d85bae3797f1153434d0b6f65dadc06"
+          },
+          {
+            "name": "[ML-DSA-44] attack:tampered payload → blocked",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] attack:tampered payload → blocked",
+            "id": "d683e8bce7cc8edae9aca6fbe696f747",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "name": "[ML-DSA-44] valid token: accepted",
+            "path": "::5. JWT Confusion Attacks::[ML-DSA-44] valid token: accepted",
+            "id": "1faac21347c8584b62208fb27381cbee",
+            "passes": 416,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=none → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=none → blocked",
+            "id": "068eaaa869e3c991f53d523c5c3df6bc",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=HS256 → blocked",
+            "id": "de46fea949b8b98a4bcdd0af096b5620",
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=HS256 → blocked"
+          },
+          {
+            "id": "a6ba7e3fc60d4f32ff7b1d5a95c99ede",
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=RS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=RS256 → blocked"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=ES256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=ES256 → blocked",
+            "id": "b032319a54767d1e3b8eb5d8dce2bdff",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=Falcon-512 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=Falcon-512 → blocked",
+            "id": "41b4735dafcd048a88e5f875ba28d9e6",
+            "passes": 1798
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:alg=ML-DSA-44 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:alg=ML-DSA-44 → blocked",
+            "id": "c0c5cbf98eb6575e830af48513a4d9b4",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:sig stripped → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:sig stripped → blocked",
+            "id": "4a2e522bc25c105b04e530587bfebfa9",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:random sig → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:random sig → blocked",
+            "id": "b127f1382a6d80e1c1bcf2c6da4ca4f9",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:expired → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:expired → blocked",
+            "id": "bafb2384349ac3e3a30358fb4cc9fc5f"
+          },
+          {
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:future iat → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:future iat → blocked",
+            "id": "43bdaa5fd660a09b9c0198bd2e14e86b"
+          },
+          {
+            "id": "72cb8ebc122d2804cfcf2b8c4e0c86c3",
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:iss spoof → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:iss spoof → blocked"
+          },
+          {
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:2 segments → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:2 segments → blocked",
+            "id": "6cfb92d09a7ad55b4654ce66942eb9d0"
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:random garbage → blocked",
+            "id": "c35677e8305a59b9046e2851224a83df",
+            "passes": 1798,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128f] attack:random garbage → blocked"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128f] attack:tampered payload → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] attack:tampered payload → blocked",
+            "id": "10ad7e8c54e6f56d9c48e9e55e187973",
+            "passes": 1798,
+            "fails": 0
+          },
+          {
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128f] valid token: accepted",
+            "id": "8f0a1dbb973767132124e7b09b889969",
+            "passes": 0,
+            "fails": 1798,
+            "name": "[SLH-DSA-SHA2-128f] valid token: accepted"
+          },
+          {
+            "id": "3e79dd077b03f15a7836c7bbca7f24ca",
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=none → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=none → blocked"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=HS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=HS256 → blocked",
+            "id": "f812c0c1c7b6b1482d10e88c2266d586",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=RS256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=RS256 → blocked",
+            "id": "03f6f611fd36c62015c7c08b1d2f1134"
+          },
+          {
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=ES256 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=ES256 → blocked",
+            "id": "4fbf3aa76065cfff1d76aaebbb360cf6"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=Falcon-512 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=Falcon-512 → blocked",
+            "id": "79bee852eb1f6f0879c6b283a9138baa",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "id": "033aae30b0d1bbe56b49444a5e3735c5",
+            "passes": 687,
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s] attack:alg=ML-DSA-44 → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:alg=ML-DSA-44 → blocked"
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:sig stripped → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:sig stripped → blocked",
+            "id": "1498954fedf0ba32466c5ec8730d7b53",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "fails": 0,
+            "name": "[SLH-DSA-SHA2-128s] attack:random sig → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:random sig → blocked",
+            "id": "87b446ef89fb6d3757c856e5cbe4d71a",
+            "passes": 687
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:expired → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:expired → blocked",
+            "id": "2902b23c2fd3651c0c19e4509be215d4",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:future iat → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:future iat → blocked",
+            "id": "e0b7760e74afe1d561f1580c696227d1",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:iss spoof → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:iss spoof → blocked",
+            "id": "1d2e6db481948cd5b44ee2e893d959bf",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:2 segments → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:2 segments → blocked",
+            "id": "44568dbd1c593132ae202ff60fc59fb4",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:random garbage → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:random garbage → blocked",
+            "id": "c2f9a2a5a0f1cb2f42c9430e27eac26d",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] attack:tampered payload → blocked",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] attack:tampered payload → blocked",
+            "id": "8f9496dff24deff32de1cee1ef223e1d",
+            "passes": 687,
+            "fails": 0
+          },
+          {
+            "name": "[SLH-DSA-SHA2-128s] valid token: accepted",
+            "path": "::5. JWT Confusion Attacks::[SLH-DSA-SHA2-128s] valid token: accepted",
+            "id": "b52a6408871154d5c439622361060d7a",
+            "passes": 0,
+            "fails": 687
+          }
+        ],
+        "name": "5. JWT Confusion Attacks"
       }
     ],
-    "checks": []
+    "checks": [],
+    "name": ""
   },
   "options": {
-    "summaryTrendStats": [
-      "avg",
-      "min",
-      "med",
-      "max",
-      "p(90)",
-      "p(95)"
-    ],
-    "summaryTimeUnit": "",
-    "noColor": false
+    "noColor": false,
+    "summaryTrendStats": ["avg", "min", "med", "max", "p(90)", "p(95)"],
+    "summaryTimeUnit": ""
   },
   "state": {
+    "testRunDurationMs": 1373359.958261,
     "isStdOutTTY": true,
-    "isStdErrTTY": true,
-    "testRunDurationMs": 45546.459389
+    "isStdErrTTY": true
   },
   "metrics": {
-    "resp_body_size": {
+    "req_header_size{alg:ML-DSA-44,vus:10}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "p(90)": 1286,
-        "p(95)": 1286,
-        "avg": 566.5857142857143,
-        "min": 39,
-        "med": 227.5,
-        "max": 2106
-      }
-    },
-    "token_ver_time{alg:ML-DSA-44,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "avg": 1801,
+        "min": 32,
+        "med": 1801,
+        "max": 3570,
+        "p(90)": 3570,
+        "p(95)": 3570
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -148,190 +1411,29 @@
         }
       }
     },
-    "http_req_tls_handshaking": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      }
-    },
-    "req_success{alg:Falcon-Precomputed-512,vus:100}": {
-      "type": "counter",
+    "req_header_size{alg:SLH-DSA-SHA2-128f,vus:50}": {
       "contains": "default",
       "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "req_failed{alg:Falcon-512,vus:100}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "req_success{alg:ML-DSA-44,vus:100}": {
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter"
-    },
-    "req_header_size{alg:Falcon-Precomputed-512,vus:100}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      }
-    },
-    "token_ver_time{alg:Falcon-Precomputed-512,vus:100}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "avg": 11513.20740541991,
+        "min": 32,
+        "med": 32,
+        "max": 23137,
+        "p(90)": 23137,
+        "p(95)": 23137
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      }
-    },
-    "resp_duration{alg:ML-DSA-44}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
-      },
-      "thresholds": {
-        "p(95)<60000": {
-          "ok": true
-        }
-      }
-    },
-    "token_gen_time{alg:Falcon-512,vus:100}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "req_success{alg:Falcon-512,vus:100}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_duration": {
-      "contains": "time",
-      "values": {
-        "avg": 418.2014546820661,
-        "min": 33.061898,
-        "med": 157.92539349999998,
-        "max": 3247.031017,
-        "p(90)": 1154.8374625000001,
-        "p(95)": 1699.54192325
       },
       "type": "trend"
     },
-    "token_ver_time{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "token_gen_time{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 3247.031017,
-        "p(90)": 2173.501212400001,
-        "p(95)": 2501.1832154,
-        "avg": 1219.2290980190476,
-        "min": 268.444279,
-        "med": 947.12321
-      },
-      "thresholds": {
-        "p(95)<60000": {
-          "ok": true
-        }
-      }
-    },
-    "req_success{alg:Falcon-Precomputed-512,vus:10}": {
+    "req_failed{alg:ML-DSA-44,vus:30}": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "count": 735,
-        "rate": 16.137368521284248
+        "count": 0,
+        "rate": 0
       },
       "thresholds": {
         "count>=0": {
@@ -339,12 +1441,12 @@
         }
       }
     },
-    "attack_block_rate{alg:ML-DSA-44}": {
+    "attack_block_rate{alg:SLH-DSA-SHA2-128s,vus:50}": {
       "type": "rate",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "passes": 0,
+        "rate": 1,
+        "passes": 9618,
         "fails": 0
       },
       "thresholds": {
@@ -353,91 +1455,218 @@
         }
       }
     },
-    "resp_duration{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_sending": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.14432499999999998,
-        "avg": 0.08441072554347821,
-        "min": 0.0135,
-        "med": 0.0343,
-        "max": 7.814899,
-        "p(90)": 0.08954999999999999
-      }
-    },
-    "token_gen_time{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "token_gen_time{alg:ML-DSA-44,vus:100}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "token_gen_time{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "req_success": {
+    "attack_block_rate{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "rate",
       "contains": "default",
       "values": {
-        "count": 735,
-        "rate": 16.137368521284248
+        "passes": 6020,
+        "fails": 0,
+        "rate": 1
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 4177.168278,
+        "p(90)": 795.6079658000002,
+        "p(95)": 1245.566085599998,
+        "avg": 216.99933170014745,
+        "min": 3.730399,
+        "med": 17.675648
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      }
+    },
+    "req_header_size{alg:ML-DSA-44,vus:30}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 3570,
+        "avg": 1801,
+        "min": 32,
+        "med": 1801,
+        "max": 3570,
+        "p(90)": 3570
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:ML-DSA-44,vus:10}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 271.617219,
+        "p(95)": 354.540525,
+        "avg": 81.69531885921316,
+        "min": 3.713593,
+        "med": 17.696629,
+        "max": 875.906438
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "req_success{alg:ML-DSA-44,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 2.4618454758803,
+        "count": 3381
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "req_success{alg:SLH-DSA-SHA2-128s,vus:30}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 665,
+        "rate": 0.48421391347542125
+      }
+    },
+    "token_gen_time{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "contains": "time",
+      "values": {
+        "max": 5748.477438,
+        "p(90)": 2360.3381082,
+        "p(95)": 2707.434688,
+        "avg": 1356.384017654744,
+        "min": 133.120599,
+        "med": 1235.993682
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128s}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.317749,
+        "max": 77.738603,
+        "p(90)": 1.4065099000000008,
+        "p(95)": 2.323884399999998,
+        "avg": 0.8972967754999993,
+        "min": 0.014882
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      }
+    },
+    "resp_body_size{alg:Falcon-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "p(95)": 1270,
+        "avg": 500.7190618762475,
+        "min": 39,
+        "med": 221.5,
+        "max": 1301,
+        "p(90)": 1270
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 3.507533,
+        "med": 27.512058,
+        "max": 49626.024713,
+        "p(90)": 1947.2906109,
+        "p(95)": 3239.3804907499994,
+        "avg": 838.3200778094297
+      }
+    },
+    "token_ver_time{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1506.5112094000003,
+        "p(95)": 1843.6181530999997,
+        "avg": 688.7221347580753,
+        "min": 9.470769,
+        "med": 504.882245,
+        "max": 3921.366129
+      },
+      "thresholds": {
+        "p(95)<30000": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate{alg:Falcon-Precomputed-512}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 6020,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      }
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128s,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.8507713858024698,
+        "min": 0.020692,
+        "med": 0.316002,
+        "max": 38.540997,
+        "p(90)": 1.3941651000000004,
+        "p(95)": 2.12955345
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_success{alg:Falcon-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "count": 3507,
+        "rate": 2.5535912700124848
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
       },
       "type": "counter"
     },
@@ -454,16 +1683,180 @@
       },
       "type": "counter"
     },
-    "resp_body_size{alg:Falcon-512,vus:100}": {
+    "req_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 38819,
+        "rate": 28.26571414616899
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 5,
+        "min": 0,
+        "max": 50
+      }
+    },
+    "req_header_size{alg:Falcon-Precomputed-512,vus:50}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
+        "max": 1248,
+        "p(90)": 1248,
+        "p(95)": 1248,
+        "avg": 640,
+        "min": 32,
+        "med": 640
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_success{alg:Falcon-Precomputed-512,vus:10}": {
+      "contains": "default",
+      "values": {
+        "count": 3535,
+        "rate": 2.5739792242640815
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "token_gen_time{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 2883.178593,
+        "p(90)": 1502.5330068,
+        "p(95)": 1797.0460017999999,
+        "avg": 856.6807793942311,
+        "min": 106.516035,
+        "med": 744.6904535
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "token_ver_time{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 730.075282,
+        "p(90)": 375.23031080000004,
+        "p(95)": 406.0448068,
+        "avg": 196.63088533861384,
+        "min": 9.470769,
+        "med": 174.670402
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed": {
+      "values": {
+        "count": 25111,
+        "rate": 18.28435425756587
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "token_gen_time{alg:SLH-DSA-SHA2-128s}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 17154.090296100007,
+        "p(95)": 21880.914941999996,
+        "avg": 8291.955741990992,
+        "min": 953.840097,
+        "med": 6358.677693,
+        "max": 49626.024713
+      },
+      "thresholds": {
+        "p(95)<600000": {
+          "ok": true
+        }
+      }
+    },
+    "req_success{alg:Falcon-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "count": 3424,
+        "rate": 2.493155548480966
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "req_header_size": {
+      "values": {
+        "avg": 6751.728720506266,
+        "min": 32,
+        "med": 32,
+        "max": 23137,
+        "p(90)": 23137,
+        "p(95)": 23137
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 278.9427626886488,
         "min": 0,
-        "med": 0,
-        "max": 0
+        "med": 0.339081,
+        "max": 49626.024713,
+        "p(90)": 510.355542,
+        "p(95)": 1379.293559
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 187701885,
+        "rate": 136673.48015423078
+      }
+    },
+    "resp_body_size{alg:ML-DSA-44,vus:50}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 1066.7596153846155,
+        "min": 39,
+        "med": 221,
+        "max": 3608,
+        "p(90)": 3608,
+        "p(95)": 3608
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -472,9 +1865,148 @@
       }
     },
     "req_failed{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
       "values": {
         "count": 0,
         "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "token_gen_time{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 494.23332479999993,
+        "avg": 267.83860149108904,
+        "min": 66.369945,
+        "med": 242.350363,
+        "max": 773.735474,
+        "p(90)": 416.0509994
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.09527143953391003,
+        "min": 0.000411,
+        "med": 0.002754,
+        "max": 62.607846,
+        "p(90)": 0.138679,
+        "p(95)": 0.19266
+      }
+    },
+    "token_ver_time{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 783.9382577307686,
+        "min": 45.091211,
+        "med": 719.848283,
+        "max": 3652.854703,
+        "p(90)": 1397.4928693000002,
+        "p(95)": 1615.3321635499983
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.07338,
+        "avg": 0.034439491571134344,
+        "min": 0,
+        "med": 0.012027,
+        "max": 201.63847,
+        "p(90)": 0.055455
+      }
+    },
+    "resp_body_size{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 521.0356435643564,
+        "min": 39,
+        "med": 227.5,
+        "max": 1879,
+        "p(90)": 1286,
+        "p(95)": 1286
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_header_size{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 1232,
+        "p(95)": 1232,
+        "avg": 632,
+        "min": 32,
+        "med": 632,
+        "max": 1232
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "token_gen_time{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1600.4880036000004,
+        "p(95)": 2055.5103563,
+        "avg": 753.0064539690717,
+        "min": 66.369945,
+        "med": 553.776093,
+        "max": 4177.168278
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      }
+    },
+    "req_header_size{alg:Falcon-Precomputed-512,vus:30}": {
+      "values": {
+        "avg": 640,
+        "min": 32,
+        "med": 640,
+        "max": 1248,
+        "p(90)": 1248,
+        "p(95)": 1248
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "req_failed{alg:SLH-DSA-SHA2-128s,vus:30}": {
+      "values": {
+        "count": 1995,
+        "rate": 1.4526417404262637
       },
       "thresholds": {
         "count>=0": {
@@ -484,12 +2016,186 @@
       "type": "counter",
       "contains": "default"
     },
-    "attack_block_rate{alg:Falcon-Precomputed-512}": {
+    "req_success{alg:ML-DSA-44,vus:50}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
       "contains": "default",
       "values": {
-        "fails": 0,
-        "rate": 0,
-        "passes": 0
+        "rate": 2.4232539910469204,
+        "count": 3328
+      }
+    },
+    "resp_body_size{alg:SLH-DSA-SHA2-128s,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 2758.5,
+        "min": 56,
+        "med": 56,
+        "max": 10866,
+        "p(90)": 10866,
+        "p(95)": 10866
+      }
+    },
+    "attack_block_rate{alg:SLH-DSA-SHA2-128s}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 9618,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      }
+    },
+    "resp_body_size{alg:Falcon-Precomputed-512,vus:30}": {
+      "values": {
+        "p(95)": 1286,
+        "avg": 502.0264423076923,
+        "min": 39,
+        "med": 227.5,
+        "max": 1368,
+        "p(90)": 1286
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "resp_body_size{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "values": {
+        "max": 23175,
+        "p(90)": 23175,
+        "p(95)": 23175,
+        "avg": 5973.81134636265,
+        "min": 56,
+        "med": 56
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "token_gen_time{alg:SLH-DSA-SHA2-128s,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 2628.6916785,
+        "max": 6071.413853,
+        "p(90)": 4002.5820248,
+        "p(95)": 4565.83517075,
+        "avg": 2750.0106107947536,
+        "min": 953.840097
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128f}": {
+      "contains": "time",
+      "values": {
+        "avg": 0.8459672736379602,
+        "min": 0,
+        "med": 0.2961015,
+        "max": 95.687053,
+        "p(90)": 0.8104581000000002,
+        "p(95)": 1.7724925000000071
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_tls_handshaking": {
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "req_success{alg:Falcon-Precomputed-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "rate": 2.504805808053307,
+        "count": 3440
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 54.588584,
+        "p(90)": 0.088113,
+        "p(95)": 0.125399,
+        "avg": 0.07777418676209995,
+        "min": 0,
+        "med": 0
+      }
+    },
+    "data_sent": {
+      "contains": "data",
+      "values": {
+        "count": 623744768,
+        "rate": 454174.2783805996
+      },
+      "type": "counter"
+    },
+    "resp_duration{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 19.114317,
+        "max": 3136.803722,
+        "p(90)": 940.5382662000005,
+        "p(95)": 1291.0104221,
+        "avg": 255.95755320901074,
+        "min": 3.978011
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate{alg:Falcon-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 5992,
+        "fails": 0
       },
       "thresholds": {
         "rate>=0.99": {
@@ -498,16 +2204,16 @@
       },
       "type": "rate"
     },
-    "token_gen_time{alg:Falcon-Precomputed-512,vus:50}": {
+    "resp_duration{alg:SLH-DSA-SHA2-128s,vus:10}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
+        "max": 6071.413853,
+        "p(90)": 2815.4163440000007,
+        "p(95)": 3408.7606485499978,
+        "avg": 688.1843499911281,
+        "min": 0.014212,
+        "med": 0.445326
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -515,12 +2221,29 @@
         }
       }
     },
-    "req_success{alg:Falcon-512,vus:50}": {
+    "resp_body_size{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 1349,
+        "p(90)": 1286,
+        "p(95)": 1286,
+        "avg": 487.2110465116279,
+        "min": 39,
+        "med": 227.5
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:SLH-DSA-SHA2-128f,vus:50}": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "count": 0
+        "count": 7278,
+        "rate": 5.299411822968596
       },
       "thresholds": {
         "count>=0": {
@@ -528,33 +2251,16 @@
         }
       }
     },
-    "resp_body_size{alg:ML-DSA-44,vus:100}": {
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "default"
-    },
-    "resp_duration{alg:Falcon-512,vus:100}": {
+    "token_gen_time{alg:Falcon-512,vus:50}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
+        "max": 5841.122263,
+        "p(90)": 2152.7473439,
+        "p(95)": 2545.8095687,
+        "avg": 1267.0865425233649,
+        "min": 110.396856,
+        "med": 1157.734062
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -562,16 +2268,7 @@
         }
       }
     },
-    "checks": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 945,
-        "fails": 0
-      }
-    },
-    "req_failed{alg:ML-DSA-44,vus:100}": {
+    "req_failed{alg:Falcon-512,vus:30}": {
       "type": "counter",
       "contains": "default",
       "values": {
@@ -582,38 +2279,86 @@
         "count>=0": {
           "ok": true
         }
+      }
+    },
+    "req_header_size{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 11560.494805194805,
+        "min": 32,
+        "med": 32,
+        "max": 23137,
+        "p(90)": 23137,
+        "p(95)": 23137
       }
     },
     "http_reqs": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "count": 736,
-        "rate": 16.15932412471457
+        "count": 116801,
+        "rate": 85.0476230193123
       }
     },
-    "http_req_blocked": {
+    "req_success{alg:ML-DSA-44,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 3500,
+        "rate": 2.5484942814495857
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "req_success{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1886,
+        "rate": 1.3732743470896909
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "values": {
+        "med": 0.4527485,
+        "max": 1510.479578,
+        "p(90)": 441.8791344999999,
+        "p(95)": 564.9386153499995,
+        "avg": 107.99845867952838,
+        "min": 0
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128s,vus:50}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 0.01925,
-        "p(95)": 0.03425,
-        "avg": 0.03750081521739133,
-        "min": 0.0039,
-        "med": 0.00895,
-        "max": 4.2182
-      }
-    },
-    "token_gen_time{alg:ML-DSA-44,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "med": 0.310229,
+        "max": 25.73137,
+        "p(90)": 1.0020499999999988,
+        "p(95)": 1.8221545999999995,
+        "avg": 0.6908442183406114,
+        "min": 0.021222
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -621,17 +2366,67 @@
         }
       }
     },
-    "vus": {
-      "type": "gauge",
+    "req_failed{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "type": "counter",
       "contains": "default",
       "values": {
-        "value": 0,
-        "min": 0,
-        "max": 10
+        "count": 5664,
+        "rate": 4.124191888608701
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
       }
     },
-    "req_success{alg:ML-DSA-44,vus:50}": {
+    "req_failed{alg:SLH-DSA-SHA2-128s,vus:50}": {
+      "type": "counter",
       "contains": "default",
+      "values": {
+        "count": 2748,
+        "rate": 2.00093208154956
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1401.9416946999997,
+        "p(95)": 1911.4256357999998,
+        "avg": 341.9876258123698,
+        "min": 0,
+        "med": 0.44333350000000005,
+        "max": 5748.477438
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "resp_body_size{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 23175,
+        "p(90)": 23175,
+        "p(95)": 23175,
+        "avg": 5929.37692611616,
+        "min": 56,
+        "med": 56
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:Falcon-Precomputed-512,vus:50}": {
       "values": {
         "count": 0,
         "rate": 0
@@ -641,63 +2436,78 @@
           "ok": true
         }
       },
-      "type": "counter"
+      "type": "counter",
+      "contains": "default"
     },
-    "req_header_size{alg:Falcon-Precomputed-512,vus:10}": {
+    "token_ver_time{alg:ML-DSA-44,vus:10}": {
+      "type": "trend",
+      "contains": "time",
       "values": {
-        "avg": 640,
-        "min": 32,
-        "med": 640,
-        "max": 1248,
-        "p(90)": 1248,
-        "p(95)": 1248
+        "p(95)": 423.57071449999995,
+        "avg": 203.91239189648044,
+        "min": 10.014898,
+        "med": 182.039051,
+        "max": 785.024295,
+        "p(90)": 368.356715
       },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:ML-DSA-44,vus:50}": {
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
       },
       "type": "trend",
-      "contains": "default"
+      "contains": "time",
+      "values": {
+        "max": 4956.251759,
+        "p(90)": 1372.9200170000001,
+        "p(95)": 1823.2226140499997,
+        "avg": 361.6755594368135,
+        "min": 3.866703,
+        "med": 17.4227205
+      }
     },
-    "req_header_size": {
+    "resp_body_size{alg:Falcon-512,vus:50}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "avg": 640,
-        "min": 32,
-        "med": 640,
-        "max": 1248,
-        "p(90)": 1248,
-        "p(95)": 1248
-      }
-    },
-    "resp_duration{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 418.26811652925267,
-        "min": 33.061898,
-        "med": 157.763088,
-        "max": 3247.031017,
-        "p(90)": 1157.3919272000005,
-        "p(95)": 1700.628613699999
+        "max": 1301,
+        "p(90)": 1270,
+        "p(95)": 1270,
+        "avg": 478.25525700934577,
+        "min": 39,
+        "med": 221.5
       },
       "thresholds": {
-        "p(95)<60000": {
+        "p(95)<9999999": {
           "ok": true
         }
       }
     },
-    "resp_duration{alg:Falcon-512,vus:50}": {
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.6676398318507547,
+        "passes": 77981,
+        "fails": 38820
+      }
+    },
+    "token_ver_time{alg:Falcon-Precomputed-512,vus:50}": {
       "contains": "time",
       "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "avg": 1151.4981743186045,
+        "min": 34.628204,
+        "med": 1020.652487,
+        "max": 3921.366129,
+        "p(90)": 2058.2992972000006,
+        "p(95)": 2435.625697249999
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -706,19 +2516,303 @@
       },
       "type": "trend"
     },
-    "token_ver_time{alg:Falcon-512,vus:100}": {
+    "token_ver_time{alg:ML-DSA-44}": {
+      "thresholds": {
+        "p(95)<30000": {
+          "ok": true
+        }
+      },
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
+        "p(90)": 1568.8478124000005,
+        "p(95)": 2009.2343408999998,
+        "avg": 720.5104374696211,
+        "min": 10.014898,
+        "med": 510.647663,
+        "max": 4055.100624
+      }
+    },
+    "req_header_size{alg:SLH-DSA-SHA2-128s,vus:50}": {
+      "contains": "default",
+      "values": {
+        "p(95)": 10828,
+        "avg": 5430,
+        "min": 32,
+        "med": 5430,
+        "max": 10828,
+        "p(90)": 10828
       },
       "thresholds": {
         "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_waiting": {
+      "contains": "time",
+      "values": {
+        "med": 0.256177,
+        "max": 49625.877191,
+        "p(90)": 510.215071,
+        "p(95)": 1379.237874,
+        "avg": 278.85538315357593,
+        "min": 0
+      },
+      "type": "trend"
+    },
+    "resp_duration{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 890.543572,
+        "p(90)": 266.6857306000002,
+        "p(95)": 356.09929739999984,
+        "avg": 82.44965245346766,
+        "min": 4.333417,
+        "med": 18.9281365
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "token_gen_time{alg:SLH-DSA-SHA2-128s,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 23616.622695,
+        "p(95)": 27762.777475699997,
+        "avg": 13546.483324327508,
+        "min": 1251.630319,
+        "med": 12300.655214,
+        "max": 49626.024713
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "contains": "default",
+      "values": {
+        "count": 5482,
+        "rate": 3.9916701859733226
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "resp_body_size{alg:ML-DSA-44,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 39,
+        "med": 221,
+        "max": 3608,
+        "p(90)": 3608,
+        "p(95)": 3608,
+        "avg": 1082.481
+      }
+    },
+    "resp_duration{alg:Falcon-Precomputed-512,vus:30}": {
+      "contains": "time",
+      "values": {
+        "min": 3.894525,
+        "med": 17.185919,
+        "max": 3652.854703,
+        "p(90)": 918.9011732999992,
+        "p(95)": 1238.7773640999994,
+        "avg": 244.9842247013741
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "token_gen_time{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 1001.72084,
+        "max": 4177.168278,
+        "p(90)": 2199.6133580000005,
+        "p(95)": 2656.3809072,
+        "avg": 1197.4230034581406,
+        "min": 126.361753
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:SLH-DSA-SHA2-128s,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1944,
+        "rate": 1.415506538039427
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "req_header_size{alg:SLH-DSA-SHA2-128s,vus:10}": {
+      "values": {
+        "med": 5430,
+        "max": 10828,
+        "p(90)": 10828,
+        "p(95)": 10828,
+        "avg": 5430,
+        "min": 32
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "req_success{alg:SLH-DSA-SHA2-128f,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1875,
+        "rate": 1.3652647936337066
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:Falcon-512,vus:50}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "token_ver_time{alg:Falcon-512,vus:50}": {
+      "values": {
+        "max": 3781.520705,
+        "p(90)": 1980.9919107,
+        "p(95)": 2254.550606499999,
+        "avg": 1118.0374698878516,
+        "min": 41.812873,
+        "med": 1018.159435
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "req_success{alg:SLH-DSA-SHA2-128s,vus:10}": {
+      "values": {
+        "count": 648,
+        "rate": 0.471835512679809
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "resp_body_size": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 23175,
+        "p(95)": 23175,
+        "avg": 3516.4342494089833,
+        "min": 39,
+        "med": 56,
+        "max": 23175
+      }
+    },
+    "resp_body_size{alg:SLH-DSA-SHA2-128f,vus:50}": {
+      "values": {
+        "max": 23175,
+        "p(90)": 23175,
+        "p(95)": 23175,
+        "avg": 5949.69476546567,
+        "min": 56,
+        "med": 56
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "token_gen_time{alg:ML-DSA-44,vus:10}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 519.2545751,
+        "avg": 288.84311367494865,
+        "min": 78.707856,
+        "med": 262.458951,
+        "max": 875.906438,
+        "p(90)": 465.62253840000005
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "token_gen_time": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2322.694862675781,
+        "min": 66.369945,
+        "med": 1035.895233,
+        "max": 49626.024713,
+        "p(90)": 5195.540664200003,
+        "p(95)": 10326.963398299991
+      }
+    },
+    "req_success{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1929,
+        "rate": 1.4045844196903574
+      },
+      "thresholds": {
+        "count>=0": {
           "ok": true
         }
       }
@@ -727,12 +2821,12 @@
       "type": "trend",
       "contains": "default",
       "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "max": 3608,
+        "p(90)": 3608,
+        "p(95)": 3608,
+        "avg": 1074.1754658385094,
+        "min": 39,
+        "med": 221
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -740,160 +2834,32 @@
         }
       }
     },
-    "token_ver_time{alg:Falcon-512}": {
-      "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
-      },
-      "thresholds": {
-        "p(95)<30000": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "resp_body_size{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "attack_block_rate{alg:Falcon-Precomputed-512,vus:100}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 0
-      },
-      "thresholds": {
-        "rate>=0.99": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_waiting": {
+    "token_gen_time{alg:SLH-DSA-SHA2-128s,vus:30}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 417.83221667934794,
-        "min": 32.848398,
-        "med": 157.7729435,
-        "max": 3246.898017,
-        "p(90)": 1154.6690625,
-        "p(95)": 1699.25667325
-      }
-    },
-    "data_sent": {
-      "contains": "data",
-      "values": {
-        "rate": 19720.259533871096,
-        "count": 898188
-      },
-      "type": "counter"
-    },
-    "iterations": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 105,
-        "rate": 2.3053383601834643
-      }
-    },
-    "req_failed{alg:ML-DSA-44,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "attack_block_rate": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "passes": 0,
-        "fails": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "rate>=0.99": {
-          "ok": true
-        }
-      }
-    },
-    "token_ver_time{alg:Falcon-512,vus:10}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      }
-    },
-    "data_received": {
-      "type": "counter",
-      "contains": "data",
-      "values": {
-        "count": 369936,
-        "rate": 8122.168110598381
-      }
-    },
-    "resp_body_size{alg:Falcon-Precomputed-512,vus:100}": {
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "avg": 8263.865510336842,
+        "min": 1330.33164,
+        "med": 7441.762026,
+        "max": 24685.590902,
+        "p(90)": 14172.643044800001,
+        "p(95)": 16113.957145599994
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      },
-      "type": "trend",
-      "contains": "default"
+      }
     },
-    "token_ver_time{alg:Falcon-512,vus:50}": {
+    "resp_duration{alg:SLH-DSA-SHA2-128s,vus:30}": {
       "contains": "time",
       "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "avg": 2066.8298322315736,
+        "min": 0.014882,
+        "med": 0.4609555,
+        "max": 24685.590902,
+        "p(90)": 8536.915402799998,
+        "p(95)": 11480.800535349998
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -902,16 +2868,50 @@
       },
       "type": "trend"
     },
-    "resp_body_size{alg:ML-DSA-44,vus:50}": {
+    "resp_duration{alg:Falcon-512,vus:50}": {
+      "values": {
+        "min": 4.210231,
+        "med": 16.3596615,
+        "max": 5841.122263,
+        "p(90)": 1363.573752,
+        "p(95)": 1750.2559325,
+        "avg": 351.1348684162212
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "token_gen_time{alg:Falcon-512,vus:10}": {
+      "values": {
+        "avg": 281.40025266390046,
+        "min": 75.994312,
+        "med": 250.913372,
+        "max": 890.543572,
+        "p(90)": 463.3879912,
+        "p(95)": 521.779946
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "req_header_size{alg:SLH-DSA-SHA2-128s,vus:30}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
+        "med": 5430,
+        "max": 10828,
+        "p(90)": 10828,
+        "p(95)": 10828,
+        "avg": 5430,
+        "min": 32
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -923,8 +2923,8 @@
       "type": "rate",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "passes": 0,
+        "rate": 1,
+        "passes": 5992,
         "fails": 0
       },
       "thresholds": {
@@ -933,33 +2933,16 @@
         }
       }
     },
-    "req_header_size{alg:Falcon-512,vus:100}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "resp_duration{alg:Falcon-Precomputed-512,vus:100}": {
+    "token_gen_time{alg:SLH-DSA-SHA2-128f,vus:10}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "avg": 425.2534128446451,
+        "min": 100.02639,
+        "med": 394.339965,
+        "max": 1510.479578,
+        "p(90)": 672.057206,
+        "p(95)": 768.8639285
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -967,202 +2950,77 @@
         }
       }
     },
-    "token_ver_time{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
+    "token_gen_time{alg:ML-DSA-44,vus:30}": {
       "contains": "time",
       "values": {
-        "med": 882.29669,
-        "max": 2894.212705,
-        "p(90)": 1686.3896400000006,
-        "p(95)": 2223.0451289999996,
-        "avg": 983.751416447619,
-        "min": 143.792389
-      },
-      "thresholds": {
-        "p(95)<30000": {
-          "ok": true
-        }
-      }
-    },
-    "resp_body_size{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "max": 2106,
-        "p(90)": 1286,
-        "p(95)": 1286,
-        "avg": 566.5857142857143,
-        "min": 39,
-        "med": 227.5
+        "med": 782.040923,
+        "max": 4091.679863,
+        "p(90)": 1593.4729845000002,
+        "p(95)": 1799.1124169999987,
+        "avg": 895.6022593580003,
+        "min": 89.317163
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      }
+      },
+      "type": "trend"
     },
-    "attack_block_rate{alg:Falcon-512,vus:100}": {
+    "resp_body_size{alg:SLH-DSA-SHA2-128s,vus:10}": {
       "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 0
+        "p(90)": 10866,
+        "p(95)": 10866,
+        "avg": 2758.5,
+        "min": 56,
+        "med": 56,
+        "max": 10866
       },
       "thresholds": {
-        "rate>=0.99": {
+        "p(95)<9999999": {
           "ok": true
         }
       },
-      "type": "rate",
+      "type": "trend",
       "contains": "default"
     },
-    "http_req_failed": {
+    "attack_block_rate{alg:ML-DSA-44}": {
       "type": "rate",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 736
-      }
-    },
-    "token_gen_time": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 2501.1832154,
-        "avg": 1219.2290980190476,
-        "min": 268.444279,
-        "med": 947.12321,
-        "max": 3247.031017,
-        "p(90)": 2173.501212400001
-      }
-    },
-    "token_ver_time{alg:ML-DSA-44}": {
+        "rate": 1,
+        "passes": 5824,
+        "fails": 0
+      },
       "thresholds": {
-        "p(95)<30000": {
+        "rate>=0.99": {
           "ok": true
         }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
       }
     },
-    "resp_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 3247.031017,
-        "p(90)": 1157.3919272000005,
-        "p(95)": 1700.628613699999,
-        "avg": 418.26811652925267,
-        "min": 33.061898,
-        "med": 157.763088
-      }
-    },
-    "req_header_size{alg:ML-DSA-44,vus:50}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
+    "req_header_size{alg:Falcon-Precomputed-512,vus:10}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      }
-    },
-    "token_gen_time{alg:ML-DSA-44,vus:10}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
-      }
-    },
-    "resp_duration{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
+        "avg": 640,
+        "min": 32,
+        "med": 640,
+        "max": 1248,
+        "p(90)": 1248,
+        "p(95)": 1248
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      }
-    },
-    "resp_duration{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
-      },
-      "thresholds": {
-        "p(95)<60000": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_receiving": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.28482727717391293,
-        "min": 0.0357,
-        "med": 0.1321,
-        "max": 10.032198,
-        "p(90)": 0.3768,
-        "p(95)": 0.6583
-      }
-    },
-    "iteration_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 2988.985214819049,
-        "min": 1167.631911,
-        "med": 2822.356584,
-        "max": 6099.767646,
-        "p(90)": 4270.4211666,
-        "p(95)": 4804.987555
       }
     },
     "req_success{alg:Falcon-512,vus:10}": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "count": 0,
-        "rate": 0
+        "count": 3374,
+        "rate": 2.4567484873174004
       },
       "thresholds": {
         "count>=0": {
@@ -1170,148 +3028,191 @@
         }
       }
     },
-    "token_gen_time{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      },
-      "thresholds": {
-        "p(95)<60000": {
-          "ok": true
-        }
-      }
-    },
-    "req_success{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "counter",
+    "attack_block_rate{alg:SLH-DSA-SHA2-128f,vus:50}": {
       "contains": "default",
       "values": {
-        "count": 0,
-        "rate": 0
+        "rate": 1,
+        "passes": 25172,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "req_success{alg:Falcon-Precomputed-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "count": 3640,
+        "rate": 2.650434052707569
       },
       "thresholds": {
         "count>=0": {
           "ok": true
         }
-      }
-    },
-    "resp_duration{alg:ML-DSA-44,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
       },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "token_gen_time{alg:Falcon-Precomputed-512,vus:100}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      }
-    },
-    "token_gen_time{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1219.2290980190476,
-        "min": 268.444279,
-        "med": 947.12321,
-        "max": 3247.031017,
-        "p(90)": 2173.501212400001,
-        "p(95)": 2501.1832154
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
+      "type": "counter"
     },
     "token_ver_time": {
-      "type": "trend",
       "contains": "time",
       "values": {
-        "max": 2894.212705,
-        "p(90)": 1686.3896400000006,
-        "p(95)": 2223.0451289999996,
-        "avg": 983.751416447619,
-        "min": 143.792389,
-        "med": 882.29669
-      }
-    },
-    "http_req_duration{expected_response:true}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 1154.8374625000001,
-        "p(95)": 1699.54192325,
-        "avg": 418.2014546820661,
-        "min": 33.061898,
-        "med": 157.92539349999998,
-        "max": 3247.031017
-      }
-    },
-    "http_req_connecting": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0.02204239130434783,
+        "p(90)": 943.5440972000002,
+        "p(95)": 1373.986728199999,
+        "avg": 251.6019814591389,
         "min": 0,
-        "med": 0,
-        "max": 3.9018,
-        "p(90)": 0
-      }
-    },
-    "group_duration": {
-      "contains": "time",
-      "values": {
-        "avg": 978.6899319238087,
-        "min": 146.060889,
-        "med": 830.591783,
-        "max": 3247.613817,
-        "p(90)": 1832.1720204000003,
-        "p(95)": 2238.5210963000004
+        "med": 0.408968,
+        "max": 4055.100624
       },
       "type": "trend"
     },
-    "req_header_size{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "default",
+    "token_ver_time{alg:Falcon-512,vus:10}": {
+      "contains": "time",
       "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "avg": 211.65562837344388,
+        "min": 17.716338,
+        "med": 187.0145035,
+        "max": 741.616175,
+        "p(90)": 381.9517649,
+        "p(95)": 452.06346024999993
       },
       "thresholds": {
         "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128s,vus:50}": {
+      "values": {
+        "avg": 3387.2004377419967,
+        "min": 0.011447,
+        "med": 0.4380565,
+        "max": 49626.024713,
+        "p(90)": 13916.650570500002,
+        "p(95)": 18698.747278150004
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "req_header_size{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 32,
+        "max": 23137,
+        "p(90)": 23137,
+        "p(95)": 23137,
+        "avg": 11529.107085775173,
+        "min": 32
+      }
+    },
+    "attack_block_rate": {
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 52626,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "http_req_receiving": {
+      "values": {
+        "med": 0.029465,
+        "max": 69.88153,
+        "p(90)": 0.082024,
+        "p(95)": 0.116486,
+        "avg": 0.052940043501339934,
+        "min": 0
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128f,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.7360872009544009,
+        "min": 0,
+        "med": 0.3028765,
+        "max": 46.498202,
+        "p(90)": 0.8618954999999999,
+        "p(95)": 1.880675
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128s,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.1559153609022563,
+        "min": 0.014882,
+        "med": 0.323969,
+        "max": 77.738603,
+        "p(90)": 1.6306526000000001,
+        "p(95)": 3.1272483999999965
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "checks": {
+      "contains": "default",
+      "values": {
+        "rate": 0.7667518890162872,
+        "passes": 107665,
+        "fails": 32752
+      },
+      "type": "rate"
+    },
+    "token_ver_time{alg:ML-DSA-44,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1706.0559458999994,
+        "avg": 809.2901464439996,
+        "min": 55.8171,
+        "med": 679.8454770000001,
+        "max": 3650.057626,
+        "p(90)": 1482.460109
+      }
+    },
+    "req_success{alg:SLH-DSA-SHA2-128s,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 687,
+        "rate": 0.50023302038739
+      },
+      "thresholds": {
+        "count>=0": {
           "ok": true
         }
       }
@@ -1329,16 +3230,33 @@
         }
       }
     },
-    "token_gen_time{alg:ML-DSA-44}": {
+    "req_header_size{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 1232,
+        "p(90)": 1232,
+        "p(95)": 1232,
+        "avg": 632,
+        "min": 32,
+        "med": 632
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:Falcon-512}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "p(95)": 1309.1144069999991,
+        "avg": 225.55718662114,
+        "min": 3.978011,
+        "med": 18.238475,
+        "max": 5841.122263,
+        "p(90)": 849.4149004
       },
       "thresholds": {
         "p(95)<60000": {
@@ -1346,7 +3264,58 @@
         }
       }
     },
-    "resp_duration{alg:Falcon-Precomputed-512,vus:10}": {
+    "resp_duration{alg:ML-DSA-44}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 226.90068523618868,
+        "min": 3.507533,
+        "med": 17.797181,
+        "max": 4956.251759,
+        "p(90)": 828.6477072000002,
+        "p(95)": 1306.930763999999
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128s}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 13115.64965819998,
+        "avg": 2073.6959989784955,
+        "min": 0.011447,
+        "med": 0.448306,
+        "max": 49626.024713,
+        "p(90)": 8178.101355000002
+      },
+      "thresholds": {
+        "p(95)<600000": {
+          "ok": true
+        }
+      }
+    },
+    "resp_body_size{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 1308,
+        "p(90)": 1270,
+        "p(95)": 1270,
+        "avg": 496.62966804979254,
+        "min": 39,
+        "med": 221.5
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:Falcon-Precomputed-512,vus:50}": {
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
@@ -1355,101 +3324,157 @@
       "type": "trend",
       "contains": "time",
       "values": {
-        "min": 33.061898,
-        "med": 157.763088,
-        "max": 3247.031017,
-        "p(90)": 1157.3919272000005,
-        "p(95)": 1700.628613699999,
-        "avg": 418.26811652925267
+        "p(95)": 1803.6681465999986,
+        "avg": 345.9532896053151,
+        "min": 4.482844,
+        "med": 16.5138745,
+        "max": 4177.168278,
+        "p(90)": 1324.5959619
       }
     },
-    "req_failed": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      }
-    },
-    "req_header_size{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0
-      },
+    "token_ver_time{alg:ML-DSA-44,vus:50}": {
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      }
-    },
-    "token_ver_time{alg:ML-DSA-44,vus:100}": {
+      },
       "type": "trend",
       "contains": "time",
       "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "avg": 1213.6041911346156,
+        "min": 65.136451,
+        "med": 1141.7012385,
+        "max": 4055.100624,
+        "p(90)": 2208.4952274999996,
+        "p(95)": 2471.6613110000003
+      }
+    },
+    "req_header_size{alg:Falcon-512,vus:50}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 1232,
+        "avg": 632,
+        "min": 32,
+        "med": 632,
+        "max": 1232,
+        "p(90)": 1232
+      }
+    },
+    "resp_duration{alg:ML-DSA-44,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 18.238551,
+        "max": 4091.679863,
+        "p(90)": 931.3062418999998,
+        "p(95)": 1281.436201249997,
+        "avg": 255.0363738214286,
+        "min": 3.507533
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2778.020928073358,
+        "min": 116.311659,
+        "med": 1620.560348,
+        "max": 49684.67822,
+        "p(90)": 5697.740348600005,
+        "p(95)": 10380.71396849999
+      }
+    },
+    "attack_block_rate{alg:SLH-DSA-SHA2-128f}": {
+      "contains": "default",
+      "values": {
+        "fails": 0,
+        "rate": 1,
+        "passes": 25172
+      },
+      "thresholds": {
+        "rate>=0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "token_gen_time{alg:ML-DSA-44}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1641.4933924000004,
+        "p(95)": 2047.9565466,
+        "avg": 788.1875361157976,
+        "min": 78.707856,
+        "med": 594.735238,
+        "max": 4956.251759
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      }
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128f,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.868720651114567,
+        "min": 0,
+        "med": 0.300705,
+        "max": 75.412384,
+        "p(90)": 0.8878082000000002,
+        "p(95)": 1.6658411999999978
       }
     },
     "vus_max": {
       "type": "gauge",
       "contains": "default",
       "values": {
-        "max": 150,
-        "value": 150,
-        "min": 150
+        "value": 80,
+        "min": 80,
+        "max": 80
       }
     },
-    "req_failed{alg:Falcon-Precomputed-512,vus:50}": {
+    "req_header_size{alg:ML-DSA-44,vus:50}": {
+      "type": "trend",
+      "contains": "default",
       "values": {
-        "count": 0,
-        "rate": 0
+        "avg": 1801,
+        "min": 32,
+        "med": 1801,
+        "max": 3570,
+        "p(90)": 3570,
+        "p(95)": 3570
       },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "token_ver_time{alg:Falcon-Precomputed-512,vus:10}": {
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 2894.212705,
-        "p(90)": 1686.3896400000006,
-        "p(95)": 2223.0451289999996,
-        "avg": 983.751416447619,
-        "min": 143.792389,
-        "med": 882.29669
       }
     },
-    "attack_block_rate{alg:ML-DSA-44,vus:100}": {
+    "attack_block_rate{alg:ML-DSA-44,vus:50}": {
       "type": "rate",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "passes": 0,
+        "rate": 1,
+        "passes": 5824,
         "fails": 0
       },
       "thresholds": {
@@ -1458,135 +3483,83 @@
         }
       }
     },
-    "resp_duration{alg:ML-DSA-44,vus:10}": {
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "token_ver_time{alg:ML-DSA-44,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "req_header_size{alg:ML-DSA-44,vus:10}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
+    "resp_body_size{alg:SLH-DSA-SHA2-128s,vus:50}": {
       "type": "trend",
       "contains": "default",
       "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
-      }
-    },
-    "req_failed{alg:Falcon-512,vus:50}": {
-      "values": {
-        "count": 0,
-        "rate": 0
+        "p(90)": 10866,
+        "p(95)": 10866,
+        "avg": 2758.5,
+        "min": 56,
+        "med": 56,
+        "max": 10866
       },
       "thresholds": {
-        "count>=0": {
+        "p(95)<9999999": {
           "ok": true
         }
-      },
-      "type": "counter",
-      "contains": "default"
+      }
     },
-    "req_success{alg:ML-DSA-44,vus:10}": {
+    "token_ver_time{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1836.7674080000002,
+        "avg": 702.4866994422385,
+        "min": 17.716338,
+        "med": 540.862389,
+        "max": 3781.520705,
+        "p(90)": 1516.404026
+      },
+      "thresholds": {
+        "p(95)<30000": {
+          "ok": true
+        }
+      }
+    },
+    "iterations": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "rate": 0,
-        "count": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
+        "count": 11955,
+        "rate": 8.704928324208513
       }
     },
-    "resp_body_size{alg:Falcon-512,vus:10}": {
-      "contains": "default",
-      "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "req_header_size{alg:Falcon-Precomputed-512,vus:50}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0
-      }
-    },
-    "resp_duration{alg:ML-DSA-44,vus:100}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
+    "resp_duration{alg:Falcon-Precomputed-512,vus:10}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "avg": 78.3808242548798,
+        "min": 3.730399,
+        "med": 19.403734,
+        "max": 773.735474,
+        "p(90)": 257.72984439999993,
+        "p(95)": 346.58449139999993
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
       }
     },
-    "req_failed{alg:Falcon-Precomputed-512,vus:100}": {
+    "token_gen_time{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 888.3791360019967,
+        "min": 111.38168,
+        "med": 798.616642,
+        "max": 3136.803722,
+        "p(90)": 1515.271067,
+        "p(95)": 1739.663288
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "req_failed{alg:ML-DSA-44,vus:10}": {
       "type": "counter",
       "contains": "default",
       "values": {
@@ -1599,16 +3572,96 @@
         }
       }
     },
-    "resp_body_size{alg:Falcon-512,vus:50}": {
+    "token_gen_time{alg:SLH-DSA-SHA2-128f}": {
       "type": "trend",
-      "contains": "default",
+      "contains": "time",
       "values": {
+        "max": 11986.592674,
+        "p(90)": 2954.019507,
+        "p(95)": 3696.8769569,
+        "avg": 1381.824417686288,
+        "min": 100.02639,
+        "med": 1031.0684110000002
+      },
+      "thresholds": {
+        "p(95)<300000": {
+          "ok": true
+        }
+      }
+    },
+    "token_gen_time{alg:Falcon-512}": {
+      "contains": "time",
+      "values": {
+        "avg": 795.9078023536503,
+        "min": 75.994312,
+        "med": 616.865995,
+        "max": 5841.122263,
+        "p(90)": 1641.720721,
+        "p(95)": 1989.546746
+      },
+      "thresholds": {
+        "p(95)<60000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.196526,
+        "med": 71.048001,
+        "max": 49626.604989,
+        "p(90)": 1916.4726209999997,
+        "p(95)": 3178.099465399999,
+        "avg": 824.1142787526001
+      }
+    },
+    "token_gen_time{alg:SLH-DSA-SHA2-128f,vus:50}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2370.1803893088013,
+        "min": 137.426816,
+        "med": 2101.953425,
+        "max": 11986.592674,
+        "p(90)": 4137.8619738,
+        "p(95)": 4876.011264899999
+      }
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128f}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 349.09260984671846,
         "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
+        "med": 0.4425075,
+        "max": 11986.592674,
+        "p(90)": 1358.4152644000005,
+        "p(95)": 2182.7414584499998
+      },
+      "thresholds": {
+        "p(95)<300000": {
+          "ok": true
+        }
+      }
+    },
+    "resp_duration{alg:SLH-DSA-SHA2-128f,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 11986.592674,
+        "p(90)": 2452.5875420000007,
+        "p(95)": 3372.9718012499998,
+        "avg": 598.5516171060292,
+        "min": 0,
+        "med": 0.4290125
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -1616,22 +3669,75 @@
         }
       }
     },
-    "req_header_size{alg:ML-DSA-44,vus:100}": {
-      "type": "trend",
-      "contains": "default",
+    "token_gen_time{alg:ML-DSA-44,vus:50}": {
+      "contains": "time",
       "values": {
-        "avg": 0,
+        "max": 4956.251759,
+        "p(90)": 2190.9206485,
+        "p(95)": 2645.53255075,
+        "avg": 1238.8509842355766,
+        "min": 93.540344,
+        "med": 1119.816977
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "resp_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
         "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
+        "med": 11.323192,
+        "max": 49626.024713,
+        "p(90)": 1249.4549523999997,
+        "p(95)": 2290.832517199995,
+        "avg": 515.1883175719776
+      }
+    },
+    "token_ver_time{alg:SLH-DSA-SHA2-128f,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.9330833013333332,
+        "min": 0,
+        "med": 0.288414,
+        "max": 95.687053,
+        "p(90)": 0.6784350000000008,
+        "p(95)": 1.6666421999999999
       },
       "thresholds": {
         "p(95)<9999999": {
           "ok": true
         }
       }
+    },
+    "token_ver_time{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 819.7019619261473,
+        "min": 30.77454,
+        "med": 719.538918,
+        "max": 3127.671694,
+        "p(90)": 1474.623563,
+        "p(95)": 1696.5285
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    }
+  },
+  "setup_data": {
+    "user": {
+      "email": "bench-shcjqqsi@bench.test",
+      "name": "bench-shcjqqsi",
+      "password": "BenchPass!123"
     }
   }
 }

@@ -63,17 +63,17 @@ func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm str
 		return "", "", status.Error(codes.Internal, "failed to generate token")
 	}
 
-	refreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-		UserID:    user.Id,
-		Email:     user.Email,
-		Algorithm: algorithm,
-	})
-	if err != nil {
-		s.log.Errorf("failed to sign refresh token: %v", err)
-		return "", "", status.Error(codes.Internal, "failed to generate token")
-	}
+	// refreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
+	// 	UserID:    user.Id,
+	// 	Email:     user.Email,
+	// 	Algorithm: algorithm,
+	// })
+	// if err != nil {
+	// 	s.log.Errorf("failed to sign refresh token: %v", err)
+	// 	return "", "", status.Error(codes.Internal, "failed to generate token")
+	// }
 
-	return accessToken, refreshToken, nil
+	return accessToken, "", nil
 }
 
 func (s *AuthService) Verify(ctx context.Context, token string) error {
