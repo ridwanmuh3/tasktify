@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
@@ -39,41 +40,37 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm string) (string, string, error) {
+// SignIn returns (accessToken, refreshToken, signTimeMs, error).
+// signTimeMs is the pure cryptographic signing duration in milliseconds,
+// isolated from DB lookup and bcrypt — usable as clean signing latency.
+func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm string) (string, string, float64, error) {
 	db := s.db.WithContext(ctx)
 
 	user := new(entity.User)
 	if err := s.userRepository.GetByEmail(db, email, user); err != nil {
 		s.log.Warnf("user not found with email %s: %v", email, err)
-		return "", "", status.Error(codes.Unauthenticated, "invalid email or password")
+		return "", "", 0, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		s.log.Warnf("invalid password for email %s", email)
-		return "", "", status.Error(codes.Unauthenticated, "invalid email or password")
+		return "", "", 0, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
+	signStart := time.Now()
 	accessToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
 		UserID:    user.Id,
 		Email:     user.Email,
 		Algorithm: algorithm,
 	})
+	signTimeMs := float64(time.Since(signStart).Microseconds()) / 1000.0
+
 	if err != nil {
 		s.log.Errorf("failed to sign access token: %v", err)
-		return "", "", status.Error(codes.Internal, "failed to generate token")
+		return "", "", 0, status.Error(codes.Internal, "failed to generate token")
 	}
 
-	// refreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-	// 	UserID:    user.Id,
-	// 	Email:     user.Email,
-	// 	Algorithm: algorithm,
-	// })
-	// if err != nil {
-	// 	s.log.Errorf("failed to sign refresh token: %v", err)
-	// 	return "", "", status.Error(codes.Internal, "failed to generate token")
-	// }
-
-	return accessToken, "", nil
+	return accessToken, "", signTimeMs, nil
 }
 
 func (s *AuthService) Verify(ctx context.Context, token string) error {
@@ -83,30 +80,3 @@ func (s *AuthService) Verify(ctx context.Context, token string) error {
 	}
 	return nil
 }
-
-// func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
-// 	claims, err := s.jwtUtil.Parse(refreshToken)
-// 	if err != nil {
-// 		return "", "", status.Error(codes.Unauthenticated, "invalid refresh token")
-// 	}
-
-// 	accessToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-// 		UserID: claims.UserID,
-// 		Email:  claims.Email,
-// 	})
-// 	if err != nil {
-// 		s.log.Errorf("failed to sign access token: %v", err)
-// 		return "", "", status.Error(codes.Internal, "failed to generate token")
-// 	}
-
-// 	newRefreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
-// 		UserID: claims.UserID,
-// 		Email:  claims.Email,
-// 	})
-// 	if err != nil {
-// 		s.log.Errorf("failed to sign refresh token: %v", err)
-// 		return "", "", status.Error(codes.Internal, "failed to generate token")
-// 	}
-
-// 	return accessToken, newRefreshToken, nil
-// }

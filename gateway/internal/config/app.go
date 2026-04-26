@@ -82,14 +82,16 @@ func Bootstrap(config *BootstrapConfig) {
 	authHandler := handler.NewAuthHandler(config.Log, authClient)
 	userHandler := handler.NewUserHandler(config.Log, userClient)
 	taskHandler := handler.NewTaskHandler(config.Log, taskClient)
+	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, authClient)
 
 	routeConfig := &route.RouteConfig{
-		App:            config.App,
-		Log:            config.Log,
-		AuthHandler:    authHandler,
-		UserHandler:    userHandler,
-		TaskHandler:    taskHandler,
-		AuthMiddleware: authMiddleware,
+		App:              config.App,
+		Log:              config.Log,
+		AuthHandler:      authHandler,
+		UserHandler:      userHandler,
+		TaskHandler:      taskHandler,
+		BenchmarkHandler: benchmarkHandler,
+		AuthMiddleware:   authMiddleware,
 	}
 
 	routeConfig.Setup()

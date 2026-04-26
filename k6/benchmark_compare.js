@@ -114,6 +114,21 @@ const DISPLAY_ENDPOINT = isMultiGateway
 // Custom Metrics
 // ═══════════════════════════════════════════════════════════════
 
+// ── Primary ─────────────────────────────────────────────────────
+// signing_latency_dirty  : full k6 round-trip (network + queuing + server)
+// signing_latency_clean  : k6 timings.waiting — server processing approx (excludes conn setup)
+// signing_latency_network: dirty - clean — pure network+connection overhead
+// signing_latency_actual : X-Sign-Time-Ms header — pure PQC signing op measured server-side
+const signingLatencyDirty   = new Trend("signing_latency_dirty",   true);
+const signingLatencyClean   = new Trend("signing_latency_clean",   true);
+const signingLatencyNetwork = new Trend("signing_latency_network", true);
+const signingLatencyActual  = new Trend("signing_latency_actual",  true);
+
+// Auth-specific throughput counters (sign-in only, excludes CRUD/verification)
+const authReqSuccess = new Counter("auth_req_success");
+const authReqFailed  = new Counter("auth_req_failed");
+
+// ── Legacy / Secondary (kept for backwards-compat) ───────────────
 const tokenGenTime = new Trend("token_gen_time", true);
 const tokenVerTime = new Trend("token_ver_time", true);
 const respDuration = new Trend("resp_duration", true);
@@ -183,13 +198,20 @@ for (const alg of ALGORITHMS) {
   // solely to force k6 to create {alg,vus} entries so handleSummary can read them.
   for (const vus of CONCURRENCY_LEVELS) {
     const tv = `{alg:${alg.name},vus:${vus}}`;
-    thresholds[`token_gen_time${tv}`] = [`p(95)<9999999`];
-    thresholds[`token_ver_time${tv}`] = [`p(95)<9999999`];
-    thresholds[`resp_duration${tv}`] = [`p(95)<9999999`];
-    thresholds[`resp_body_size${tv}`] = [`p(95)<9999999`];
-    thresholds[`req_header_size${tv}`] = [`p(95)<9999999`];
-    thresholds[`req_success${tv}`] = [`count>=0`];
-    thresholds[`req_failed${tv}`] = [`count>=0`];
+    thresholds[`token_gen_time${tv}`]         = [`p(95)<9999999`];
+    thresholds[`token_ver_time${tv}`]         = [`p(95)<9999999`];
+    thresholds[`resp_duration${tv}`]          = [`p(95)<9999999`];
+    thresholds[`resp_body_size${tv}`]         = [`p(95)<9999999`];
+    thresholds[`req_header_size${tv}`]        = [`p(95)<9999999`];
+    thresholds[`req_success${tv}`]            = [`count>=0`];
+    thresholds[`req_failed${tv}`]             = [`count>=0`];
+    // New latency-decomposition metrics
+    thresholds[`signing_latency_dirty${tv}`]   = [`p(95)<9999999`];
+    thresholds[`signing_latency_clean${tv}`]   = [`p(95)<9999999`];
+    thresholds[`signing_latency_network${tv}`] = [`p(95)<9999999`];
+    thresholds[`signing_latency_actual${tv}`]  = [`p(95)<9999999`];
+    thresholds[`auth_req_success${tv}`]        = [`count>=0`];
+    thresholds[`auth_req_failed${tv}`]         = [`count>=0`];
   }
   // Attack rate only at the highest VU level
   const attackVus = CONCURRENCY_LEVELS[CONCURRENCY_LEVELS.length - 1];
@@ -346,8 +368,28 @@ export function benchmark(data) {
       headers: jsonHdr,
     });
 
-    tokenGenTime.add(res.timings.duration, tags);
-    respDuration.add(res.timings.duration, tags);
+    // ── Primary: Signing Latency Decomposition ────────────────
+    // dirty  = full k6 round-trip (network + server processing)
+    // clean  = timings.waiting = time-to-first-byte after send (server processing approx)
+    // network= dirty - clean = connection setup + send + receive overhead
+    // actual = X-Sign-Time-Ms header = pure PQC signing op measured server-side
+    const dirty   = res.timings.duration;
+    const clean   = res.timings.waiting;
+    const network = dirty - clean;
+
+    signingLatencyDirty.add(dirty,   tags);
+    signingLatencyClean.add(clean,   tags);
+    signingLatencyNetwork.add(network, tags);
+
+    const signTimeHdr = res.headers["X-Sign-Time-Ms"] || res.headers["x-sign-time-ms"];
+    if (signTimeHdr) {
+      const actual = parseFloat(signTimeHdr);
+      if (!isNaN(actual)) signingLatencyActual.add(actual, tags);
+    }
+
+    // ── Legacy metrics (kept for backwards compat) ────────────
+    tokenGenTime.add(dirty, tags);
+    respDuration.add(dirty, tags);
     respBodySize.add(res.body.length, tags);
     reqHeaderSize.add(estimateHeaderSize(jsonHdr), tags);
 
@@ -362,12 +404,12 @@ export function benchmark(data) {
       },
     });
     ok ? reqSuccess.add(1, tags) : reqFailed.add(1, tags);
+    ok ? authReqSuccess.add(1, tags) : authReqFailed.add(1, tags);
 
     if (res.status === 200) {
       try {
         const b = JSON.parse(res.body);
         _vuToken = b.data.access_token;
-        // _vuRefreshToken = b.data.refresh_token;
       } catch (_) {}
     }
   });
@@ -655,7 +697,7 @@ export function handleSummary(data) {
       : str + " ".repeat(w - str.length);
   }
 
-  // Throughput = (req_success + req_failed) / scenario duration (req/s)
+  // Total request throughput (all endpoints)
   function getThroughput(algName, vuCount) {
     const sk = `req_success{alg:${algName},vus:${vuCount}}`;
     const fk = `req_failed{alg:${algName},vus:${vuCount}}`;
@@ -668,8 +710,22 @@ export function handleSummary(data) {
     return (total / dur).toFixed(2);
   }
 
-  // [Algorithm, VUs, GenAvg, Genp95, VerAvg, Verp95, RespAvg, Respp95, BodyAvg, HdrAvg, Throughput, Attack]
-  const W = [26, 6, 10, 10, 10, 10, 10, 10, 10, 10, 12, 9];
+  // Auth-only throughput (sign-in requests per second)
+  function getAuthThroughput(algName, vuCount) {
+    const sk = `auth_req_success{alg:${algName},vus:${vuCount}}`;
+    const fk = `auth_req_failed{alg:${algName},vus:${vuCount}}`;
+    const sc = (m[sk] && m[sk].values.count) || 0;
+    const fc = (m[fk] && m[fk].values.count) || 0;
+    const total = sc + fc;
+    if (total === 0) return "—";
+    const algDef = ALGORITHMS.find((a) => a.name === algName);
+    const dur = (algDef && algDef.scenarioDuration) || SCENARIO_DURATION_S;
+    return (total / dur).toFixed(2);
+  }
+
+  // ── Table 1: Primary + Secondary Metrics ───────────────────
+  // [Algorithm, VUs, GenAvg, Genp95, VerAvg, Verp95, RespAvg, Respp95, AuthRPS, TotalRPS, Attack]
+  const W = [26, 6, 10, 10, 10, 10, 10, 10, 10, 10, 9];
 
   const hdr = [
     pad("Algorithm", W[0]),
@@ -680,10 +736,9 @@ export function handleSummary(data) {
     pad("Ver p95", W[5]),
     pad("Resp avg", W[6]),
     pad("Resp p95", W[7]),
-    pad("Body avg", W[8]),
-    pad("Hdr avg", W[9]),
-    pad("Throughput", W[10]),
-    pad("Attack", W[11]),
+    pad("AuthRPS", W[8]),
+    pad("TotalRPS", W[9]),
+    pad("Attack", W[10]),
   ].join("");
 
   const unit = [
@@ -695,20 +750,49 @@ export function handleSummary(data) {
     pad("(ms)", W[5]),
     pad("(ms)", W[6]),
     pad("(ms)", W[7]),
-    pad("(B)", W[8]),
-    pad("(B)", W[9]),
-    pad("(req/s)", W[10]),
-    pad("Blocked", W[11]),
+    pad("(req/s)", W[8]),
+    pad("(req/s)", W[9]),
+    pad("Blocked", W[10]),
   ].join("");
 
-  let pqcRows = "",
-    classicRows = "";
+  // ── Table 2: Signing Latency Decomposition ──────────────────
+  // dirty=full k6 round-trip | clean=server processing (timings.waiting)
+  // network=dirty-clean | actual=X-Sign-Time-Ms (pure PQC signing op)
+  const WL = [26, 6, 10, 10, 10, 10, 10, 10, 10, 10];
+
+  const hdrL = [
+    pad("Algorithm", WL[0]),
+    pad("VUs", WL[1]),
+    pad("Dirty avg", WL[2]),
+    pad("Dirty p95", WL[3]),
+    pad("Clean avg", WL[4]),
+    pad("Clean p95", WL[5]),
+    pad("Net avg",   WL[6]),
+    pad("Net p95",   WL[7]),
+    pad("Actual avg",WL[8]),
+    pad("Actual p95",WL[9]),
+  ].join("");
+
+  const unitL = [
+    pad("", WL[0]),
+    pad("", WL[1]),
+    pad("(ms)", WL[2]),
+    pad("(ms)", WL[3]),
+    pad("(ms)", WL[4]),
+    pad("(ms)", WL[5]),
+    pad("(ms)", WL[6]),
+    pad("(ms)", WL[7]),
+    pad("(ms)", WL[8]),
+    pad("(ms)", WL[9]),
+  ].join("");
+
+  let pqcRows = "", classicRows = "";
+  let pqcRowsL = "", classicRowsL = "";
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
     for (let i = 0; i < CONCURRENCY_LEVELS.length; i++) {
       const vus = String(CONCURRENCY_LEVELS[i]);
-      // Tampilkan nama algoritma hanya di baris pertama (level 100 VU)
       const label = i === 0 ? n : "";
 
       const row =
@@ -721,50 +805,85 @@ export function handleSummary(data) {
           pad(getVal("token_ver_time", n, vus, "p(95)"), W[5]),
           pad(getVal("resp_duration", n, vus, "avg"), W[6]),
           pad(getVal("resp_duration", n, vus, "p(95)"), W[7]),
-          pad(getVal("resp_body_size", n, vus, "avg"), W[8]),
-          pad(getVal("req_header_size", n, vus, "avg"), W[9]),
-          pad(getThroughput(n, vus), W[10]),
-          pad(i === 0 ? getAttack(n) : "", W[11]),
+          pad(getAuthThroughput(n, vus), W[8]),
+          pad(getThroughput(n, vus), W[9]),
+          pad(i === 0 ? getAttack(n) : "", W[10]),
         ].join("") + "\n";
 
-      alg.category === "PQC" ? (pqcRows += row) : (classicRows += row);
+      const rowL =
+        [
+          pad(label, WL[0]),
+          pad(vus, WL[1]),
+          pad(getVal("signing_latency_dirty",   n, vus, "avg"),   WL[2]),
+          pad(getVal("signing_latency_dirty",   n, vus, "p(95)"), WL[3]),
+          pad(getVal("signing_latency_clean",   n, vus, "avg"),   WL[4]),
+          pad(getVal("signing_latency_clean",   n, vus, "p(95)"), WL[5]),
+          pad(getVal("signing_latency_network", n, vus, "avg"),   WL[6]),
+          pad(getVal("signing_latency_network", n, vus, "p(95)"), WL[7]),
+          pad(getVal("signing_latency_actual",  n, vus, "avg"),   WL[8]),
+          pad(getVal("signing_latency_actual",  n, vus, "p(95)"), WL[9]),
+        ].join("") + "\n";
+
+      alg.category === "PQC" ? (pqcRows  += row)  : (classicRows  += row);
+      alg.category === "PQC" ? (pqcRowsL += rowL) : (classicRowsL += rowL);
     }
-    // Baris pemisah antar algoritma
-    const separator =
+    const sep1 =
       pad("", W[0] + W[1]) +
-      "─".repeat(W.slice(2).reduce((a, b) => a + b, 0)) +
-      "\n";
-    alg.category === "PQC"
-      ? (pqcRows += separator)
-      : (classicRows += separator);
+      "─".repeat(W.slice(2).reduce((a, b) => a + b, 0)) + "\n";
+    const sep2 =
+      pad("", WL[0] + WL[1]) +
+      "─".repeat(WL.slice(2).reduce((a, b) => a + b, 0)) + "\n";
+    alg.category === "PQC" ? (pqcRows  += sep1) : (classicRows  += sep1);
+    alg.category === "PQC" ? (pqcRowsL += sep2) : (classicRowsL += sep2);
   }
 
   const totalScenarios = ALGORITHMS.length * CONCURRENCY_LEVELS.length;
+  const SEP = "═".repeat(116);
+  const LINE = "─".repeat(116);
+
   const table = `
-${sep}
+${SEP}
   JWT ALGORITHM PERFORMANCE COMPARISON  —  Concurrent Users: ${CONCURRENCY_LEVELS.join(" / ")} VU
   Endpoint  : ${DISPLAY_ENDPOINT}
   Skenario  : ${totalScenarios} (${ALGORITHMS.length} algoritma × ${CONCURRENCY_LEVELS.length} level VU)
   Durasi    : ${SCENARIO_DURATION_S}s sustain per skenario
   Attack    = diukur hanya pada level ${CONCURRENCY_LEVELS[CONCURRENCY_LEVELS.length - 1]} VU
-${sep}
+${SEP}
+  ── TABLE 1: PRIMARY + SECONDARY METRICS ──
   ${hdr}
   ${unit}
-  ${line}
+  ${LINE}
   [ PQC Algorithms ]
   ${pqcRows.trimEnd().split("\n").join("\n  ")}
-  ${line}
+  ${LINE}
   [ Classical Algorithms ]
   ${classicRows.trimEnd().split("\n").join("\n  ") || "(tidak ada)"}
-${sep}
-  GenTime    = Token Generation Time (sign-in), avg & p95
-  VerTime    = Token Verification Time (middleware gateway), avg & p95
-  Resp       = Total response duration semua endpoint, avg & p95
-  Body       = Ukuran response body rata-rata (bytes)
-  Hdr        = Ukuran request header rata-rata (bytes, mencerminkan ukuran JWT)
-  Throughput = Total requests / scenario duration (req/s), termasuk semua endpoint
-  Attack     = JWT Confusion Attack block rate (100.0% = semua serangan ditolak)
-${sep}
+
+  ── TABLE 2: SIGNING LATENCY DECOMPOSITION (clean vs dirty) ──
+  ${hdrL}
+  ${unitL}
+  ${LINE}
+  [ PQC Algorithms ]
+  ${pqcRowsL.trimEnd().split("\n").join("\n  ")}
+  ${LINE}
+  [ Classical Algorithms ]
+  ${classicRowsL.trimEnd().split("\n").join("\n  ") || "(tidak ada)"}
+${SEP}
+  TABLE 1 LEGEND
+  GenTime    = Token Generation Time (sign-in full round-trip), avg & p95
+  VerTime    = Token Verification Time (profile/middleware), avg & p95
+  Resp       = Total response duration all endpoints, avg & p95
+  AuthRPS    = Auth sign-in requests per second (authentication throughput)
+  TotalRPS   = All requests / scenario duration (req/s)
+  Attack     = JWT Confusion Attack block rate (100.0% = all attacks rejected)
+
+  TABLE 2 LEGEND
+  Dirty      = Full k6 client round-trip (network + queuing + server)  → "dirty" latency
+  Clean      = timings.waiting: time-to-first-byte after send (server processing approx)
+  Network    = Dirty − Clean: connection setup + send + receive overhead
+  Actual     = X-Sign-Time-Ms header: pure PQC signing op measured server-side → "clean" latency
+               (requires auth-service to set gRPC trailer x-sign-time-ms)
+${SEP}
 `;
 
   return {

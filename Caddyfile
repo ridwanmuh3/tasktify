@@ -1,21 +1,38 @@
+# Global server options
+# SLH-DSA-SHA2-128f produces ~22.5 KB Authorization headers.
+# Set max_header_size to 64 KB — matches the ReadBufferSize configured in the gateway.
+{
+	servers {
+		max_header_size 64KB
+	}
+}
+
 poc-ridwanmuh3.my.id {
-	# Reverse proxy to gateway
-	reverse_proxy gateway:3000
+	reverse_proxy gateway:3000 {
+		# Pass real client IP for logging and rate-limit tracking
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+
+		# Flush response chunks immediately — required for the /api/benchmark/sign
+		# endpoint which holds an open connection for the duration of N signing
+		# iterations (can be several minutes for SLH-DSA-SHA2-128s).
+		flush_interval -1
+
+		transport http {
+			# Keep-alive between Caddy and gateway
+			keepalive 30s
+			keepalive_idle_conns 10
+		}
+	}
 
 	# Security headers
 	header {
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
-		X-XSS-Protection "1; mode=block"
-		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Content-Type-Options  "nosniff"
+		X-Frame-Options         "DENY"
+		X-XSS-Protection        "1; mode=block"
+		Referrer-Policy         "strict-origin-when-cross-origin"
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 		-Server
-	}
-
-	# Rate limiting (basic)
-	@api path /api/*
-	handle @api {
-		reverse_proxy gateway:3000
 	}
 
 	# Logging

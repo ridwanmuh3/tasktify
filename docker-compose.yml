@@ -16,7 +16,8 @@ services:
       - caddy_config:/config
       - caddy_logs:/data/logs
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
     networks:
       - frontend
 
@@ -57,22 +58,37 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SSL_MODE: disable
-      DB_POOL_IDLE: 10
+      # Increase idle pool to sustain 50-VU concurrent sign-in requests
+      DB_POOL_IDLE: 25
       DB_MAX_POOL: 100
       DB_MAX_LIFETIME: 300
       APP_NAME: auth-service
       APP_MODE: production
       GRPC_PORT: 3001
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      # All 5 PQC algorithms enabled — keys loaded from KEYS_DIR at startup.
+      # Run `make keygen` first to populate auth-service/keys/.
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,ML-DSA-44,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s
+      KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
-      JWT_PRIVATE_KEY_PATH: /app/keys/falcon512_sk.pem
-      JWT_PUBLIC_KEY_PATH: /app/keys/falcon512_vk.pem
       JWT_TOKEN_DURATION: 60
     volumes:
-      - ./auth-service/keys:/app/keys
+      - ./auth-service/keys:/app/keys:ro
     depends_on:
       postgres:
         condition: service_healthy
+    # TCP probe — checks gRPC port is listening before gateway starts.
+    # busybox nc is available in Alpine-based images.
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3001 2>/dev/null && exit 0 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
       - backend
 
@@ -92,7 +108,7 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_SSL_MODE: disable
-      DB_POOL_IDLE: 10
+      DB_POOL_IDLE: 25
       DB_MAX_POOL: 100
       DB_MAX_LIFETIME: 300
       APP_NAME: todo-service
@@ -101,6 +117,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3002 2>/dev/null && exit 0 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
       - backend
 
@@ -114,7 +140,7 @@ services:
     container_name: tasktify-gateway
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
       APP_NAME: gateway
       APP_PREFORK: "false"
@@ -122,15 +148,32 @@ services:
       APP_MODE: production
       AUTH_SERVICE_ADDR: auth-service:3001
       TODO_SERVICE_ADDR: todo-service:3002
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      # Must match auth-service JWT_ALLOWED_ALGS exactly
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,ML-DSA-44,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s
+      KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
-      JWT_PUBLIC_KEY_PATH: /app/keys/falcon512_vk.pem
       JWT_TOKEN_DURATION: 60
+    # Gateway shares the same public-key files as auth-service (verify-only, read-only).
+    # auth-service/keys is populated by `make keygen`.
     volumes:
-      - ./gateway/keys:/app/keys
+      - ./auth-service/keys:/app/keys:ro
     depends_on:
-      - auth-service
-      - todo-service
+      auth-service:
+        condition: service_healthy
+      todo-service:
+        condition: service_healthy
+    # Overrides Dockerfile HEALTHCHECK — shorter interval for faster startup detection.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
       - frontend
       - backend

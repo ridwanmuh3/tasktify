@@ -1,0 +1,810 @@
+openapi: 3.1.0
+
+info:
+  title: Tasktify API
+  version: 1.0.0
+  description: |
+    Task management API with Post-Quantum Cryptography (PQC) JWT authentication.
+    Supports multiple signing algorithms: Falcon-512, ML-DSA (44/65/87), SLH-DSA,
+    and classical algorithms (ES256, RS256, HS256, EdDSA).
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Profile
+    description: User profile
+  - name: Tasks
+    description: Task management (CRUD)
+  - name: Benchmark
+    description: PQC algorithm latency benchmarks (research use)
+  - name: Health
+    description: Service health
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+              example:
+                status: 200
+                message: ok
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              name: John Doe
+              email: john@example.com
+              password: secret123
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+              example:
+                status: 201
+                message: user registered successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/auth/signin:
+    post:
+      tags: [Auth]
+      summary: Sign in and receive JWT
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+            example:
+              email: john@example.com
+              password: secret123
+              algorithm: Falcon-512
+      responses:
+        "200":
+          description: Sign in successful
+          headers:
+            X-Sign-Time-Ms:
+              description: Pure cryptographic signing duration in milliseconds
+              schema:
+                type: number
+                format: float
+              example: 2.45
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/AuthData"
+              example:
+                status: 200
+                message: sign in successful
+                data:
+                  token_type: Bearer
+                  access_token: eyJhbGciOiJGYWxjb24tNTEyIn0...
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/profile:
+    get:
+      tags: [Profile]
+      summary: Get authenticated user profile
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/User"
+              example:
+                status: 200
+                data:
+                  id: 550e8400-e29b-41d4-a716-446655440000
+                  name: John Doe
+                  email: john@example.com
+                  created_at: 1714204800000
+                  updated_at: 1714204800000
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/tasks:
+    post:
+      tags: [Tasks]
+      summary: Create task
+      operationId: createTask
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+            example:
+              title: Implement PQC benchmark
+              description: Run Falcon-512 vs ML-DSA comparison
+              status: pending
+              due_date: 1714291200000
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+              example:
+                status: 201
+                message: task created successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    get:
+      tags: [Tasks]
+      summary: List all tasks for authenticated user
+      operationId: getTasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Task list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Response"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Task"
+                      paging:
+                        $ref: "#/components/schemas/PageMetadata"
+              example:
+                status: 200
+                data:
+                  - id: 550e8400-e29b-41d4-a716-446655440001
+                    user_id: 550e8400-e29b-41d4-a716-446655440000
+                    title: Implement PQC benchmark
+                    description: Run Falcon-512 vs ML-DSA comparison
+                    status: pending
+                    due_date: 1714291200000
+                    created_at: 1714204800000
+                    updated_at: 1714204800000
+                paging:
+                  page: 1
+                  size: 10
+                  total_item: 1
+                  total_page: 1
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/tasks/{id}:
+    get:
+      tags: [Tasks]
+      summary: Get task by ID
+      operationId: getTaskById
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Task detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/Task"
+              example:
+                status: 200
+                data:
+                  id: 550e8400-e29b-41d4-a716-446655440001
+                  user_id: 550e8400-e29b-41d4-a716-446655440000
+                  title: Implement PQC benchmark
+                  description: Run Falcon-512 vs ML-DSA comparison
+                  status: pending
+                  due_date: 1714291200000
+                  created_at: 1714204800000
+                  updated_at: 1714204800000
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [Tasks]
+      summary: Update task
+      operationId: updateTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+            example:
+              title: Implement PQC benchmark
+              description: Run Falcon-512 vs ML-DSA comparison
+              status: in_progress
+              due_date: 1714291200000
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+              example:
+                status: 200
+                message: task updated successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [Tasks]
+      summary: Delete task
+      operationId: deleteTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+              example:
+                status: 200
+                message: task deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/benchmark/sign:
+    post:
+      tags: [Benchmark]
+      summary: Benchmark PQC signing latency
+      description: |
+        Runs N sequential sign-in calls and collects two latency series:
+        - **sign_timings_ms**: pure cryptographic signing time (via gRPC trailer `x-sign-time-ms`)
+        - **total_timings_ms**: full gRPC round-trip including network and serialization
+
+        The difference between the two isolates network + serialization overhead.
+        Designed for research comparison of PQC algorithms.
+      operationId: benchmarkSign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenchmarkSignRequest"
+            example:
+              algorithm: Falcon-512
+              iterations: 100
+              email: bench@example.com
+              password: secret123
+              payload_note: falcon-baseline-run-1
+      responses:
+        "200":
+          description: Benchmark results
+          headers:
+            X-Bench-Sign-P95-Ms:
+              description: 95th percentile pure signing latency (ms)
+              schema:
+                type: number
+                format: float
+            X-Bench-Total-P95-Ms:
+              description: 95th percentile full round-trip latency (ms)
+              schema:
+                type: number
+                format: float
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/BenchmarkSignResult"
+              example:
+                status: 200
+                data:
+                  algorithm: Falcon-512
+                  iterations: 100
+                  success_count: 100
+                  payload_note: falcon-baseline-run-1
+                  sign_timings_ms: [2.1, 1.9, 2.3]
+                  total_timings_ms: [5.4, 4.8, 5.1]
+                  stats:
+                    sign:
+                      min: 1.9
+                      max: 2.3
+                      avg: 2.1
+                      p50: 2.1
+                      p95: 2.3
+                      p99: 2.3
+                      stdev: 0.12
+                      sum: 210.0
+                    total:
+                      min: 4.8
+                      max: 5.4
+                      avg: 5.1
+                      p50: 5.1
+                      p95: 5.4
+                      p99: 5.4
+                      stdev: 0.23
+                      sum: 510.0
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        PQC-signed JWT token obtained from `POST /api/auth/signin`.
+        Token header contains the algorithm identifier (e.g. `Falcon-512`, `ML-DSA-44`).
+
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Task UUID
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      description: Items per page
+
+  responses:
+    BadRequest:
+      description: Invalid request body or parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 400
+            message: validation error
+            error:
+              - field: email
+                message: must be a valid email address
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 401
+            message: unauthorized
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 404
+            message: task not found
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 409
+            message: email already registered
+
+  schemas:
+    Response:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: success
+        data:
+          description: Response payload (type varies by endpoint)
+        paging:
+          $ref: "#/components/schemas/PageMetadata"
+        error:
+          description: Error details (present only on failure)
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        error:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+    PageMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        size:
+          type: integer
+          example: 10
+        total_item:
+          type: integer
+          format: int64
+          example: 42
+        total_page:
+          type: integer
+          format: int64
+          example: 5
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          minLength: 6
+          example: secret123
+
+    SignInRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          example: secret123
+        algorithm:
+          type: string
+          description: Override signing algorithm. Defaults to service-configured algorithm.
+          enum:
+            - Falcon-512
+            - Falcon-Precomputed-512
+            - ML-DSA-44
+            - ML-DSA-65
+            - ML-DSA-87
+            - SLH-DSA-SHA2-128s
+            - SLH-DSA-SHA2-128f
+            - SLH-DSA-SHAKE-128s
+            - SLH-DSA-SHAKE-128f
+            - ES256
+            - RS256
+            - HS256
+            - EdDSA
+          example: Falcon-512
+
+    AuthData:
+      type: object
+      properties:
+        token_type:
+          type: string
+          enum: [Bearer]
+          example: Bearer
+        access_token:
+          type: string
+          description: PQC-signed JWT token
+          example: eyJhbGciOiJGYWxjb24tNTEyIn0...
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds
+          example: 1714204800000
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds
+          example: 1714204800000
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440001
+        user_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Implement PQC benchmark
+        description:
+          type: string
+          example: Run Falcon-512 vs ML-DSA comparison
+        status:
+          $ref: "#/components/schemas/TaskStatus"
+        due_date:
+          type: [integer, "null"]
+          format: int64
+          description: Unix timestamp in milliseconds. Null if not set.
+          example: 1714291200000
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds
+          example: 1714204800000
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp in milliseconds
+          example: 1714204800000
+
+    TaskStatus:
+      type: string
+      enum:
+        - pending
+        - in_progress
+        - completed
+      example: pending
+
+    CreateTaskRequest:
+      type: object
+      required: [title, status]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          example: Implement PQC benchmark
+        description:
+          type: string
+          example: Run Falcon-512 vs ML-DSA comparison
+        status:
+          $ref: "#/components/schemas/TaskStatus"
+        due_date:
+          type: [integer, "null"]
+          format: int64
+          description: Unix timestamp in milliseconds. Optional.
+          example: 1714291200000
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          example: Implement PQC benchmark
+        description:
+          type: string
+          example: Run Falcon-512 vs ML-DSA comparison
+        status:
+          $ref: "#/components/schemas/TaskStatus"
+        due_date:
+          type: [integer, "null"]
+          format: int64
+          description: Unix timestamp in milliseconds. Optional.
+          example: 1714291200000
+
+    BenchmarkSignRequest:
+      type: object
+      required: [algorithm, iterations, email, password]
+      properties:
+        algorithm:
+          type: string
+          description: PQC or classical algorithm to benchmark
+          enum:
+            - Falcon-512
+            - Falcon-Precomputed-512
+            - ML-DSA-44
+            - ML-DSA-65
+            - ML-DSA-87
+            - SLH-DSA-SHA2-128s
+            - SLH-DSA-SHA2-128f
+            - SLH-DSA-SHAKE-128s
+            - SLH-DSA-SHAKE-128f
+            - ES256
+            - RS256
+            - HS256
+            - EdDSA
+          example: Falcon-512
+        iterations:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Number of sequential sign-in calls to execute
+          example: 100
+        email:
+          type: string
+          format: email
+          description: Benchmark user credentials
+          example: bench@example.com
+        password:
+          type: string
+          example: secret123
+        payload_note:
+          type: string
+          description: Metadata label for experiment traceability
+          example: falcon-baseline-run-1
+
+    BenchmarkSignResult:
+      type: object
+      properties:
+        algorithm:
+          type: string
+          example: Falcon-512
+        iterations:
+          type: integer
+          example: 100
+        success_count:
+          type: integer
+          description: Number of iterations that completed without error
+          example: 100
+        payload_note:
+          type: string
+          example: falcon-baseline-run-1
+        sign_timings_ms:
+          type: array
+          items:
+            type: number
+            format: float
+          description: Pure cryptographic signing duration per iteration (ms)
+          example: [2.1, 1.9, 2.3]
+        total_timings_ms:
+          type: array
+          items:
+            type: number
+            format: float
+          description: Full gRPC round-trip duration per iteration (ms)
+          example: [5.4, 4.8, 5.1]
+        stats:
+          type: object
+          properties:
+            sign:
+              $ref: "#/components/schemas/LatencyStats"
+            total:
+              $ref: "#/components/schemas/LatencyStats"
+
+    LatencyStats:
+      type: object
+      description: Descriptive statistics for a latency series
+      properties:
+        min:
+          type: number
+          format: float
+          example: 1.9
+        max:
+          type: number
+          format: float
+          example: 2.3
+        avg:
+          type: number
+          format: float
+          example: 2.1
+        p50:
+          type: number
+          format: float
+          example: 2.1
+        p95:
+          type: number
+          format: float
+          example: 2.3
+        p99:
+          type: number
+          format: float
+          example: 2.3
+        stdev:
+          type: number
+          format: float
+          example: 0.12
+        sum:
+          type: number
+          format: float
+          example: 210.0

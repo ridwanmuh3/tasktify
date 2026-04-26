@@ -2,8 +2,11 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"auth-service/internal/model"
@@ -24,10 +27,14 @@ func NewAuthServer(log *zap.SugaredLogger, authService *service.AuthService) *Au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (*model.AuthResponse, error) {
-	accessToken, refreshToken, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
+	accessToken, refreshToken, signTimeMs, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
 	if err != nil {
 		return nil, err
 	}
+
+	// Expose pure signing latency as gRPC trailer so the gateway can forward
+	// it as X-Sign-Time-Ms response header for k6 to capture as clean latency.
+	grpc.SetTrailer(ctx, metadata.Pairs("x-sign-time-ms", fmt.Sprintf("%.3f", signTimeMs)))
 
 	return &model.AuthResponse{
 		Auth: &model.Auth{
@@ -37,21 +44,6 @@ func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (
 		},
 	}, nil
 }
-
-// func (s *AuthServer) RefreshToken(ctx context.Context, request *model.RefreshTokenRequest) (*model.AuthResponse, error) {
-// 	accessToken, refreshToken, err := s.authService.RefreshToken(ctx, request.RefreshToken)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &model.AuthResponse{
-// 		Auth: &model.Auth{
-// 			TokenType:    "Bearer",
-// 			AccessToken:  accessToken,
-// 			RefreshToken: refreshToken,
-// 		},
-// 	}, nil
-// }
 
 func (s *AuthServer) Verify(ctx context.Context, request *model.VerifyRequest) (*emptypb.Empty, error) {
 	if err := s.authService.Verify(ctx, request.Token); err != nil {

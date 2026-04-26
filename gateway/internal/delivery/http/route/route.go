@@ -9,17 +9,23 @@ import (
 )
 
 type RouteConfig struct {
-	App            *fiber.App
-	Log            *zap.SugaredLogger
-	AuthHandler    *handler.AuthHandler
-	UserHandler    *handler.UserHandler
-	TaskHandler    *handler.TaskHandler
-	AuthMiddleware *middleware.AuthMiddleware
+	App               *fiber.App
+	Log               *zap.SugaredLogger
+	AuthHandler       *handler.AuthHandler
+	UserHandler       *handler.UserHandler
+	TaskHandler       *handler.TaskHandler
+	BenchmarkHandler  *handler.BenchmarkHandler
+	AuthMiddleware    *middleware.AuthMiddleware
 }
 
 func (c *RouteConfig) Setup() {
 	c.App.Get("/", func(ctx fiber.Ctx) error {
 		return ctx.SendString("API OK")
+	})
+
+	// Docker HEALTHCHECK and load-balancer probe endpoint
+	c.App.Get("/health", func(ctx fiber.Ctx) error {
+		return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "ok"})
 	})
 
 	// define group
@@ -44,4 +50,8 @@ func (c *RouteConfig) Setup() {
 	tasks.Get("/:id", c.TaskHandler.GetById)
 	tasks.Put("/:id", c.TaskHandler.Update)
 	tasks.Delete("/:id", c.TaskHandler.Delete)
+
+	// Academic benchmark — isolated signing-latency experiment (public, no auth required)
+	bench := api.Group("/benchmark")
+	bench.Post("/sign", c.BenchmarkHandler.SignLatency)
 }
