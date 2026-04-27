@@ -37,21 +37,18 @@ func (c *RouteConfig) Setup() {
 	// auth.Post("/refresh", c.AuthHandler.RefreshToken)
 	auth.Post("/register", c.UserHandler.Register)
 
-	// Protected routes - Verifikasi Signature PQC Falcon di middleware
-	protected := api.Group("/", c.AuthMiddleware.Handle)
+	// Protected: /profile — PQC signature verified in middleware
+	api.Get("/profile", c.AuthMiddleware.Handle, c.UserHandler.GetProfile)
 
-	// User profile
-	protected.Get("/profile", c.UserHandler.GetProfile)
-
-	// Task CRUD - Forward ke Resource Service dengan X-User-ID
-	tasks := protected.Group("/tasks")
+	// Protected: /tasks — Forward ke Resource Service dengan X-User-ID
+	tasks := api.Group("/tasks", c.AuthMiddleware.Handle)
 	tasks.Post("/", c.TaskHandler.Create)
 	tasks.Get("/", c.TaskHandler.GetAll)
 	tasks.Get("/:id", c.TaskHandler.GetById)
 	tasks.Put("/:id", c.TaskHandler.Update)
 	tasks.Delete("/:id", c.TaskHandler.Delete)
 
-	// Academic benchmark — isolated signing-latency experiment (public, no auth required)
+	// Public: academic benchmark — isolated signing-latency experiment, no auth required
 	bench := api.Group("/benchmark")
 	bench.Post("/sign", c.BenchmarkHandler.SignLatency)
 }
