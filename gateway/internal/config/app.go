@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/spf13/viper"
@@ -53,7 +55,16 @@ func Bootstrap(config *BootstrapConfig) {
 	// Determine which algorithms to load.
 	// JWT_ALLOWED_ALGS narrows the set (useful for benchmark gateways that only
 	// need to verify tokens from one algorithm). Falls back to full list.
-	algsToLoad := config.Config.GetStringSlice("JWT_ALLOWED_ALGS")
+	// GetStringSlice uses strings.Fields (whitespace split), not comma split —
+	// read as string and split manually for comma-separated env var values.
+	var algsToLoad []string
+	if raw := config.Config.GetString("JWT_ALLOWED_ALGS"); raw != "" {
+		for _, a := range strings.Split(raw, ",") {
+			if t := strings.TrimSpace(a); t != "" {
+				algsToLoad = append(algsToLoad, t)
+			}
+		}
+	}
 	if len(algsToLoad) == 0 {
 		algsToLoad = supportedAlgorithms
 	}
