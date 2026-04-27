@@ -68,7 +68,7 @@ services:
       # All 5 PQC algorithms enabled — keys loaded from KEYS_DIR at startup.
       # Run `make keygen` first to populate auth-service/keys/.
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,ML-DSA-44,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
@@ -80,7 +80,8 @@ services:
     # TCP probe — checks gRPC port is listening before gateway starts.
     # busybox nc is available in Alpine-based images.
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 3001 2>/dev/null && exit 0 || exit 1"]
+      test:
+        ["CMD-SHELL", "nc -z localhost 3001 2>/dev/null && exit 0 || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 15
@@ -118,7 +119,8 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 3002 2>/dev/null && exit 0 || exit 1"]
+      test:
+        ["CMD-SHELL", "nc -z localhost 3002 2>/dev/null && exit 0 || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 15
@@ -150,7 +152,7 @@ services:
       TODO_SERVICE_ADDR: todo-service:3002
       # Must match auth-service JWT_ALLOWED_ALGS exactly
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,ML-DSA-44,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
@@ -165,7 +167,11 @@ services:
         condition: service_healthy
     # Overrides Dockerfile HEALTHCHECK — shorter interval for faster startup detection.
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health 2>/dev/null || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:3000/health 2>/dev/null || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12

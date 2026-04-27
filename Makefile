@@ -53,7 +53,7 @@ logs-caddy:
 	$(COMPOSE) logs -f caddy
 
 # --- Production Deploy ---
-deploy: vendor
+deploy: vendor keygen
 	$(COMPOSE) up -d --build
 
 # --- Local Development ---
