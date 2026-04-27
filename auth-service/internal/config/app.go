@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 	"github.com/spf13/viper"
@@ -52,7 +54,11 @@ func Bootstrap(config *BootstrapConfig) {
 	// Determine which algorithms to load.
 	// JWT_ALLOWED_ALGS narrows the set (useful for benchmark services that only
 	// need one algorithm). Falls back to the full supportedAlgorithms list.
-	algsToLoad := config.Config.GetStringSlice("JWT_ALLOWED_ALGS")
+	// Use GetString+Split because viper AutomaticEnv doesn't split comma-separated env vars.
+	var algsToLoad []string
+	if raw := config.Config.GetString("JWT_ALLOWED_ALGS"); raw != "" {
+		algsToLoad = strings.Split(raw, ",")
+	}
 	if len(algsToLoad) == 0 {
 		algsToLoad = supportedAlgorithms
 	}
