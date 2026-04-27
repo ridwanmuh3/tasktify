@@ -18,6 +18,10 @@ services:
     depends_on:
       gateway:
         condition: service_healthy
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
       - frontend
 

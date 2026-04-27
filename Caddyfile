@@ -21,7 +21,7 @@ poc-ridwanmuh3.my.id {
 		transport http {
 			# Keep-alive between Caddy and gateway
 			keepalive 30s
-			keepalive_idle_conns 10
+			keepalive_idle_conns 100
 		}
 	}
 
