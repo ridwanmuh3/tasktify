@@ -33,7 +33,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-tasktify}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
       interval: 5s
@@ -170,7 +170,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -qO- http://localhost:3000/health 2>/dev/null || exit 1",
+          "wget -qO- http://127.0.0.1:3000/health 2>/dev/null || exit 1",
         ]
       interval: 10s
       timeout: 5s
