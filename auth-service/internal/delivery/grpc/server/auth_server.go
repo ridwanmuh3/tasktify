@@ -27,14 +27,20 @@ func NewAuthServer(log *zap.SugaredLogger, authService *service.AuthService) *Au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (*model.AuthResponse, error) {
-	accessToken, refreshToken, signTimeMs, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
+	accessToken, refreshToken, tokenGenerationMs, runtimeStats, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
 	if err != nil {
 		return nil, err
 	}
 
-	// Expose pure signing latency as gRPC trailer so the gateway can forward
-	// it as X-Sign-Time-Ms response header for k6 to capture as clean latency.
-	grpc.SetTrailer(ctx, metadata.Pairs("x-sign-time-ms", fmt.Sprintf("%.3f", signTimeMs)))
+	// Expose clean token-generation latency and auth-service resource usage
+	// as gRPC trailers so gateway can forward them as k6-visible headers.
+	grpc.SetTrailer(ctx, metadata.Pairs(
+		"x-sign-time-ms", fmt.Sprintf("%.3f", tokenGenerationMs),
+		"x-token-generation-time-ms", fmt.Sprintf("%.3f", tokenGenerationMs),
+		"x-auth-cpu-pct", fmt.Sprintf("%.3f", runtimeStats.CPUPct),
+		"x-auth-mem-alloc-mb", fmt.Sprintf("%.3f", runtimeStats.MemoryAllocMB),
+		"x-auth-mem-sys-mb", fmt.Sprintf("%.3f", runtimeStats.MemorySysMB),
+	))
 
 	return &model.AuthResponse{
 		Auth: &model.Auth{

@@ -52,9 +52,17 @@ func (h *AuthHandler) SignIn(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "internal server error")
 	}
 
-	// Forward pure signing latency measured by auth-service (clean time, no bcrypt/DB).
-	if vals := trailer.Get("x-sign-time-ms"); len(vals) > 0 {
-		c.Set("X-Sign-Time-Ms", vals[0])
+	// Forward clean token-generation latency and auth-service resource metrics for k6.
+	for trailerKey, headerKey := range map[string]string{
+		"x-sign-time-ms":             "X-Sign-Time-Ms",
+		"x-token-generation-time-ms": "X-Token-Generation-Time-Ms",
+		"x-auth-cpu-pct":             "X-Auth-CPU-Pct",
+		"x-auth-mem-alloc-mb":        "X-Auth-Mem-Alloc-MB",
+		"x-auth-mem-sys-mb":          "X-Auth-Mem-Sys-MB",
+	} {
+		if vals := trailer.Get(trailerKey); len(vals) > 0 {
+			c.Set(headerKey, vals[0])
+		}
 	}
 
 	return c.JSON(model.Response[any]{

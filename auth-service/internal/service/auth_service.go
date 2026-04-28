@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"runtime"
+	"runtime/metrics"
+	"sync"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -15,6 +18,18 @@ import (
 	"auth-service/internal/entity"
 	"auth-service/internal/repository"
 )
+
+type RuntimeStats struct {
+	MemoryAllocMB float64
+	MemorySysMB   float64
+	CPUPct        float64
+}
+
+var runtimeStatsState struct {
+	sync.Mutex
+	lastWall time.Time
+	lastCPU  float64
+}
 
 type AuthService struct {
 	db             *gorm.DB
@@ -40,21 +55,20 @@ func NewAuthService(
 	}
 }
 
-// SignIn returns (accessToken, refreshToken, signTimeMs, error).
-// signTimeMs is the pure cryptographic signing duration in milliseconds,
-// isolated from DB lookup and bcrypt — usable as clean signing latency.
-func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm string) (string, string, float64, error) {
+// SignIn returns (accessToken, refreshToken, tokenGenerationMs, runtimeStats, error).
+// tokenGenerationMs is measured around JWT generation only, isolated from DB lookup and bcrypt.
+func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm string) (string, string, float64, RuntimeStats, error) {
 	db := s.db.WithContext(ctx)
 
 	user := new(entity.User)
 	if err := s.userRepository.GetByEmail(db, email, user); err != nil {
 		s.log.Warnf("user not found with email %s: %v", email, err)
-		return "", "", 0, status.Error(codes.Unauthenticated, "invalid email or password")
+		return "", "", 0, RuntimeStats{}, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		s.log.Warnf("invalid password for email %s", email)
-		return "", "", 0, status.Error(codes.Unauthenticated, "invalid email or password")
+		return "", "", 0, RuntimeStats{}, status.Error(codes.Unauthenticated, "invalid email or password")
 	}
 
 	signStart := time.Now()
@@ -67,10 +81,10 @@ func (s *AuthService) SignIn(ctx context.Context, email, password, algorithm str
 
 	if err != nil {
 		s.log.Errorf("failed to sign access token: %v", err)
-		return "", "", 0, status.Error(codes.Internal, "failed to generate token")
+		return "", "", 0, RuntimeStats{}, status.Error(codes.Internal, "failed to generate token")
 	}
 
-	return accessToken, "", signTimeMs, nil
+	return accessToken, "", signTimeMs, collectRuntimeStats(), nil
 }
 
 func (s *AuthService) Verify(ctx context.Context, token string) error {
@@ -79,4 +93,45 @@ func (s *AuthService) Verify(ctx context.Context, token string) error {
 		return status.Error(codes.Unauthenticated, "invalid token")
 	}
 	return nil
+}
+
+func collectRuntimeStats() RuntimeStats {
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
+
+	stats := RuntimeStats{
+		MemoryAllocMB: bytesToMB(mem.Alloc),
+		MemorySysMB:   bytesToMB(mem.Sys),
+	}
+
+	now := time.Now()
+	cpuSeconds := readGoCPUSeconds()
+
+	runtimeStatsState.Lock()
+	defer runtimeStatsState.Unlock()
+
+	if !runtimeStatsState.lastWall.IsZero() {
+		wallSeconds := now.Sub(runtimeStatsState.lastWall).Seconds()
+		cpuDelta := cpuSeconds - runtimeStatsState.lastCPU
+		if wallSeconds > 0 && cpuDelta >= 0 {
+			stats.CPUPct = (cpuDelta / wallSeconds / float64(runtime.GOMAXPROCS(0))) * 100
+		}
+	}
+	runtimeStatsState.lastWall = now
+	runtimeStatsState.lastCPU = cpuSeconds
+
+	return stats
+}
+
+func readGoCPUSeconds() float64 {
+	samples := []metrics.Sample{{Name: "/cpu/classes/total:cpu-seconds"}}
+	metrics.Read(samples)
+	if samples[0].Value.Kind() != metrics.KindFloat64 {
+		return 0
+	}
+	return samples[0].Value.Float64()
+}
+
+func bytesToMB(v uint64) float64 {
+	return float64(v) / 1024.0 / 1024.0
 }

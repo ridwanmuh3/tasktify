@@ -29,6 +29,14 @@ type ldlTree struct {
 	leaf  f64
 }
 
+// LogN returns the logarithmic degree of the key bound to this signer.
+func (ps *PrecomputedSigner) LogN() uint {
+	if ps == nil {
+		return 0
+	}
+	return ps.logn
+}
+
 // NewPrecomputedSigner creates a signer for standard degrees (512 and 1024).
 func NewPrecomputedSigner(skey []byte) (*PrecomputedSigner, error) {
 	return newPrecomputedSignerInner(9, 10, skey)
@@ -141,7 +149,7 @@ func newPrecomputedSignerInner(lognMin uint, lognMax uint,
 func (ps *PrecomputedSigner) Sign(rng io.Reader,
 	ctx DomainContext, id crypto.Hash, data []byte) ([]byte, error) {
 
-	if ps == nil {
+	if !ps.isValid() {
 		return nil, errors.New("Invalid precomputed signer")
 	}
 	var seed [40]byte
@@ -169,6 +177,31 @@ func (ps *PrecomputedSigner) signSeeded(seed []byte,
 		return nil, err
 	}
 	return sig, nil
+}
+
+func (ps *PrecomputedSigner) isValid() bool {
+	if ps == nil || ps.logn < 1 || ps.logn >= uint(len(inv_sigma)) {
+		return false
+	}
+	n := 1 << ps.logn
+	return len(ps.b00) == n &&
+		len(ps.b01) == n &&
+		len(ps.b10) == n &&
+		len(ps.b11) == n &&
+		validateLDLTree(ps.logn, ps.tree)
+}
+
+func validateLDLTree(logn uint, tree *ldlTree) bool {
+	if tree == nil || tree.logn != logn {
+		return false
+	}
+	if logn == 0 {
+		return tree.l10 == nil && tree.left == nil && tree.right == nil && tree.leaf != f64_ZERO
+	}
+	n := 1 << logn
+	return len(tree.l10) == n &&
+		validateLDLTree(logn-1, tree.left) &&
+		validateLDLTree(logn-1, tree.right)
 }
 
 func sign_core_precomputed(ps *PrecomputedSigner,

@@ -3,6 +3,7 @@ package jwt
 import (
 	"crypto"
 	"crypto/rand"
+	"fmt"
 
 	"github.com/ridwanmuh3/tasktify/pkg/fndsa"
 )
@@ -42,6 +43,9 @@ func (m *SigningMethodFalconPrecomputed) Verify(signingString string, sig []byte
 	if !ok {
 		return newError("Falcon verify expects []byte", ErrInvalidKeyType)
 	}
+	if err := m.validatePublicKey(falconKey); err != nil {
+		return err
+	}
 
 	isValid := fndsa.Verify(falconKey, fndsa.DOMAIN_NONE, crypto.SHA3_256, []byte(signingString), sig)
 	if !isValid {
@@ -52,13 +56,14 @@ func (m *SigningMethodFalconPrecomputed) Verify(signingString string, sig []byte
 }
 
 // Sign implements token signing for the SigningMethod.
-// For this signing method, key must be an []byte
-func (m *SigningMethodFalconPrecomputed) Sign(signingString string, _ any) ([]byte, error) {
-	if m.signer == nil {
-		return nil, newError("precomputed signer not set for Falcon", ErrInvalidKeyType)
+// For this signing method, key must be []byte or *fndsa.PrecomputedSigner.
+func (m *SigningMethodFalconPrecomputed) Sign(signingString string, key any) ([]byte, error) {
+	signer, err := m.signerForKey(key)
+	if err != nil {
+		return nil, err
 	}
 
-	signature, err := m.signer.Sign(rand.Reader, fndsa.DOMAIN_NONE, crypto.SHA3_256, []byte(signingString))
+	signature, err := signer.Sign(rand.Reader, fndsa.DOMAIN_NONE, crypto.SHA3_256, []byte(signingString))
 	if err != nil {
 		return nil, newError("oqs/Falcon: signing error", err)
 	}
@@ -72,4 +77,62 @@ func (m *SigningMethodFalconPrecomputed) SignPrecompute() bool {
 
 func (m *SigningMethodFalconPrecomputed) SetPrecomputedSigner(s *fndsa.PrecomputedSigner) {
 	m.signer = s
+}
+
+func (m *SigningMethodFalconPrecomputed) signerForKey(key any) (*fndsa.PrecomputedSigner, error) {
+	var signer *fndsa.PrecomputedSigner
+	switch k := key.(type) {
+	case nil:
+		signer = m.signer
+	case []byte:
+		var err error
+		signer, err = fndsa.NewPrecomputedSigner(k)
+		if err != nil {
+			return nil, newError("invalid Falcon private key", ErrInvalidKey, err)
+		}
+	case *fndsa.PrecomputedSigner:
+		signer = k
+	default:
+		return nil, newError("Falcon precomputed sign expects []byte or *fndsa.PrecomputedSigner", ErrInvalidKeyType)
+	}
+	if signer == nil {
+		return nil, newError("precomputed signer not set for Falcon", ErrInvalidKeyType)
+	}
+	if err := m.validateSigner(signer); err != nil {
+		return nil, err
+	}
+	return signer, nil
+}
+
+func (m *SigningMethodFalconPrecomputed) validateSigner(signer *fndsa.PrecomputedSigner) error {
+	logn, err := m.expectedLogN()
+	if err != nil {
+		return err
+	}
+	if signer.LogN() != logn {
+		return newError(fmt.Sprintf("Falcon precomputed signer degree %d does not match %s", 1<<signer.LogN(), m.Alg()), ErrInvalidKey)
+	}
+	return nil
+}
+
+func (m *SigningMethodFalconPrecomputed) validatePublicKey(key []byte) error {
+	logn, err := m.expectedLogN()
+	if err != nil {
+		return err
+	}
+	if len(key) == 0 || (key[0]&0xF0) != 0x00 || uint(key[0]&0x0F) != logn {
+		return newError(fmt.Sprintf("Falcon public key does not match %s", m.Alg()), ErrInvalidKey)
+	}
+	return nil
+}
+
+func (m *SigningMethodFalconPrecomputed) expectedLogN() (uint, error) {
+	switch m.Alg() {
+	case "Falcon-Precomputed-512":
+		return 9, nil
+	case "Falcon-Precomputed-1024":
+		return 10, nil
+	default:
+		return 0, newError("unsupported Falcon precomputed algorithm", ErrInvalidKey)
+	}
 }
