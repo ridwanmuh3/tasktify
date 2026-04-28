@@ -296,8 +296,13 @@ for (const alg of ALGORITHMS) {
   const ta = `{alg:${alg.name}}`;
   if (RUN_ISOLATED) {
     thresholds[`bench_sign_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_sign_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_sign_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_token_generation_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_token_generation_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_token_generation_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_total_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_size_avg${ta}`] = [`avg>=0`];
@@ -623,11 +628,14 @@ export function runAttack(data) {
 export function handleSummary(data) {
   const m = data.metrics;
 
+  function getMetricKey(metric, algName, vuCount) {
+    return vuCount !== null
+      ? `${metric}{alg:${algName},vus:${vuCount}}`
+      : `${metric}{alg:${algName}}`;
+  }
+
   function getVal(metric, algName, vuCount, stat, digits = 3) {
-    const key =
-      vuCount !== null
-        ? `${metric}{alg:${algName},vus:${vuCount}}`
-        : `${metric}{alg:${algName}}`;
+    const key = getMetricKey(metric, algName, vuCount);
     if (!(key in m)) return "—";
     const v = m[key].values[stat];
     if (v === undefined) return "—";
@@ -636,11 +644,15 @@ export function handleSummary(data) {
   }
 
   function getCount(metric, algName, vuCount) {
-    const key =
-      vuCount !== null
-        ? `${metric}{alg:${algName},vus:${vuCount}}`
-        : `${metric}{alg:${algName}}`;
+    const key = getMetricKey(metric, algName, vuCount);
     return (m[key] && m[key].values.count) || 0;
+  }
+
+  function getNumber(metric, algName, vuCount, stat) {
+    const key = getMetricKey(metric, algName, vuCount);
+    if (!(key in m)) return null;
+    const v = m[key].values[stat];
+    return v === undefined ? null : v;
   }
 
   function getThroughput(algName, vuCount) {
@@ -676,6 +688,114 @@ export function handleSummary(data) {
     const total = blocked + allowed;
     if (total === 0) return "—";
     return ((blocked / total) * 100).toFixed(1) + "%";
+  }
+
+  function buildAcademicResult() {
+    const result = {
+      generated_at: new Date().toISOString(),
+      mode: ATTACK_ONLY
+        ? "Attack only"
+        : STRESS_ONLY
+          ? "Stress only"
+          : ISOLATED_ONLY
+            ? "Isolated only"
+            : "Isolated + Stress + Attack",
+      endpoint: isMultiGateway
+        ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}`
+        : SINGLE_BASE,
+      methodology: {
+        primary_metric: "isolated_clean_token_generation",
+        supporting_metric: "stress_concurrent_signing",
+        isolated_iterations: ITERATIONS,
+        isolated_warmup_iterations: ISOLATED_WARMUP,
+        stress_duration_seconds: STRESS_DURATION_S,
+        stress_warmup_enabled: STRESS_WARMUP,
+        concurrency_levels: CONCURRENCY_LEVELS,
+        notes: [
+          "Isolated metrics use gateway-local pure signing path.",
+          "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
+          "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios.",
+        ],
+      },
+      algorithms: [],
+    };
+
+    for (const alg of ALGORITHMS) {
+      const item = {
+        algorithm: alg.name,
+        category: alg.category,
+        isolated: null,
+        stress: [],
+        attack: null,
+      };
+
+      const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
+      const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
+      const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
+      const isolatedTotalAvg = getNumber("bench_total_avg", alg.name, null, "avg");
+      const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
+      const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
+      const isolatedMemAvg = getNumber("bench_auth_memory_alloc_avg", alg.name, null, "avg");
+      const isolatedTokBytes = getNumber("bench_token_size_avg", alg.name, null, "avg");
+
+      if (isolatedTokenAvg !== null || isolatedTotalAvg !== null) {
+        item.isolated = {
+          token_generation_avg_ms: isolatedTokenAvg,
+          token_generation_p95_ms: isolatedTokenP95,
+          token_generation_stdev_ms: isolatedTokenStdev,
+          total_avg_ms: isolatedTotalAvg,
+          total_p95_ms: isolatedTotalP95,
+          overhead_avg_ms:
+            isolatedTokenAvg !== null && isolatedTotalAvg !== null
+              ? isolatedTotalAvg - isolatedTokenAvg
+              : null,
+          cpu_avg_pct: isolatedCPUAvg,
+          memory_alloc_avg_mb: isolatedMemAvg,
+          token_size_avg_bytes: isolatedTokBytes,
+        };
+      }
+
+      for (const vus of CONCURRENCY_LEVELS) {
+        const vusKey = String(vus);
+        const signAvg = getNumber("stress_token_generation_clean", alg.name, vusKey, "avg");
+        const signP95 = getNumber("stress_token_generation_clean", alg.name, vusKey, "p(95)");
+        const e2eAvg = getNumber("stress_sign_dirty", alg.name, vusKey, "avg");
+        const e2eP95 = getNumber("stress_sign_dirty", alg.name, vusKey, "p(95)");
+
+        if (signAvg === null && e2eAvg === null) {
+          continue;
+        }
+
+        item.stress.push({
+          vus,
+          token_generation_avg_ms: signAvg,
+          token_generation_p95_ms: signP95,
+          e2e_avg_ms: e2eAvg,
+          e2e_p95_ms: e2eP95,
+          throughput_ok_per_s: parseFloat(getThroughput(alg.name, vusKey)) || 0,
+          request_rate_per_s: parseFloat(getRequestRate(alg.name, vusKey)) || 0,
+          error_rate_pct:
+            (() => {
+              const v = getErrRate(alg.name, vusKey);
+              return v === "—" ? null : parseFloat(v);
+            })(),
+          token_size_avg_bytes: getNumber("stress_token_size", alg.name, vusKey, "avg"),
+          token_header_avg_bytes: getNumber("stress_token_header_size", alg.name, vusKey, "avg"),
+          token_body_avg_bytes: getNumber("stress_token_body_size", alg.name, vusKey, "avg"),
+        });
+      }
+
+      const attackRate = getAttackBlockRate(alg.name);
+      if (attackRate !== "—") {
+        item.attack = {
+          tampered_token_block_rate_pct: parseFloat(attackRate),
+        };
+      }
+
+      result.algorithms.push(item);
+    }
+
+    return result;
   }
 
   const SEP = "═".repeat(156);
@@ -917,6 +1037,7 @@ ${SEP}
 
   return {
     stdout: table,
-    "benchmark_sign_result.json": JSON.stringify(data, null, 2),
+    "benchmark_sign_result.json": JSON.stringify(buildAcademicResult(), null, 2),
+    "benchmark_sign_raw.json": JSON.stringify(data, null, 2),
   };
 }
