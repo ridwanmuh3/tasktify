@@ -74,12 +74,17 @@ func Bootstrap(config *BootstrapConfig) {
 	if err != nil {
 		config.Log.Fatalf("failed to load algorithm configs: %v", err)
 	}
+	benchmarkAlgConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, algsToLoad, true)
+	if err != nil {
+		config.Log.Fatalf("failed to load benchmark signing configs: %v", err)
+	}
 
 	issuer := config.Config.GetString("JWT_ISSUER")
 	duration := config.Config.GetInt("JWT_TOKEN_DURATION")
 
 	// Multi-algorithm JWT util for token verification
 	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, algConfigs)
+	benchmarkJWT := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, benchmarkAlgConfigs)
 
 	// gRPC clients
 	authClient := model.NewAuthServiceClient(config.AuthServiceConn)
@@ -93,7 +98,7 @@ func Bootstrap(config *BootstrapConfig) {
 	authHandler := handler.NewAuthHandler(config.Log, authClient)
 	userHandler := handler.NewUserHandler(config.Log, userClient)
 	taskHandler := handler.NewTaskHandler(config.Log, taskClient)
-	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, authClient)
+	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, benchmarkJWT)
 
 	routeConfig := &route.RouteConfig{
 		App:              config.App,

@@ -9,13 +9,13 @@ import (
 )
 
 type RouteConfig struct {
-	App               *fiber.App
-	Log               *zap.SugaredLogger
-	AuthHandler       *handler.AuthHandler
-	UserHandler       *handler.UserHandler
-	TaskHandler       *handler.TaskHandler
-	BenchmarkHandler  *handler.BenchmarkHandler
-	AuthMiddleware    *middleware.AuthMiddleware
+	App              *fiber.App
+	Log              *zap.SugaredLogger
+	AuthHandler      *handler.AuthHandler
+	UserHandler      *handler.UserHandler
+	TaskHandler      *handler.TaskHandler
+	BenchmarkHandler *handler.BenchmarkHandler
+	AuthMiddleware   *middleware.AuthMiddleware
 }
 
 func (c *RouteConfig) Setup() {
@@ -51,4 +51,5 @@ func (c *RouteConfig) Setup() {
 	// Public: academic benchmark — isolated signing-latency experiment, no auth required
 	bench := api.Group("/benchmark")
 	bench.Post("/sign", c.BenchmarkHandler.SignLatency)
+	bench.Post("/token", c.BenchmarkHandler.SignToken)
 }

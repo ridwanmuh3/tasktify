@@ -5,6 +5,47 @@ import (
 	"testing"
 )
 
+func newDeterministicPrecomputedSigner(t *testing.T, logn uint, keyTag byte) ([]byte, []byte, *PrecomputedSigner) {
+	t.Helper()
+
+	var keySeed [32]byte
+	for i := 0; i < len(keySeed); i++ {
+		keySeed[i] = byte(int(logn)*17 + i + int(keyTag))
+	}
+	skey, vkey, err := KeyGen(logn, bytes.NewReader(keySeed[:]))
+	if err != nil {
+		t.Fatalf("keygen failed (logn=%d, tag=%d): %v", logn, keyTag, err)
+	}
+
+	var ps *PrecomputedSigner
+	if logn >= 9 {
+		ps, err = NewPrecomputedSigner(skey)
+	} else {
+		ps, err = NewPrecomputedSignerWeak(skey)
+	}
+	if err != nil {
+		t.Fatalf("precompute failed (logn=%d, tag=%d): %v", logn, keyTag, err)
+	}
+	if ps.LogN() != logn {
+		t.Fatalf("wrong precomputed degree: got %d, want %d", ps.LogN(), logn)
+	}
+	return skey, vkey, ps
+}
+
+func requireSameF64Slice(t *testing.T, name string, want []f64, got []f64) {
+	t.Helper()
+
+	if len(want) != len(got) {
+		t.Fatalf("%s length mismatch: got %d, want %d", name, len(got), len(want))
+	}
+	for i := range want {
+		if f64_to_bits(want[i]) != f64_to_bits(got[i]) {
+			t.Fatalf("%s mismatch at %d: got %016x, want %016x",
+				name, i, f64_to_bits(got[i]), f64_to_bits(want[i]))
+		}
+	}
+}
+
 func TestPrecomputedSign(t *testing.T) {
 	var seed [40]byte
 	for i := 0; i < len(seed); i++ {
@@ -37,23 +78,8 @@ func TestPrecomputedSign(t *testing.T) {
 }
 
 func TestPrecomputedSignReusableTree(t *testing.T) {
-	for _, logn := range []uint{9, 10} {
-		var keySeed [32]byte
-		for i := 0; i < len(keySeed); i++ {
-			keySeed[i] = byte(int(logn) + i)
-		}
-		skey, vkey, err := KeyGen(logn, bytes.NewReader(keySeed[:]))
-		if err != nil {
-			t.Fatalf("keygen failed (logn=%d): %v", logn, err)
-		}
-		ps, err := NewPrecomputedSigner(skey)
-		if err != nil {
-			t.Fatalf("precompute failed (logn=%d): %v", logn, err)
-		}
-		if ps.LogN() != logn {
-			t.Fatalf("wrong precomputed degree: got %d, want %d", ps.LogN(), logn)
-		}
-
+	for logn := uint(2); logn <= 10; logn++ {
+		skey, vkey, ps := newDeterministicPrecomputedSigner(t, logn, 0)
 		for j, data := range [][]byte{
 			[]byte("first reusable-tree message"),
 			[]byte("second reusable-tree message"),
@@ -75,8 +101,59 @@ func TestPrecomputedSignReusableTree(t *testing.T) {
 			if !bytes.Equal(sig1, sig2) {
 				t.Fatalf("signatures differ (logn=%d, msg=%d)", logn, j)
 			}
-			if !Verify(vkey, DOMAIN_NONE, 0, data, sig2) {
+			ok := Verify(vkey, DOMAIN_NONE, 0, data, sig2)
+			if logn < 9 {
+				ok = VerifyWeak(vkey, DOMAIN_NONE, 0, data, sig2)
+			}
+			if !ok {
 				t.Fatalf("precomputed signature verification failed (logn=%d, msg=%d)", logn, j)
+			}
+		}
+	}
+}
+
+func TestPrecomputedLDLTreeMatchesSamplerRecursion(t *testing.T) {
+	for logn := uint(2); logn <= 10; logn++ {
+		for keyTag := byte(0); keyTag < 2; keyTag++ {
+			_, _, ps := newDeterministicPrecomputedSigner(t, logn, keyTag)
+			n := 1 << logn
+
+			g00 := append([]f64(nil), ps.b00...)
+			g01 := append([]f64(nil), ps.b01...)
+			g11 := append([]f64(nil), ps.b10...)
+			gx := append([]f64(nil), ps.b11...)
+			fpoly_gram_fft(logn, g00, g01, g11, gx)
+
+			for sampleTag := byte(0); sampleTag < 3; sampleTag++ {
+				hm := make([]uint16, n)
+				for i := range hm {
+					hm[i] = uint16((i*37 + int(logn)*53 + int(keyTag)*97 + int(sampleTag)*193) % int(q))
+				}
+
+				t0Base := make([]f64, n)
+				t1Base := make([]f64, n)
+				fpoly_apply_basis(logn, t0Base, t1Base, ps.b01, ps.b11, hm)
+
+				t0Tree := append([]f64(nil), t0Base...)
+				t1Tree := append([]f64(nil), t1Base...)
+				t0Ref := append([]f64(nil), t0Base...)
+				t1Ref := append([]f64(nil), t1Base...)
+
+				gram00 := append([]f64(nil), g00...)
+				gram01 := append([]f64(nil), g01...)
+				gram11 := append([]f64(nil), g11...)
+
+				var subseed [56]byte
+				for i := 0; i < len(subseed); i++ {
+					subseed[i] = byte(i + int(logn)*11 + int(keyTag)*23 + int(sampleTag)*41)
+				}
+				ssRef := newSampler(logn, subseed[:])
+				ssTree := newSampler(logn, subseed[:])
+				ssRef.ffsamp_fft(t0Ref, t1Ref, gram00, gram01, gram11, make([]f64, n*4))
+				ssTree.ffsamp_fft_precomputed(t0Tree, t1Tree, ps.tree, make([]f64, n*4))
+
+				requireSameF64Slice(t, "sampled t0", t0Ref, t0Tree)
+				requireSameF64Slice(t, "sampled t1", t1Ref, t1Tree)
 			}
 		}
 	}

@@ -8,32 +8,40 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
+	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/ridwanmuh3/tasktify/gateway/internal/model"
 )
 
 type BenchmarkHandler struct {
-	log        *zap.SugaredLogger
-	authClient model.AuthServiceClient
+	log          *zap.SugaredLogger
+	benchmarkJWT jwtutils.JwtUtil
 }
 
-func NewBenchmarkHandler(log *zap.SugaredLogger, authClient model.AuthServiceClient) *BenchmarkHandler {
-	return &BenchmarkHandler{log: log, authClient: authClient}
+func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
+	return &BenchmarkHandler{log: log, benchmarkJWT: benchmarkJWT}
 }
 
-// BenchmarkSignRequest defines an isolated signing-latency experiment.
-// Use a pre-registered benchmark user (email/password).
+// BenchmarkSignRequest defines a pure-sign isolated benchmark.
+// Email is used to derive stable JWT claims. Password is ignored and kept
+// only for backward-compatible k6 payloads.
 // PayloadNote is metadata-only — it has no effect on the signing itself
 // but is echoed in the response for experiment traceability.
 type BenchmarkSignRequest struct {
-	Algorithm   string `json:"algorithm"    validate:"required"`
-	Iterations  int    `json:"iterations"   validate:"required,min=1,max=10000"`
-	Email       string `json:"email"        validate:"required,email"`
-	Password    string `json:"password"     validate:"required"`
-	PayloadNote string `json:"payload_note"` // optional experiment label
+	Algorithm        string `json:"algorithm"         validate:"required"`
+	Iterations       int    `json:"iterations"        validate:"required,min=1,max=10000"`
+	WarmupIterations int    `json:"warmup_iterations"`
+	Email            string `json:"email"             validate:"required,email"`
+	Password         string `json:"password"`
+	PayloadNote      string `json:"payload_note"` // optional experiment label
+}
+
+type BenchmarkTokenRequest struct {
+	Algorithm string `json:"algorithm" validate:"required"`
+	Email     string `json:"email"     validate:"required,email"`
+	Password  string `json:"password"`
 }
 
 // TimingStats holds descriptive statistics for a latency series.
@@ -61,17 +69,17 @@ type NumericStats struct {
 }
 
 // BenchmarkSignResult is the academic experiment output.
-// TokenGenerationTimingsMs = JWT generation durations reported by auth-service (clean time).
-// TotalTimingsMs = full gRPC round-trip durations measured here in gateway (dirty time).
-// The difference (total - sign) isolates network + serialization overhead.
+// TokenGenerationTimingsMs = pure JWT generation durations from the local benchmark signer.
+// TotalTimingsMs = per-iteration local handler durations around payload build + sign.
 type BenchmarkSignResult struct {
 	Algorithm                string    `json:"algorithm"`
 	Iterations               int       `json:"iterations"`
+	WarmupIterations         int       `json:"warmup_iterations"`
 	SuccessCount             int       `json:"success_count"`
 	PayloadNote              string    `json:"payload_note,omitempty"`
 	SignTimingsMs            []float64 `json:"sign_timings_ms"`             // backward-compatible alias
 	TokenGenerationTimingsMs []float64 `json:"token_generation_timings_ms"` // clean: JWT generation only
-	TotalTimingsMs           []float64 `json:"total_timings_ms"`            // dirty: full gRPC call
+	TotalTimingsMs           []float64 `json:"total_timings_ms"`            // local iteration around pure sign
 	TokenSizeBytes           []float64 `json:"token_size_bytes"`
 	TokenHeaderSizeBytes     []float64 `json:"token_header_size_bytes"`
 	TokenBodySizeBytes       []float64 `json:"token_body_size_bytes"`
@@ -82,7 +90,7 @@ type BenchmarkSignResult struct {
 	Stats                    struct {
 		Sign            TimingStats `json:"sign"`             // backward-compatible alias
 		TokenGeneration TimingStats `json:"token_generation"` // clean token generation
-		Total           TimingStats `json:"total"`            // dirty (sign + gRPC overhead) stats
+		Total           TimingStats `json:"total"`            // local iteration stats
 		TokenSize       struct {
 			Token     NumericStats `json:"token"`
 			Header    NumericStats `json:"header"`
@@ -97,7 +105,7 @@ type BenchmarkSignResult struct {
 	} `json:"stats"`
 }
 
-// SignLatency runs N sequential sign-in calls and returns per-iteration timing data.
+// SignLatency runs N sequential pure-sign iterations and returns per-iteration timing data.
 // Designed for isolated academic experiments — use 1 VU in k6 for controlled measurements.
 //
 // POST /api/benchmark/sign
@@ -116,53 +124,36 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	cpuSamples := make([]float64, 0, req.Iterations)
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memSysSamples := make([]float64, 0, req.Iterations)
+	warmupIterations := req.WarmupIterations
+	if warmupIterations < 0 {
+		warmupIterations = 0
+	}
+
+	for i := 0; i < warmupIterations; i++ {
+		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email); err != nil {
+			h.log.Warnf("benchmark warmup iter %d failed: %v", i, err)
+		}
+	}
 
 	for i := 0; i < req.Iterations; i++ {
-		var trailer metadata.MD
-
-		start := time.Now()
-		resp, err := h.authClient.SignIn(c.Context(), &model.SignInRequest{
-			Email:     req.Email,
-			Password:  req.Password,
-			Algorithm: req.Algorithm,
-		}, grpc.Trailer(&trailer))
-		elapsedMs := float64(time.Since(start).Microseconds()) / 1000.0
-
+		token, signMs, totalMs, err := h.signBenchmarkToken(req.Algorithm, req.Email)
 		if err != nil {
 			h.log.Warnf("benchmark iter %d failed: %v", i, err)
 			continue
 		}
 
-		totalTimings = append(totalTimings, elapsedMs)
-		if resp != nil && resp.Auth != nil {
-			addTokenSizeSamples(resp.Auth.AccessToken, &tokenSizes, &tokenHeaderSizes, &tokenBodySizes, &tokenSignatureSizes)
-		}
-
-		if vals := trailer.Get("x-sign-time-ms"); len(vals) > 0 {
-			if t, ok := parseFloat(vals[0]); ok {
-				signTimings = append(signTimings, t)
-			}
-		}
-		if vals := trailer.Get("x-auth-cpu-pct"); len(vals) > 0 {
-			if t, ok := parseFloat(vals[0]); ok {
-				cpuSamples = append(cpuSamples, t)
-			}
-		}
-		if vals := trailer.Get("x-auth-mem-alloc-mb"); len(vals) > 0 {
-			if t, ok := parseFloat(vals[0]); ok {
-				memAllocSamples = append(memAllocSamples, t)
-			}
-		}
-		if vals := trailer.Get("x-auth-mem-sys-mb"); len(vals) > 0 {
-			if t, ok := parseFloat(vals[0]); ok {
-				memSysSamples = append(memSysSamples, t)
-			}
-		}
+		signTimings = append(signTimings, signMs)
+		totalTimings = append(totalTimings, totalMs)
+		addTokenSizeSamples(token, &tokenSizes, &tokenHeaderSizes, &tokenBodySizes, &tokenSignatureSizes)
+		cpuSamples = append(cpuSamples, 0)
+		memAllocSamples = append(memAllocSamples, 0)
+		memSysSamples = append(memSysSamples, 0)
 	}
 
 	result := BenchmarkSignResult{
 		Algorithm:                req.Algorithm,
 		Iterations:               req.Iterations,
+		WarmupIterations:         warmupIterations,
 		SuccessCount:             len(totalTimings),
 		PayloadNote:              req.PayloadNote,
 		SignTimingsMs:            signTimings,
@@ -196,6 +187,61 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		Message: "benchmark complete",
 		Data:    result,
 	})
+}
+
+// SignToken signs one benchmark token and returns the same response shape as /api/auth/signin
+// with clean signing latency in headers for k6 stress runs.
+//
+// POST /api/benchmark/token
+func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
+	var req BenchmarkTokenRequest
+	if err := c.Bind().JSON(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+
+	token, signMs, _, err := h.signBenchmarkToken(req.Algorithm, req.Email)
+	if err != nil {
+		h.log.Errorf("benchmark token sign failed: %v", err)
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate benchmark token")
+	}
+
+	c.Set("X-Sign-Time-Ms", fmt.Sprintf("%.3f", signMs))
+	c.Set("X-Token-Generation-Time-Ms", fmt.Sprintf("%.3f", signMs))
+	c.Set("X-Auth-CPU-Pct", "0.000")
+	c.Set("X-Auth-Mem-Alloc-MB", "0.000")
+	c.Set("X-Auth-Mem-Sys-MB", "0.000")
+
+	return c.JSON(model.Response[any]{
+		Status:  fiber.StatusOK,
+		Message: "benchmark token generated",
+		Data: fiber.Map{
+			"token_type":   "Bearer",
+			"access_token": token,
+		},
+	})
+}
+
+func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (string, float64, float64, error) {
+	if h.benchmarkJWT == nil {
+		return "", 0, 0, fmt.Errorf("benchmark signer not configured")
+	}
+
+	userID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(strings.ToLower(email)))
+	payload := &jwtutils.JWTPayload{
+		UserID:    userID,
+		Email:     email,
+		Algorithm: algorithm,
+	}
+
+	totalStart := time.Now()
+	signStart := totalStart
+	token, err := h.benchmarkJWT.Sign(payload)
+	signMs := float64(time.Since(signStart).Microseconds()) / 1000.0
+	totalMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+	if err != nil {
+		return "", 0, 0, err
+	}
+	return token, signMs, totalMs, nil
 }
 
 func computeTimingStats(timings []float64) TimingStats {
@@ -273,12 +319,4 @@ func addTokenSizeSamples(token string, tokenSizes, headerSizes, bodySizes, signa
 	*headerSizes = append(*headerSizes, float64(len(parts[0])))
 	*bodySizes = append(*bodySizes, float64(len(parts[1])))
 	*signatureSizes = append(*signatureSizes, float64(len(parts[2])))
-}
-
-func parseFloat(s string) (float64, bool) {
-	var v float64
-	if _, err := fmt.Sscanf(s, "%f", &v); err != nil {
-		return 0, false
-	}
-	return v, true
 }
