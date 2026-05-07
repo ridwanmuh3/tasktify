@@ -200,6 +200,48 @@ func TestAttack_AlgorithmSwitchToFalcon1024(t *testing.T) {
 }
 
 // ========================================================
+// ATTACK: Signature Tampering (Scenario 1)
+// Attacker flip byte pada signature yang valid tanpa private key
+// ========================================================
+func TestAttack_SignatureTampering(t *testing.T) {
+	_, vkey, signer := setupFalconKeys(t)
+	validToken := createValidToken(t, signer)
+	parts := strings.Split(validToken, ".")
+
+	sigBytes, err := base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		t.Fatalf("failed to decode signature: %v", err)
+	}
+
+	testCases := []struct {
+		name     string
+		position int
+	}{
+		{"flip first byte", 0},
+		{"flip middle byte", len(sigBytes) / 2},
+		{"flip last byte", len(sigBytes) - 1},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tampered := make([]byte, len(sigBytes))
+			copy(tampered, sigBytes)
+			tampered[tc.position] ^= 0xFF
+
+			tamperedSigB64 := base64.RawURLEncoding.EncodeToString(tampered)
+			tamperedToken := parts[0] + "." + parts[1] + "." + tamperedSigB64
+
+			_, err := parseWithProtection(tamperedToken, vkey)
+			if err == nil {
+				t.Fatalf("VULNERABLE: tampered signature (%s) diterima!", tc.name)
+			}
+
+			t.Logf("PROTECTED: tampered signature (%s) ditolak: %v", tc.name, err)
+		})
+	}
+}
+
+// ========================================================
 // ATTACK 5: Signature Stripping
 // Attacker menghapus atau memanipulasi signature dari token
 // ========================================================
@@ -265,8 +307,8 @@ func TestAttack_ExpiredToken(t *testing.T) {
 }
 
 // ========================================================
-// ATTACK 7: Issuer Spoofing
-// Attacker membuat token dengan issuer yang berbeda
+// ATTACK 7: Issuer Spoofing (Scenario 10)
+// Attacker membuat token dengan issuer yang tidak dikenali server
 // ========================================================
 func TestAttack_IssuerSpoofing(t *testing.T) {
 	_, vkey, signer := setupFalconKeys(t)
@@ -274,28 +316,34 @@ func TestAttack_IssuerSpoofing(t *testing.T) {
 	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
 	method.SetPrecomputedSigner(signer)
 
-	token := jwt.NewWithClaims(method, TestClaims{
-		UserID: uuid.New(),
-		Email:  "attacker@evil.com",
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        uuid.NewString(),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(60 * time.Minute)),
-			Issuer:    "evil-service",
-		},
-	})
+	fakeIssuers := []string{"evil-service", "example.com", "attacker.io", ""}
 
-	tokenString, err := token.SignedString(nil)
-	if err != nil {
-		t.Fatalf("failed to sign token: %v", err)
+	for _, fakeIssuer := range fakeIssuers {
+		t.Run("iss="+fakeIssuer, func(t *testing.T) {
+			token := jwt.NewWithClaims(method, TestClaims{
+				UserID: uuid.New(),
+				Email:  "attacker@evil.com",
+				RegisteredClaims: jwt.RegisteredClaims{
+					ID:        uuid.NewString(),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(60 * time.Minute)),
+					Issuer:    fakeIssuer,
+				},
+			})
+
+			tokenString, err := token.SignedString(nil)
+			if err != nil {
+				t.Fatalf("failed to sign token: %v", err)
+			}
+
+			_, err = parseWithProtection(tokenString, vkey)
+			if err == nil {
+				t.Fatalf("VULNERABLE: issuer spoofing dengan iss=%q berhasil!", fakeIssuer)
+			}
+
+			t.Logf("PROTECTED: issuer spoofing iss=%q ditolak: %v", fakeIssuer, err)
+		})
 	}
-
-	_, err = parseWithProtection(tokenString, vkey)
-	if err == nil {
-		t.Fatal("VULNERABLE: issuer spoofing berhasil!")
-	}
-
-	t.Logf("PROTECTED: issuer spoofing ditolak: %v", err)
 }
 
 // ========================================================
@@ -467,6 +515,49 @@ func TestAttack_JSONInjectionInClaims(t *testing.T) {
 }
 
 // ========================================================
+// ATTACK: Replay Attack (Scenario 7)
+// Attacker menggunakan ulang token valid yang sama berkali-kali
+// JWT library bersifat stateless — deteksi harus di app layer via JTI blacklist
+// ========================================================
+func TestAttack_ReplayAttack(t *testing.T) {
+	_, vkey, signer := setupFalconKeys(t)
+	validToken := createValidToken(t, signer)
+
+	// Parse pertama — legitimate use
+	tok1, err := parseWithProtection(validToken, vkey)
+	if err != nil {
+		t.Fatalf("first parse failed: %v", err)
+	}
+	claims1 := tok1.Claims.(*TestClaims)
+
+	// Parse kedua — replay simulation (library stateless, masih accepted)
+	tok2, err := parseWithProtection(validToken, vkey)
+	if err != nil {
+		t.Fatalf("replay parse failed: %v", err)
+	}
+	claims2 := tok2.Claims.(*TestClaims)
+
+	if claims1.ID != claims2.ID {
+		t.Fatal("JTI mismatch on replayed token — should be identical")
+	}
+
+	// Verifikasi setiap token baru punya JTI unik (syarat untuk blacklisting)
+	freshToken := createValidToken(t, signer)
+	tok3, err := parseWithProtection(freshToken, vkey)
+	if err != nil {
+		t.Fatalf("fresh token parse failed: %v", err)
+	}
+	claims3 := tok3.Claims.(*TestClaims)
+
+	if claims1.ID == claims3.ID {
+		t.Fatal("INSECURE: dua token berbeda punya JTI sama — replay detection tidak mungkin")
+	}
+
+	t.Logf("NOTE: JWT library stateless — replay token JTI=%s diterima (expected)", claims1.ID)
+	t.Logf("MITIGATION: App layer wajib blacklist JTI setelah digunakan. Token baru punya JTI unik: %s", claims3.ID)
+}
+
+// ========================================================
 // VERIFICATION: Token yang valid tetap bisa diverifikasi
 // Memastikan proteksi tidak memblokir token yang legitimate
 // ========================================================
@@ -517,25 +608,41 @@ func TestVerification_ValidTokenAccepted(t *testing.T) {
 
 // ========================================================
 // SUMMARY: Menjalankan semua attack test dan ringkasan
+//
+// Mapping ke 10 Vektor Serangan Adversarial JWT:
+//  #1  Signature Tampering       → TestAttack_SignatureTampering
+//  #2  Token Forgery             → TestAttack_SignatureStripping (empty/fake sig)
+//  #3  Algorithm Confusion       → TestAttack_UnknownAlgorithm (HS256/RS256/ES256)
+//  #4  None Algorithm Attack     → TestAttack_AlgorithmNone, TestAttack_NoneWithSignature
+//  #5  Payload/Claim Manipulation→ TestAttack_JSONInjectionInClaims
+//  #6  Expired Token Abuse       → TestAttack_ExpiredToken
+//  #7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
+//  #8  Missing Sig Verification  → TestAttack_SignatureStripping (empty signature case)
+//  #9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke Falcon verifier)
+//  #10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
 // ========================================================
 func TestConfusionAttackSummary(t *testing.T) {
 	attacks := []struct {
 		name string
 		fn   func(*testing.T)
 	}{
-		{"Algorithm None", TestAttack_AlgorithmNone},
-		{"Algorithm Switch to Falcon-512", TestAttack_AlgorithmSwitchToFalcon512},
-		{"Algorithm Switch to ML-DSA", TestAttack_AlgorithmSwitchToMLDSA},
+		// Scenario mapping
+		{"[#1] Signature Tampering (flip byte)", TestAttack_SignatureTampering},
+		{"[#2] Token Forgery (empty/fake signature)", TestAttack_SignatureStripping},
+		{"[#3] Algorithm Confusion (HS256/RS256)", TestAttack_UnknownAlgorithm},
+		{"[#4] None Algorithm Attack", TestAttack_AlgorithmNone},
+		{"[#4b] None Algorithm with Signature", TestAttack_NoneWithSignature},
+		{"[#5] Payload/Claim Manipulation (no resign)", TestAttack_JSONInjectionInClaims},
+		{"[#6] Expired Token Abuse", TestAttack_ExpiredToken},
+		{"[#7] Replay Attack (JTI uniqueness)", TestAttack_ReplayAttack},
+		{"[#9] Cross-Algorithm Injection (PQC switch)", TestAttack_AlgorithmSwitchToFalcon512},
+		{"[#9b] Cross-Algorithm ML-DSA", TestAttack_AlgorithmSwitchToMLDSA},
+		{"[#10] Invalid Issuer Attack (example.com)", TestAttack_IssuerSpoofing},
+		// Additional hardening tests
 		{"Algorithm Switch to Falcon-1024", TestAttack_AlgorithmSwitchToFalcon1024},
-		{"Signature Stripping", TestAttack_SignatureStripping},
-		{"Expired Token", TestAttack_ExpiredToken},
-		{"Issuer Spoofing", TestAttack_IssuerSpoofing},
 		{"Cross-Key Verification", TestAttack_CrossKeyVerification},
-		{"Unknown Algorithms", TestAttack_UnknownAlgorithm},
 		{"Malformed Tokens", TestAttack_MalformedTokens},
 		{"Future IssuedAt", TestAttack_FutureIssuedAt},
-		{"None with Signature", TestAttack_NoneWithSignature},
-		{"JSON Injection", TestAttack_JSONInjectionInClaims},
 		{"Valid Token Accepted", TestVerification_ValidTokenAccepted},
 	}
 
@@ -556,11 +663,22 @@ func TestConfusionAttackSummary(t *testing.T) {
 	}
 
 	fmt.Printf("\n")
-	fmt.Printf("══════════════════════════════════════════════════════\n")
-	fmt.Printf("  JWT CONFUSION ATTACK TEST SUMMARY\n")
-	fmt.Printf("══════════════════════════════════════════════════════\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════\n")
+	fmt.Printf("  ADVERSARIAL JWT TEST SUMMARY (10 Attack Vectors)\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════\n")
+	fmt.Printf("  #1  Signature Tampering       : flip byte → 401/403\n")
+	fmt.Printf("  #2  Token Forgery             : fake/empty sig → 401/403\n")
+	fmt.Printf("  #3  Algorithm Confusion       : HS256/RS256 → 401/403\n")
+	fmt.Printf("  #4  None Algorithm Attack     : alg=none → 401/403\n")
+	fmt.Printf("  #5  Payload Manipulation      : no resign → 401/403\n")
+	fmt.Printf("  #6  Expired Token Abuse       : exp lama → 401/403\n")
+	fmt.Printf("  #7  Replay Attack             : stateless; JTI tracking at app layer\n")
+	fmt.Printf("  #8  Missing Sig Verification  : empty sig → 401/403\n")
+	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→Falcon → 401/403\n")
+	fmt.Printf("  #10 Invalid Issuer Attack     : example.com → 401/403\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════\n")
 	fmt.Printf("  Total Tests : %d\n", len(attacks))
 	fmt.Printf("  Protected   : %d\n", passed)
 	fmt.Printf("  Vulnerable  : %d\n", failed)
-	fmt.Printf("══════════════════════════════════════════════════════\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════\n")
 }

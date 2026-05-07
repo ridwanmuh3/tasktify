@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(k6 inspect *)",
+      "Bash(grep -E '\\\\.\\(go|js|json|sh|yaml|yml\\)$')"
+    ]
+  }
+}

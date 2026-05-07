@@ -214,6 +214,7 @@ const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
 const benchAuthMemoryAllocAvg = new Trend("bench_auth_memory_alloc_avg", true);
+const benchAuthMemoryAllocDeltaAvg = new Trend("bench_auth_memory_alloc_delta_avg", true);
 const benchAuthMemorySysAvg = new Trend("bench_auth_memory_sys_avg", true);
 const benchTokenSizeAvg = new Trend("bench_token_size_avg");
 const benchTokenHeaderSizeAvg = new Trend("bench_token_header_size_avg");
@@ -236,6 +237,7 @@ const stressSignDirty = new Trend("stress_sign_dirty", true);
 const stressSignNetwork = new Trend("stress_sign_network", true);
 const stressAuthCPU = new Trend("stress_auth_cpu", true);
 const stressAuthMemoryAlloc = new Trend("stress_auth_memory_alloc", true);
+const stressAuthMemoryAllocDelta = new Trend("stress_auth_memory_alloc_delta", true);
 const stressAuthMemorySys = new Trend("stress_auth_memory_sys", true);
 const stressTokenSize = new Trend("stress_token_size");
 const stressTokenHeaderSize = new Trend("stress_token_header_size");
@@ -282,6 +284,7 @@ for (const alg of ALGORITHMS) {
       thresholds[`stress_sign_network${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_auth_cpu${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_auth_memory_alloc${tv}`] = [`p(95)<9999999`];
+      thresholds[`stress_auth_memory_alloc_delta${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_auth_memory_sys${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_token_size${tv}`] = [`avg>=0`];
       thresholds[`stress_token_header_size${tv}`] = [`avg>=0`];
@@ -305,6 +308,7 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_alloc_delta_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_size_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_token_header_size_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_token_body_size_avg${ta}`] = [`avg>=0`];
@@ -438,6 +442,7 @@ export function runIsolated(data) {
     benchTotalAvg.add(s.total.avg_ms, tags);
     benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
     benchAuthMemoryAllocAvg.add(s.resource?.memory_alloc_mb?.avg ?? 0, tags);
+    benchAuthMemoryAllocDeltaAvg.add(s.resource?.memory_alloc_delta_mb?.avg ?? 0, tags);
     benchAuthMemorySysAvg.add(s.resource?.memory_sys_mb?.avg ?? 0, tags);
     benchTokenSizeAvg.add(s.token_size?.token?.avg ?? 0, tags);
     benchTokenHeaderSizeAvg.add(s.token_size?.header?.avg ?? 0, tags);
@@ -546,6 +551,12 @@ export function runStress(data) {
       "x-auth-mem-alloc-mb",
     ]);
     if (memAllocMB !== null) stressAuthMemoryAlloc.add(memAllocMB, tags);
+
+    const memAllocDeltaMB = getHeaderNumber(res, [
+      "X-Auth-Mem-Alloc-Delta-MB",
+      "x-auth-mem-alloc-delta-mb",
+    ]);
+    if (memAllocDeltaMB !== null) stressAuthMemoryAllocDelta.add(memAllocDeltaMB, tags);
 
     const memSysMB = getHeaderNumber(res, [
       "X-Auth-Mem-Sys-MB",
@@ -736,6 +747,7 @@ export function handleSummary(data) {
       const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
       const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
       const isolatedMemAvg = getNumber("bench_auth_memory_alloc_avg", alg.name, null, "avg");
+      const isolatedMemDeltaAvg = getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "avg");
       const isolatedTokBytes = getNumber("bench_token_size_avg", alg.name, null, "avg");
 
       if (isolatedTokenAvg !== null || isolatedTotalAvg !== null) {
@@ -751,6 +763,8 @@ export function handleSummary(data) {
               : null,
           cpu_avg_pct: isolatedCPUAvg,
           memory_alloc_avg_mb: isolatedMemAvg,
+          memory_alloc_delta_avg_mb: isolatedMemDeltaAvg,
+          memory_sys_avg_mb: getNumber("bench_auth_memory_sys_avg", alg.name, null, "avg"),
           token_size_avg_bytes: isolatedTokBytes,
         };
       }
@@ -774,6 +788,10 @@ export function handleSummary(data) {
           e2e_p95_ms: e2eP95,
           throughput_ok_per_s: parseFloat(getThroughput(alg.name, vusKey)) || 0,
           request_rate_per_s: parseFloat(getRequestRate(alg.name, vusKey)) || 0,
+          cpu_avg_pct: getNumber("stress_auth_cpu", alg.name, vusKey, "avg"),
+          memory_alloc_avg_mb: getNumber("stress_auth_memory_alloc", alg.name, vusKey, "avg"),
+          memory_alloc_delta_avg_mb: getNumber("stress_auth_memory_alloc_delta", alg.name, vusKey, "avg"),
+          memory_sys_avg_mb: getNumber("stress_auth_memory_sys", alg.name, vusKey, "avg"),
           error_rate_pct:
             (() => {
               const v = getErrRate(alg.name, vusKey);
@@ -808,14 +826,12 @@ export function handleSummary(data) {
       : str + " ".repeat(w - str.length);
   }
 
-  function appendRow(section, category, row) {
-    return category === "PQC"
-      ? { ...section, pqc: section.pqc + row }
-      : { ...section, classic: section.classic + row };
+  function appendRow(section, row) {
+    return section + row;
   }
 
   // ── TABLE 1: Isolated clean token-generation baseline ─────────
-  const WI = [28, 6, 12, 12, 12, 12, 12, 12, 10, 10, 10];
+  const WI = [28, 6, 12, 12, 12, 12, 12, 10, 10];
 
   const hdrI = [
     pad("Algorithm", WI[0]),
@@ -825,10 +841,9 @@ export function handleSummary(data) {
     pad("Token stdev", WI[4]),
     pad("E2E avg", WI[5]),
     pad("E2E p95", WI[6]),
-    pad("Overhead", WI[7]),
-    pad("CPU avg", WI[8]),
-    pad("Mem avg", WI[9]),
-    pad("Tok bytes", WI[10]),
+    pad("CPU avg", WI[7]),
+    pad("Mem avg", WI[8]),
+    pad("Tok bytes", WI[8]),
   ].join("");
 
   const unitI = [
@@ -839,13 +854,12 @@ export function handleSummary(data) {
     pad("(ms)", WI[4]),
     pad("(ms)", WI[5]),
     pad("(ms)", WI[6]),
-    pad("total-sign", WI[7]),
-    pad("(%)", WI[8]),
-    pad("(MB)", WI[9]),
-    pad("(B)", WI[10]),
+    pad("(%)", WI[7]),
+    pad("(MB)", WI[8]),
+    pad("(B)", WI[8]),
   ].join("");
 
-  let isolated = { pqc: "", classic: "" };
+  let isolated = "";
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
@@ -857,10 +871,6 @@ export function handleSummary(data) {
     const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
     const mem = getVal("bench_auth_memory_alloc_avg", n, null, "avg");
     const tok = getVal("bench_token_size_avg", n, null, "avg", 0);
-    const oh =
-      sa !== "—" && ta !== "—"
-        ? (parseFloat(ta) - parseFloat(sa)).toFixed(3)
-        : "—";
 
     const row =
       [
@@ -871,13 +881,12 @@ export function handleSummary(data) {
         pad(ss, WI[4]),
         pad(ta, WI[5]),
         pad(tp, WI[6]),
-        pad(oh, WI[7]),
-        pad(cpu, WI[8]),
-        pad(mem, WI[9]),
-        pad(tok, WI[10]),
+        pad(cpu, WI[7]),
+        pad(mem, WI[8]),
+        pad(tok, WI[8]),
       ].join("") + "\n";
 
-    isolated = appendRow(isolated, alg.category, row);
+    isolated = appendRow(isolated, row);
   }
 
   // ── TABLE 2: Primary stress metrics ──────────────────────────
@@ -932,8 +941,8 @@ export function handleSummary(data) {
     pad("", WS[9]),
   ].join("");
 
-  let primary = { pqc: "", classic: "" };
-  let secondary = { pqc: "", classic: "" };
+  let primary = "";
+  let secondary = "";
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
@@ -967,8 +976,8 @@ export function handleSummary(data) {
           pad(i === 0 ? attackRate : "", WS[9]),
         ].join("") + "\n";
 
-      primary = appendRow(primary, alg.category, rowP);
-      secondary = appendRow(secondary, alg.category, rowS);
+      primary = appendRow(primary, rowP);
+      secondary = appendRow(secondary, rowS);
     }
     const sepP =
       pad("", WP[0] + WP[1]) +
@@ -978,8 +987,8 @@ export function handleSummary(data) {
       pad("", WS[0] + WS[1]) +
       "─".repeat(WS.slice(2).reduce((a, b) => a + b, 0)) +
       "\n";
-    primary = appendRow(primary, alg.category, sepP);
-    secondary = appendRow(secondary, alg.category, sepS);
+    primary = appendRow(primary, sepP);
+    secondary = appendRow(secondary, sepS);
   }
 
   const table = `
@@ -993,40 +1002,27 @@ ${SEP}
   ${hdrI}
   ${unitI}
   ${LINE}
-  [ PQC ]
-  ${isolated.pqc.trimEnd().split("\n").join("\n  ")}
-  ${LINE}
-  [ Classical ]
-  ${isolated.classic.trimEnd().split("\n").join("\n  ") || "(none)"}
+  ${isolated.trimEnd().split("\n").join("\n  ")}
 
   Token   = JWT generation measured in local benchmark signer only; excludes DB lookup, bcrypt, auth-service, and network
   E2E     = Full local benchmark handler iteration during isolated benchmark
-  Overhead= E2E avg − Token avg
   Warmup  = ${ISOLATED_WARMUP} discarded iterations before each isolated measurement
 
   ── SUPPORTING SYSTEM METRICS: STRESS (${CONCURRENCY_LEVELS.join(" / ")} VUs, ${STRESS_DURATION_S}s each) ──
   ${hdrP}
   ${unitP}
   ${LINE}
-  [ PQC ]
-  ${primary.pqc.trimEnd().split("\n").join("\n  ")}
-  ${LINE}
-  [ Classical ]
-  ${primary.classic.trimEnd().split("\n").join("\n  ") || "(none)"}
+  ${primary.trimEnd().split("\n").join("\n  ")}
 
   ── SECONDARY METRICS: END-TO-END, SIZE, ATTACK BLOCK RATE ──
   ${hdrS}
   ${unitS}
   ${LINE}
-  [ PQC ]
-  ${secondary.pqc.trimEnd().split("\n").join("\n  ")}
-  ${LINE}
-  [ Classical ]
-  ${secondary.classic.trimEnd().split("\n").join("\n  ") || "(none)"}
+  ${secondary.trimEnd().split("\n").join("\n  ")}
 
   Sign avg/p95 = X-Token-Generation-Time-Ms header; pure JWT generation only
   Auth thrpt   = Successful benchmark-sign requests / ${STRESS_DURATION_S}s
-  CPU/Mem      = Placeholder benchmark headers; not sampled from auth-service
+  CPU/Mem      = Runtime samples from benchmark gateway process
   E2E          = Full k6 client round-trip for /api/benchmark/token
   RPS          = Total benchmark-sign requests / ${STRESS_DURATION_S}s
   Tok/Hdr/Body = JWT string and base64url segment sizes in bytes

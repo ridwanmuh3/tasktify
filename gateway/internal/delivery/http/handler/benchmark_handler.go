@@ -3,6 +3,8 @@ package handler
 import (
 	"fmt"
 	"math"
+	"runtime"
+	"runtime/metrics"
 	"sort"
 	"strings"
 	"time"
@@ -18,6 +20,13 @@ import (
 type BenchmarkHandler struct {
 	log          *zap.SugaredLogger
 	benchmarkJWT jwtutils.JwtUtil
+}
+
+type BenchmarkRuntimeStats struct {
+	MemoryAllocMB      float64
+	MemoryAllocDeltaMB float64 // heap growth during sign operation
+	MemorySysMB        float64
+	CPUPct             float64 // CPU utilization during sign operation
 }
 
 func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
@@ -86,6 +95,7 @@ type BenchmarkSignResult struct {
 	TokenSignatureSizeBytes  []float64 `json:"token_signature_size_bytes"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
 	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`
+	AuthMemoryAllocDeltaMB   []float64 `json:"auth_memory_alloc_delta_mb"`
 	AuthMemorySysMB          []float64 `json:"auth_memory_sys_mb"`
 	Stats                    struct {
 		Sign            TimingStats `json:"sign"`             // backward-compatible alias
@@ -98,9 +108,10 @@ type BenchmarkSignResult struct {
 			Signature NumericStats `json:"signature"`
 		} `json:"token_size"`
 		Resource struct {
-			CPUUtilization NumericStats `json:"cpu_utilization_pct"`
-			MemoryAllocMB  NumericStats `json:"memory_alloc_mb"`
-			MemorySysMB    NumericStats `json:"memory_sys_mb"`
+			CPUUtilization      NumericStats `json:"cpu_utilization_pct"`
+			MemoryAllocMB       NumericStats `json:"memory_alloc_mb"`
+			MemoryAllocDeltaMB  NumericStats `json:"memory_alloc_delta_mb"`
+			MemorySysMB         NumericStats `json:"memory_sys_mb"`
 		} `json:"resource"`
 	} `json:"stats"`
 }
@@ -123,6 +134,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	tokenSignatureSizes := make([]float64, 0, req.Iterations)
 	cpuSamples := make([]float64, 0, req.Iterations)
 	memAllocSamples := make([]float64, 0, req.Iterations)
+	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
 	memSysSamples := make([]float64, 0, req.Iterations)
 	warmupIterations := req.WarmupIterations
 	if warmupIterations < 0 {
@@ -130,13 +142,13 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 
 	for i := 0; i < warmupIterations; i++ {
-		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email); err != nil {
+		if _, _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email); err != nil {
 			h.log.Warnf("benchmark warmup iter %d failed: %v", i, err)
 		}
 	}
 
 	for i := 0; i < req.Iterations; i++ {
-		token, signMs, totalMs, err := h.signBenchmarkToken(req.Algorithm, req.Email)
+		token, signMs, totalMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email)
 		if err != nil {
 			h.log.Warnf("benchmark iter %d failed: %v", i, err)
 			continue
@@ -145,9 +157,10 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		signTimings = append(signTimings, signMs)
 		totalTimings = append(totalTimings, totalMs)
 		addTokenSizeSamples(token, &tokenSizes, &tokenHeaderSizes, &tokenBodySizes, &tokenSignatureSizes)
-		cpuSamples = append(cpuSamples, 0)
-		memAllocSamples = append(memAllocSamples, 0)
-		memSysSamples = append(memSysSamples, 0)
+		cpuSamples = append(cpuSamples, stats.CPUPct)
+		memAllocSamples = append(memAllocSamples, stats.MemoryAllocMB)
+		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaMB)
+		memSysSamples = append(memSysSamples, stats.MemorySysMB)
 	}
 
 	result := BenchmarkSignResult{
@@ -165,6 +178,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		TokenSignatureSizeBytes:  tokenSignatureSizes,
 		AuthCPUPct:               cpuSamples,
 		AuthMemoryAllocMB:        memAllocSamples,
+		AuthMemoryAllocDeltaMB:   memAllocDeltaSamples,
 		AuthMemorySysMB:          memSysSamples,
 	}
 	result.Stats.Sign = computeTimingStats(signTimings)
@@ -176,6 +190,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	result.Stats.TokenSize.Signature = computeNumericStats(tokenSignatureSizes)
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
 	result.Stats.Resource.MemoryAllocMB = computeNumericStats(memAllocSamples)
+	result.Stats.Resource.MemoryAllocDeltaMB = computeNumericStats(memAllocDeltaSamples)
 	result.Stats.Resource.MemorySysMB = computeNumericStats(memSysSamples)
 
 	c.Set("X-Bench-Sign-P95-Ms", fmt.Sprintf("%.3f", result.Stats.Sign.P95Ms))
@@ -199,7 +214,7 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, signMs, _, err := h.signBenchmarkToken(req.Algorithm, req.Email)
+	token, signMs, _, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email)
 	if err != nil {
 		h.log.Errorf("benchmark token sign failed: %v", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate benchmark token")
@@ -207,9 +222,10 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 
 	c.Set("X-Sign-Time-Ms", fmt.Sprintf("%.3f", signMs))
 	c.Set("X-Token-Generation-Time-Ms", fmt.Sprintf("%.3f", signMs))
-	c.Set("X-Auth-CPU-Pct", "0.000")
-	c.Set("X-Auth-Mem-Alloc-MB", "0.000")
-	c.Set("X-Auth-Mem-Sys-MB", "0.000")
+	c.Set("X-Auth-CPU-Pct", fmt.Sprintf("%.3f", stats.CPUPct))
+	c.Set("X-Auth-Mem-Alloc-MB", fmt.Sprintf("%.3f", stats.MemoryAllocMB))
+	c.Set("X-Auth-Mem-Alloc-Delta-MB", fmt.Sprintf("%.6f", stats.MemoryAllocDeltaMB))
+	c.Set("X-Auth-Mem-Sys-MB", fmt.Sprintf("%.3f", stats.MemorySysMB))
 
 	return c.JSON(model.Response[any]{
 		Status:  fiber.StatusOK,
@@ -221,9 +237,9 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 	})
 }
 
-func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (string, float64, float64, error) {
+func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (string, float64, float64, BenchmarkRuntimeStats, error) {
 	if h.benchmarkJWT == nil {
-		return "", 0, 0, fmt.Errorf("benchmark signer not configured")
+		return "", 0, 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark signer not configured")
 	}
 
 	userID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(strings.ToLower(email)))
@@ -233,15 +249,60 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 		Algorithm: algorithm,
 	}
 
+	cpuBefore, heapBefore, _ := readRuntimeMetrics()
 	totalStart := time.Now()
+
 	signStart := totalStart
 	token, err := h.benchmarkJWT.Sign(payload)
 	signMs := float64(time.Since(signStart).Microseconds()) / 1000.0
 	totalMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+
 	if err != nil {
-		return "", 0, 0, err
+		return "", 0, 0, BenchmarkRuntimeStats{}, err
 	}
-	return token, signMs, totalMs, nil
+
+	cpuAfter, heapAfter, sysMem := readRuntimeMetrics()
+	wallElapsed := time.Since(totalStart).Seconds()
+
+	cpuDelta := cpuAfter - cpuBefore
+	cpuPct := 0.0
+	if wallElapsed > 0 && cpuDelta >= 0 {
+		cpuPct = (cpuDelta / wallElapsed / float64(runtime.GOMAXPROCS(0))) * 100
+	}
+
+	stats := BenchmarkRuntimeStats{
+		MemoryAllocMB:      bytesToMB(uint64(heapAfter)),
+		MemoryAllocDeltaMB: bytesToMB(uint64(heapAfter)) - bytesToMB(uint64(heapBefore)),
+		MemorySysMB:        bytesToMB(uint64(sysMem)),
+		CPUPct:             cpuPct,
+	}
+
+	return token, signMs, totalMs, stats, nil
+}
+
+// readRuntimeMetrics samples CPU seconds, heap-in-use bytes, and total memory bytes
+// using the runtime/metrics API (non-STW, safe to call concurrently).
+func readRuntimeMetrics() (cpuSeconds, heapInuse, totalMem float64) {
+	samples := []metrics.Sample{
+		{Name: "/cpu/classes/total:cpu-seconds"},
+		{Name: "/memory/classes/heap/inuse:bytes"},
+		{Name: "/memory/classes/total:bytes"},
+	}
+	metrics.Read(samples)
+	if samples[0].Value.Kind() == metrics.KindFloat64 {
+		cpuSeconds = samples[0].Value.Float64()
+	}
+	if samples[1].Value.Kind() == metrics.KindUint64 {
+		heapInuse = float64(samples[1].Value.Uint64())
+	}
+	if samples[2].Value.Kind() == metrics.KindUint64 {
+		totalMem = float64(samples[2].Value.Uint64())
+	}
+	return
+}
+
+func bytesToMB(v uint64) float64 {
+	return float64(v) / 1024.0 / 1024.0
 }
 
 func computeTimingStats(timings []float64) TimingStats {
