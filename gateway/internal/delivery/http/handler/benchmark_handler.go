@@ -3,11 +3,12 @@ package handler
 import (
 	"fmt"
 	"math"
+	"os"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -30,9 +31,9 @@ type BenchmarkRuntimeStats struct {
 	CPUPct             float64 // process CPU utilization % from background sampler
 }
 
-// cpuMonitor samples process CPU utilization every 200 ms using Getrusage.
-// Per-operation /cpu/classes/total:cpu-seconds has insufficient resolution for
-// sub-millisecond sign calls — a background sampler with a 200ms window is reliable.
+// cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
+// /proc/self/stat utime+stime always sums all threads — reliable in containers.
+// USER_HZ=100 so 1 tick = 10ms; formula: ticks*1e6/wallµs/GOMAXPROCS = %.
 var cpuMonitor struct {
 	mu  sync.RWMutex
 	pct float64
@@ -40,15 +41,16 @@ var cpuMonitor struct {
 
 func init() {
 	go func() {
-		prev := readProcessCPUMicros()
+		prev := readCPUTicks()
 		prevWall := time.Now()
 		for {
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			now := time.Now()
-			curr := readProcessCPUMicros()
+			curr := readCPUTicks()
 			wallUs := now.Sub(prevWall).Microseconds()
 			if wallUs > 0 {
-				pct := float64(curr-prev) / float64(wallUs) / float64(runtime.GOMAXPROCS(0)) * 100
+				// 1 tick=10ms=10000µs; *1e6 = 10000*100 (tick→µs then fraction→pct)
+				pct := float64(curr-prev) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
 				cpuMonitor.mu.Lock()
 				cpuMonitor.pct = pct
 				cpuMonitor.mu.Unlock()
@@ -59,12 +61,25 @@ func init() {
 	}()
 }
 
-func readProcessCPUMicros() int64 {
-	var u syscall.Rusage
-	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &u); err != nil {
+// readCPUTicks reads process-wide CPU clock ticks (utime+stime) from /proc/self/stat.
+// Unlike Getrusage(RUSAGE_SELF), this always aggregates all threads on Linux.
+func readCPUTicks() int64 {
+	data, err := os.ReadFile("/proc/self/stat")
+	if err != nil {
 		return 0
 	}
-	return u.Utime.Sec*1_000_000 + u.Utime.Usec + u.Stime.Sec*1_000_000 + u.Stime.Usec
+	s := string(data)
+	end := strings.LastIndex(s, ")")
+	if end < 0 || end+2 >= len(s) {
+		return 0
+	}
+	fields := strings.Fields(s[end+2:])
+	if len(fields) < 13 {
+		return 0
+	}
+	utime, _ := strconv.ParseInt(fields[11], 10, 64)
+	stime, _ := strconv.ParseInt(fields[12], 10, 64)
+	return utime + stime
 }
 
 func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
@@ -294,11 +309,11 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 	var memBefore, memAfter runtime.MemStats
 	runtime.ReadMemStats(&memBefore)
 
-	cpuOpBefore := readProcessCPUMicros()
+	cpuOpBefore := readCPUTicks()
 	totalStart := time.Now()
 	token, err := h.benchmarkJWT.Sign(payload)
 	signMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
-	cpuOpAfter := readProcessCPUMicros()
+	cpuOpAfter := readCPUTicks()
 	totalMs := signMs
 
 	if err != nil {
@@ -318,7 +333,7 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 		wallUs := int64(signMs * 1000)
 		cpuDelta := cpuOpAfter - cpuOpBefore
 		if wallUs > 0 && cpuDelta > 0 {
-			cpuPct = float64(cpuDelta) / float64(wallUs) / float64(runtime.GOMAXPROCS(0)) * 100
+			cpuPct = float64(cpuDelta) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
 		}
 	}
 

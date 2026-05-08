@@ -107,4 +107,15 @@ bench: keygen-all vendor bench-up
 	@echo " ready!"
 	k6 run -e BENCH_HOST=localhost k6/benchmark_compare.js
 
-.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench
+bench-sign: keygen-all vendor bench-up
+	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
+	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
+		printf "."; sleep 3; \
+	done
+	@echo " ready!"
+	k6 run --no-color -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee result.txt
+
+bench-sign-remote:
+	k6 run --no-color -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
+
+.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote
