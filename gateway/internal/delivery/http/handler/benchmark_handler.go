@@ -7,6 +7,8 @@ import (
 	"runtime/metrics"
 	"sort"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -24,9 +26,46 @@ type BenchmarkHandler struct {
 
 type BenchmarkRuntimeStats struct {
 	MemoryAllocMB      float64
-	MemoryAllocDeltaMB float64 // heap growth during sign operation
+	MemoryAllocDeltaMB float64 // bytes allocated during sign operation (cumulative delta)
 	MemorySysMB        float64
-	CPUPct             float64 // CPU utilization during sign operation
+	CPUPct             float64 // process CPU utilization % from background sampler
+}
+
+// cpuMonitor samples process CPU utilization every 200 ms using Getrusage.
+// Per-operation /cpu/classes/total:cpu-seconds has insufficient resolution for
+// sub-millisecond sign calls — a background sampler with a 200ms window is reliable.
+var cpuMonitor struct {
+	mu  sync.RWMutex
+	pct float64
+}
+
+func init() {
+	go func() {
+		prev := readProcessCPUMicros()
+		prevWall := time.Now()
+		for {
+			time.Sleep(200 * time.Millisecond)
+			now := time.Now()
+			curr := readProcessCPUMicros()
+			wallUs := now.Sub(prevWall).Microseconds()
+			if wallUs > 0 {
+				pct := float64(curr-prev) / float64(wallUs) / float64(runtime.GOMAXPROCS(0)) * 100
+				cpuMonitor.mu.Lock()
+				cpuMonitor.pct = pct
+				cpuMonitor.mu.Unlock()
+			}
+			prev = curr
+			prevWall = now
+		}
+	}()
+}
+
+func readProcessCPUMicros() int64 {
+	var u syscall.Rusage
+	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &u); err != nil {
+		return 0
+	}
+	return u.Utime.Sec*1_000_000 + u.Utime.Usec + u.Stime.Sec*1_000_000 + u.Stime.Usec
 }
 
 func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
@@ -249,30 +288,29 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 		Algorithm: algorithm,
 	}
 
-	cpuBefore, heapBefore, _ := readRuntimeMetrics()
-	totalStart := time.Now()
+	// Sample cumulative heap allocations before/after sign.
+	// /gc/heap/allocs:bytes is monotonically increasing (not affected by GC),
+	// giving accurate bytes-allocated-during-sign regardless of collection activity.
+	_, allocBefore, _ := readMemoryMetrics()
 
-	signStart := totalStart
+	totalStart := time.Now()
 	token, err := h.benchmarkJWT.Sign(payload)
-	signMs := float64(time.Since(signStart).Microseconds()) / 1000.0
-	totalMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+	signMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+	totalMs := signMs
 
 	if err != nil {
 		return "", 0, 0, BenchmarkRuntimeStats{}, err
 	}
 
-	cpuAfter, heapAfter, sysMem := readRuntimeMetrics()
-	wallElapsed := time.Since(totalStart).Seconds()
+	heapAfter, allocAfter, sysMem := readMemoryMetrics()
 
-	cpuDelta := cpuAfter - cpuBefore
-	cpuPct := 0.0
-	if wallElapsed > 0 && cpuDelta >= 0 {
-		cpuPct = (cpuDelta / wallElapsed / float64(runtime.GOMAXPROCS(0))) * 100
-	}
+	cpuMonitor.mu.RLock()
+	cpuPct := cpuMonitor.pct
+	cpuMonitor.mu.RUnlock()
 
 	stats := BenchmarkRuntimeStats{
 		MemoryAllocMB:      bytesToMB(uint64(heapAfter)),
-		MemoryAllocDeltaMB: bytesToMB(uint64(heapAfter)) - bytesToMB(uint64(heapBefore)),
+		MemoryAllocDeltaMB: (allocAfter - allocBefore) / 1024 / 1024,
 		MemorySysMB:        bytesToMB(uint64(sysMem)),
 		CPUPct:             cpuPct,
 	}
@@ -280,20 +318,20 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 	return token, signMs, totalMs, stats, nil
 }
 
-// readRuntimeMetrics samples CPU seconds, heap-in-use bytes, and total memory bytes
-// using the runtime/metrics API (non-STW, safe to call concurrently).
-func readRuntimeMetrics() (cpuSeconds, heapInuse, totalMem float64) {
+// readMemoryMetrics returns heap-in-use, cumulative-heap-allocs, and total-mapped bytes.
+// Uses runtime/metrics (non-STW, concurrent-safe).
+func readMemoryMetrics() (heapInuse, heapAllocs, totalMem float64) {
 	samples := []metrics.Sample{
-		{Name: "/cpu/classes/total:cpu-seconds"},
 		{Name: "/memory/classes/heap/inuse:bytes"},
+		{Name: "/gc/heap/allocs:bytes"},
 		{Name: "/memory/classes/total:bytes"},
 	}
 	metrics.Read(samples)
-	if samples[0].Value.Kind() == metrics.KindFloat64 {
-		cpuSeconds = samples[0].Value.Float64()
+	if samples[0].Value.Kind() == metrics.KindUint64 {
+		heapInuse = float64(samples[0].Value.Uint64())
 	}
 	if samples[1].Value.Kind() == metrics.KindUint64 {
-		heapInuse = float64(samples[1].Value.Uint64())
+		heapAllocs = float64(samples[1].Value.Uint64())
 	}
 	if samples[2].Value.Kind() == metrics.KindUint64 {
 		totalMem = float64(samples[2].Value.Uint64())

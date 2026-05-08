@@ -55,6 +55,11 @@ import { Trend, Counter, Rate } from "k6/metrics";
 import exec from "k6/execution";
 import { randomString } from "./k6-utils.js";
 
+// Full server-side stats stored during runIsolated, used in handleSummary.
+// k6 metrics only carry avg/p95 for isolated phase (one value per alg),
+// so we keep the raw server response to preserve min/max/p99/stdev.
+const isolatedServerStats = {};
+
 // ═══════════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════════
@@ -421,6 +426,9 @@ export function runIsolated(data) {
     const result = JSON.parse(res.body).data;
     const s = result.stats;
 
+    // Persist full server-side stats for handleSummary (includes min/max/p99/stdev).
+    isolatedServerStats[alg.name] = { stats: s, iterations: result.success_count };
+
     benchSignP95.add(s.sign.p95_ms, tags);
     benchSignAvg.add(s.sign.avg_ms, tags);
     benchSignMin.add(s.sign.min_ms, tags);
@@ -740,66 +748,119 @@ export function handleSummary(data) {
         attack: null,
       };
 
-      const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
-      const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
-      const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
-      const isolatedTotalAvg = getNumber("bench_total_avg", alg.name, null, "avg");
-      const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
-      const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
-      const isolatedMemAvg = getNumber("bench_auth_memory_alloc_avg", alg.name, null, "avg");
-      const isolatedMemDeltaAvg = getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "avg");
-      const isolatedTokBytes = getNumber("bench_token_size_avg", alg.name, null, "avg");
-
-      if (isolatedTokenAvg !== null || isolatedTotalAvg !== null) {
+      // ── Isolated: use full server-side stats (min/max/p99/stdev preserved) ──
+      const srv = isolatedServerStats[alg.name];
+      if (srv) {
+        const sg = srv.stats.token_generation ?? srv.stats.sign;
+        const tot = srv.stats.total;
+        const cpu = srv.stats.resource?.cpu_utilization_pct;
+        const mem = srv.stats.resource?.memory_alloc_mb;
+        const memD = srv.stats.resource?.memory_alloc_delta_mb;
+        const memS = srv.stats.resource?.memory_sys_mb;
+        const tok = srv.stats.token_size?.token;
         item.isolated = {
-          token_generation_avg_ms: isolatedTokenAvg,
-          token_generation_p95_ms: isolatedTokenP95,
-          token_generation_stdev_ms: isolatedTokenStdev,
-          total_avg_ms: isolatedTotalAvg,
-          total_p95_ms: isolatedTotalP95,
+          iterations: srv.iterations,
+          token_generation_ms: {
+            avg: sg?.avg_ms, min: sg?.min_ms, max: sg?.max_ms,
+            p50: sg?.p50_ms, p95: sg?.p95_ms, p99: sg?.p99_ms, stdev: sg?.stdev_ms,
+          },
+          total_ms: {
+            avg: tot?.avg_ms, min: tot?.min_ms, max: tot?.max_ms,
+            p95: tot?.p95_ms, p99: tot?.p99_ms, stdev: tot?.stdev_ms,
+          },
           overhead_avg_ms:
-            isolatedTokenAvg !== null && isolatedTotalAvg !== null
-              ? isolatedTotalAvg - isolatedTokenAvg
-              : null,
-          cpu_avg_pct: isolatedCPUAvg,
-          memory_alloc_avg_mb: isolatedMemAvg,
-          memory_alloc_delta_avg_mb: isolatedMemDeltaAvg,
-          memory_sys_avg_mb: getNumber("bench_auth_memory_sys_avg", alg.name, null, "avg"),
-          token_size_avg_bytes: isolatedTokBytes,
+            sg?.avg_ms != null && tot?.avg_ms != null ? tot.avg_ms - sg.avg_ms : null,
+          cpu_pct: {
+            avg: cpu?.avg, min: cpu?.min, max: cpu?.max,
+            p50: cpu?.p50, p95: cpu?.p95, p99: cpu?.p99, stdev: cpu?.stdev,
+          },
+          memory_alloc_mb: {
+            avg: mem?.avg, min: mem?.min, max: mem?.max,
+            p50: mem?.p50, p95: mem?.p95, p99: mem?.p99, stdev: mem?.stdev,
+          },
+          memory_alloc_delta_mb: {
+            avg: memD?.avg, min: memD?.min, max: memD?.max,
+            p50: memD?.p50, p95: memD?.p95, p99: memD?.p99, stdev: memD?.stdev,
+          },
+          memory_sys_mb: { avg: memS?.avg, min: memS?.min, max: memS?.max },
+          token_size_bytes: { avg: tok?.avg, min: tok?.min, max: tok?.max },
         };
       }
 
+      // ── Stress: extract full k6 Trend distributions ───────────
       for (const vus of CONCURRENCY_LEVELS) {
         const vusKey = String(vus);
         const signAvg = getNumber("stress_token_generation_clean", alg.name, vusKey, "avg");
-        const signP95 = getNumber("stress_token_generation_clean", alg.name, vusKey, "p(95)");
         const e2eAvg = getNumber("stress_sign_dirty", alg.name, vusKey, "avg");
-        const e2eP95 = getNumber("stress_sign_dirty", alg.name, vusKey, "p(95)");
 
         if (signAvg === null && e2eAvg === null) {
           continue;
         }
 
+        function stressStat(metric, stat) {
+          return getNumber(metric, alg.name, vusKey, stat);
+        }
+
         item.stress.push({
           vus,
-          token_generation_avg_ms: signAvg,
-          token_generation_p95_ms: signP95,
-          e2e_avg_ms: e2eAvg,
-          e2e_p95_ms: e2eP95,
+          token_generation_ms: {
+            avg: stressStat("stress_token_generation_clean", "avg"),
+            min: stressStat("stress_token_generation_clean", "min"),
+            max: stressStat("stress_token_generation_clean", "max"),
+            med: stressStat("stress_token_generation_clean", "med"),
+            p95: stressStat("stress_token_generation_clean", "p(95)"),
+            p99: stressStat("stress_token_generation_clean", "p(99)"),
+          },
+          e2e_ms: {
+            avg: stressStat("stress_sign_dirty", "avg"),
+            min: stressStat("stress_sign_dirty", "min"),
+            max: stressStat("stress_sign_dirty", "max"),
+            med: stressStat("stress_sign_dirty", "med"),
+            p95: stressStat("stress_sign_dirty", "p(95)"),
+            p99: stressStat("stress_sign_dirty", "p(99)"),
+          },
           throughput_ok_per_s: parseFloat(getThroughput(alg.name, vusKey)) || 0,
           request_rate_per_s: parseFloat(getRequestRate(alg.name, vusKey)) || 0,
-          cpu_avg_pct: getNumber("stress_auth_cpu", alg.name, vusKey, "avg"),
-          memory_alloc_avg_mb: getNumber("stress_auth_memory_alloc", alg.name, vusKey, "avg"),
-          memory_alloc_delta_avg_mb: getNumber("stress_auth_memory_alloc_delta", alg.name, vusKey, "avg"),
-          memory_sys_avg_mb: getNumber("stress_auth_memory_sys", alg.name, vusKey, "avg"),
-          error_rate_pct:
-            (() => {
-              const v = getErrRate(alg.name, vusKey);
-              return v === "—" ? null : parseFloat(v);
-            })(),
-          token_size_avg_bytes: getNumber("stress_token_size", alg.name, vusKey, "avg"),
-          token_header_avg_bytes: getNumber("stress_token_header_size", alg.name, vusKey, "avg"),
-          token_body_avg_bytes: getNumber("stress_token_body_size", alg.name, vusKey, "avg"),
+          cpu_pct: {
+            avg: stressStat("stress_auth_cpu", "avg"),
+            min: stressStat("stress_auth_cpu", "min"),
+            max: stressStat("stress_auth_cpu", "max"),
+            med: stressStat("stress_auth_cpu", "med"),
+            p95: stressStat("stress_auth_cpu", "p(95)"),
+            p99: stressStat("stress_auth_cpu", "p(99)"),
+          },
+          memory_alloc_mb: {
+            avg: stressStat("stress_auth_memory_alloc", "avg"),
+            min: stressStat("stress_auth_memory_alloc", "min"),
+            max: stressStat("stress_auth_memory_alloc", "max"),
+            p95: stressStat("stress_auth_memory_alloc", "p(95)"),
+          },
+          memory_alloc_delta_mb: {
+            avg: stressStat("stress_auth_memory_alloc_delta", "avg"),
+            min: stressStat("stress_auth_memory_alloc_delta", "min"),
+            max: stressStat("stress_auth_memory_alloc_delta", "max"),
+            p95: stressStat("stress_auth_memory_alloc_delta", "p(95)"),
+          },
+          memory_sys_mb: {
+            avg: stressStat("stress_auth_memory_sys", "avg"),
+            min: stressStat("stress_auth_memory_sys", "min"),
+            max: stressStat("stress_auth_memory_sys", "max"),
+          },
+          error_rate_pct: (() => {
+            const v = getErrRate(alg.name, vusKey);
+            return v === "—" ? null : parseFloat(v);
+          })(),
+          token_size_bytes: {
+            avg: stressStat("stress_token_size", "avg"),
+            min: stressStat("stress_token_size", "min"),
+            max: stressStat("stress_token_size", "max"),
+          },
+          token_header_bytes: {
+            avg: stressStat("stress_token_header_size", "avg"),
+          },
+          token_body_bytes: {
+            avg: stressStat("stress_token_body_size", "avg"),
+          },
         });
       }
 
