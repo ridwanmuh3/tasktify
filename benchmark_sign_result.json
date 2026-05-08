@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-08T07:57:43.674Z",
+  "generated_at": "2026-05-08T09:21:13.807Z",
   "mode": "Isolated + Stress + Attack",
   "endpoint": "https://poc-ridwanmuh3.my.id",
   "methodology": {
@@ -24,70 +24,181 @@
     {
       "algorithm": "Falcon-Precomputed-512",
       "category": "PQC",
-      "isolated": {
-        "token_generation_avg_ms": 0.30630999999999997,
-        "token_generation_p95_ms": 0.41069999999999984,
-        "token_generation_stdev_ms": 0.21588013780799753,
-        "total_avg_ms": 0.30635999999999997,
-        "total_p95_ms": 0.41069999999999984,
-        "overhead_avg_ms": 0.00004999999999999449,
-        "cpu_avg_pct": 0,
-        "memory_alloc_avg_mb": 0,
-        "memory_alloc_delta_avg_mb": 0,
-        "memory_sys_avg_mb": null,
-        "token_size_avg_bytes": 1192
-      },
+      "isolated": null,
       "stress": [
         {
           "vus": 10,
-          "token_generation_avg_ms": 0.4398383027522933,
-          "token_generation_p95_ms": 0.849,
-          "e2e_avg_ms": 287.16876546789,
-          "e2e_p95_ms": 643.4852065499982,
-          "throughput_ok_per_s": 29.07,
-          "request_rate_per_s": 29.07,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.39217172503242537,
+            "min": 0.204,
+            "max": 3.524,
+            "med": 0.329,
+            "p95": 0.7922999999999998,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 26.534101829312593,
+            "min": 19.973927,
+            "max": 81.112595,
+            "med": 24.676423,
+            "p95": 39.490679199999974,
+            "p99": null
+          },
+          "throughput_ok_per_s": 128.5,
+          "request_rate_per_s": 128.5,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1192,
-          "token_header_avg_bytes": 59,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1192,
+            "min": 1192,
+            "max": 1192
+          },
+          "token_header_bytes": {
+            "avg": 59
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 30,
-          "token_generation_avg_ms": 0.4288774603174599,
-          "token_generation_p95_ms": 0.9332999999999985,
-          "e2e_avg_ms": 228.4920518650797,
-          "e2e_p95_ms": 514.1030640999996,
-          "throughput_ok_per_s": 105,
-          "request_rate_per_s": 105,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.44131861912846476,
+            "min": 0.197,
+            "max": 7.411,
+            "med": 0.326,
+            "p95": 1.131,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 33.54608408715334,
+            "min": 20.064913,
+            "max": 362.242652,
+            "med": 32.369964,
+            "p95": 46.47361049999999,
+            "p99": null
+          },
+          "throughput_ok_per_s": 353.4,
+          "request_rate_per_s": 353.4,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1192,
-          "token_header_avg_bytes": 59,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1192,
+            "min": 1192,
+            "max": 1192
+          },
+          "token_header_bytes": {
+            "avg": 59
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 50,
-          "token_generation_avg_ms": 0.4566987509184417,
-          "token_generation_p95_ms": 1.1367999999999994,
-          "e2e_avg_ms": 312.53426344770986,
-          "e2e_p95_ms": 906.0599158999986,
-          "throughput_ok_per_s": 136.1,
-          "request_rate_per_s": 136.1,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.5051497922062285,
+            "min": 0.2,
+            "max": 10.294,
+            "med": 0.335,
+            "p95": 1.356,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 39.418410896283774,
+            "min": 20.197037,
+            "max": 855.882461,
+            "med": 33.897241,
+            "p95": 69.59129509999997,
+            "p99": null
+          },
+          "throughput_ok_per_s": 553.43,
+          "request_rate_per_s": 553.43,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1192,
-          "token_header_avg_bytes": 59,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1192,
+            "min": 1192,
+            "max": 1192
+          },
+          "token_header_bytes": {
+            "avg": 59
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         }
       ],
       "attack": null
@@ -95,70 +206,181 @@
     {
       "algorithm": "Falcon-512",
       "category": "PQC",
-      "isolated": {
-        "token_generation_avg_ms": 0.3314800000000001,
-        "token_generation_p95_ms": 0.40729999999999994,
-        "token_generation_stdev_ms": 0.0635631150904359,
-        "total_avg_ms": 0.3315600000000001,
-        "total_p95_ms": 0.40729999999999994,
-        "overhead_avg_ms": 0.00007999999999996898,
-        "cpu_avg_pct": 0,
-        "memory_alloc_avg_mb": 0,
-        "memory_alloc_delta_avg_mb": 0,
-        "memory_sys_avg_mb": null,
-        "token_size_avg_bytes": 1176
-      },
+      "isolated": null,
       "stress": [
         {
           "vus": 10,
-          "token_generation_avg_ms": 0.528348379629629,
-          "token_generation_p95_ms": 1.0115999999999985,
-          "e2e_avg_ms": 295.12856687499993,
-          "e2e_p95_ms": 835.0190161499997,
-          "throughput_ok_per_s": 28.8,
-          "request_rate_per_s": 28.8,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.548847814910025,
+            "min": 0.279,
+            "max": 5.945,
+            "med": 0.45,
+            "p95": 1.1900999999999995,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 26.218767629563025,
+            "min": 20.147168,
+            "max": 209.0699,
+            "med": 24.620435,
+            "p95": 37.05389664999999,
+            "p99": null
+          },
+          "throughput_ok_per_s": 129.67,
+          "request_rate_per_s": 129.67,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1176,
-          "token_header_avg_bytes": 43,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1176,
+            "min": 1176,
+            "max": 1176
+          },
+          "token_header_bytes": {
+            "avg": 43
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 30,
-          "token_generation_avg_ms": 0.585087206910736,
-          "token_generation_p95_ms": 1.3330000000000002,
-          "e2e_avg_ms": 325.94948413451255,
-          "e2e_p95_ms": 819.9048009999999,
-          "throughput_ok_per_s": 81.03,
-          "request_rate_per_s": 81.03,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.6305359510982164,
+            "min": 0.277,
+            "max": 9.2,
+            "med": 0.462,
+            "p95": 1.506,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 42.25036733661416,
+            "min": 20.469898,
+            "max": 285.282738,
+            "med": 43.2690195,
+            "p95": 55.707798499999996,
+            "p99": null
+          },
+          "throughput_ok_per_s": 321.73,
+          "request_rate_per_s": 321.73,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1176,
-          "token_header_avg_bytes": 43,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1176,
+            "min": 1176,
+            "max": 1176
+          },
+          "token_header_bytes": {
+            "avg": 43
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 50,
-          "token_generation_avg_ms": 0.5740012147716222,
-          "token_generation_p95_ms": 1.3495000000000001,
-          "e2e_avg_ms": 317.64193556778486,
-          "e2e_p95_ms": 813.13571025,
-          "throughput_ok_per_s": 137.2,
-          "request_rate_per_s": 137.2,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.6186889021836699,
+            "min": 0.27,
+            "max": 8.693,
+            "med": 0.449,
+            "p95": 1.4872999999999994,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 36.9359776805264,
+            "min": 20.135916,
+            "max": 355.102969,
+            "med": 33.060003,
+            "p95": 63.553757,
+            "p99": null
+          },
+          "throughput_ok_per_s": 557.17,
+          "request_rate_per_s": 557.17,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 1176,
-          "token_header_avg_bytes": 43,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 1176,
+            "min": 1176,
+            "max": 1176
+          },
+          "token_header_bytes": {
+            "avg": 43
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         }
       ],
       "attack": null
@@ -166,70 +388,181 @@
     {
       "algorithm": "ML-DSA-44",
       "category": "PQC",
-      "isolated": {
-        "token_generation_avg_ms": 0.08455000000000004,
-        "token_generation_p95_ms": 0.17854999999999996,
-        "token_generation_stdev_ms": 0.05310298955802771,
-        "total_avg_ms": 0.08462000000000003,
-        "total_p95_ms": 0.17854999999999996,
-        "overhead_avg_ms": 0.00006999999999998674,
-        "cpu_avg_pct": 0,
-        "memory_alloc_avg_mb": 0,
-        "memory_alloc_delta_avg_mb": 0,
-        "memory_sys_avg_mb": null,
-        "token_size_avg_bytes": 3514
-      },
+      "isolated": null,
       "stress": [
         {
           "vus": 10,
-          "token_generation_avg_ms": 0.177252236135957,
-          "token_generation_p95_ms": 0.418,
-          "e2e_avg_ms": 80.7092021610017,
-          "e2e_p95_ms": 286.9969575,
-          "throughput_ok_per_s": 74.53,
-          "request_rate_per_s": 74.53,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.1784817358726193,
+            "min": 0.029,
+            "max": 2.495,
+            "med": 0.138,
+            "p95": 0.429,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 41.65159974679985,
+            "min": 20.599501,
+            "max": 281.594185,
+            "med": 43.125541,
+            "p95": 57.3913535,
+            "p99": null
+          },
+          "throughput_ok_per_s": 106.77,
+          "request_rate_per_s": 106.77,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 3514,
-          "token_header_avg_bytes": 42,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 3514,
+            "min": 3514,
+            "max": 3514
+          },
+          "token_header_bytes": {
+            "avg": 42
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 30,
-          "token_generation_avg_ms": 0.15733983951420535,
-          "token_generation_p95_ms": 0.387,
-          "e2e_avg_ms": 42.998693695293824,
-          "e2e_p95_ms": 75.22770329999994,
-          "throughput_ok_per_s": 307.4,
-          "request_rate_per_s": 307.4,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.19773818343458316,
+            "min": 0.029,
+            "max": 5.153,
+            "med": 0.137,
+            "p95": 0.502,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 68.39670377522594,
+            "min": 21.137157,
+            "max": 784.209736,
+            "med": 56.544187,
+            "p95": 128.58397879999998,
+            "p99": null
+          },
+          "throughput_ok_per_s": 224.97,
+          "request_rate_per_s": 224.97,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 3514,
-          "token_header_avg_bytes": 42,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 3514,
+            "min": 3514,
+            "max": 3514
+          },
+          "token_header_bytes": {
+            "avg": 42
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 50,
-          "token_generation_avg_ms": 0.15336866996507562,
-          "token_generation_p95_ms": 0.399,
-          "e2e_avg_ms": 55.74787625618457,
-          "e2e_p95_ms": 111.16953089999991,
-          "throughput_ok_per_s": 458.13,
-          "request_rate_per_s": 458.13,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 0.22507631494030203,
+            "min": 0.028,
+            "max": 8.034,
+            "med": 0.132,
+            "p95": 0.6657500000000001,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 68.18332138585042,
+            "min": 21.166141,
+            "max": 2177.297458,
+            "med": 39.3224145,
+            "p95": 193.02655475,
+            "p99": null
+          },
+          "throughput_ok_per_s": 413.2,
+          "request_rate_per_s": 413.2,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 3514,
-          "token_header_avg_bytes": 42,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 3514,
+            "min": 3514,
+            "max": 3514
+          },
+          "token_header_bytes": {
+            "avg": 42
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         }
       ],
       "attack": null
@@ -237,70 +570,181 @@
     {
       "algorithm": "SLH-DSA-SHA2-128f",
       "category": "PQC",
-      "isolated": {
-        "token_generation_avg_ms": 12.631470000000004,
-        "token_generation_p95_ms": 13.000549999999997,
-        "token_generation_stdev_ms": 1.4515781925545725,
-        "total_avg_ms": 12.631660000000002,
-        "total_p95_ms": 13.000599999999997,
-        "overhead_avg_ms": 0.0001899999999981361,
-        "cpu_avg_pct": 0,
-        "memory_alloc_avg_mb": 0,
-        "memory_alloc_delta_avg_mb": 0,
-        "memory_sys_avg_mb": null,
-        "token_size_avg_bytes": 23081
-      },
+      "isolated": null,
       "stress": [
         {
           "vus": 10,
-          "token_generation_avg_ms": 13.23581678773208,
-          "token_generation_p95_ms": 17.485500000000002,
-          "e2e_avg_ms": 67.27759664971768,
-          "e2e_p95_ms": 113.99891570000004,
-          "throughput_ok_per_s": 82.6,
-          "request_rate_per_s": 82.6,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 17.884622786022007,
+            "min": 11.621,
+            "max": 98.161,
+            "med": 14.504,
+            "p95": 38.52659999999998,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 90.33075141168015,
+            "min": 39.42357,
+            "max": 534.71361,
+            "med": 82.180057,
+            "p95": 153.10046119999998,
+            "p99": null
+          },
+          "throughput_ok_per_s": 69.63,
+          "request_rate_per_s": 69.63,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 23081,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 23081,
+            "min": 23081,
+            "max": 23081
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 30,
-          "token_generation_avg_ms": 26.89531273408242,
-          "token_generation_p95_ms": 93.84445,
-          "e2e_avg_ms": 156.3970396582398,
-          "e2e_p95_ms": 286.8925987,
-          "throughput_ok_per_s": 142.4,
-          "request_rate_per_s": 142.4,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 36.72053778751369,
+            "min": 11.476,
+            "max": 258.484,
+            "med": 13.862,
+            "p95": 120.54995,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 191.8427567584883,
+            "min": 44.274337,
+            "max": 1090.355469,
+            "med": 165.76503000000002,
+            "p95": 367.88219835,
+            "p99": null
+          },
+          "throughput_ok_per_s": 121.73,
+          "request_rate_per_s": 121.73,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 23081,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 23081,
+            "min": 23081,
+            "max": 23081
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 50,
-          "token_generation_avg_ms": 39.60457964601767,
-          "token_generation_p95_ms": 183.79749999999996,
-          "e2e_avg_ms": 424.6533162607453,
-          "e2e_p95_ms": 1141.6905283499998,
-          "throughput_ok_per_s": 105.47,
-          "request_rate_per_s": 105.47,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 67.87421541786742,
+            "min": 11.558,
+            "max": 530.269,
+            "med": 13.8015,
+            "p95": 225.70759999999999,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 308.6054614233916,
+            "min": 43.724364,
+            "max": 1280.695414,
+            "med": 282.096895,
+            "p95": 537.9120433999999,
+            "p99": null
+          },
+          "throughput_ok_per_s": 138.8,
+          "request_rate_per_s": 138.8,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 23081,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 23081,
+            "min": 23081,
+            "max": 23081
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         }
       ],
       "attack": null
@@ -308,70 +752,181 @@
     {
       "algorithm": "SLH-DSA-SHA2-128s",
       "category": "PQC",
-      "isolated": {
-        "token_generation_avg_ms": 253.54639000000003,
-        "token_generation_p95_ms": 266.36749999999995,
-        "token_generation_stdev_ms": 7.631151932565622,
-        "total_avg_ms": 253.54658000000003,
-        "total_p95_ms": 266.36749999999995,
-        "overhead_avg_ms": 0.00019000000000346517,
-        "cpu_avg_pct": 0,
-        "memory_alloc_avg_mb": 0,
-        "memory_alloc_delta_avg_mb": 0,
-        "memory_sys_avg_mb": null,
-        "token_size_avg_bytes": 10772
-      },
+      "isolated": null,
       "stress": [
         {
           "vus": 10,
-          "token_generation_avg_ms": 1079.7705514403287,
-          "token_generation_p95_ms": 1222.7033,
-          "e2e_avg_ms": 1193.7402890617284,
-          "e2e_p95_ms": 1344.2062569999998,
-          "throughput_ok_per_s": 8.1,
-          "request_rate_per_s": 8.1,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 1166.1674698275865,
+            "min": 867.56,
+            "max": 1442.64,
+            "med": 1168.083,
+            "p95": 1311.2287999999999,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 1264.8997023965517,
+            "min": 960.400448,
+            "max": 1535.054565,
+            "med": 1265.9066375,
+            "p95": 1401.2234483,
+            "p99": null
+          },
+          "throughput_ok_per_s": 7.73,
+          "request_rate_per_s": 7.73,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 10772,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 10772,
+            "min": 10772,
+            "max": 10772
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 30,
-          "token_generation_avg_ms": 3301.332011538458,
-          "token_generation_p95_ms": 3680.859,
-          "e2e_avg_ms": 3589.2095077846157,
-          "e2e_p95_ms": 3986.1455263,
-          "throughput_ok_per_s": 8.67,
-          "request_rate_per_s": 8.67,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 3386.5784581673292,
+            "min": 1406.895,
+            "max": 4152.45,
+            "med": 3421.758,
+            "p95": 3854.658,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 3669.7280906055776,
+            "min": 1738.554891,
+            "max": 4727.22638,
+            "med": 3709.211995,
+            "p95": 4195.203087,
+            "p99": null
+          },
+          "throughput_ok_per_s": 8.37,
+          "request_rate_per_s": 8.37,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 10772,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 10772,
+            "min": 10772,
+            "max": 10772
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         },
         {
           "vus": 50,
-          "token_generation_avg_ms": 5592.258462450595,
-          "token_generation_p95_ms": 6229.474999999999,
-          "e2e_avg_ms": 6023.295306790511,
-          "e2e_p95_ms": 6653.9656384,
-          "throughput_ok_per_s": 8.43,
-          "request_rate_per_s": 8.43,
-          "cpu_avg_pct": 0,
-          "memory_alloc_avg_mb": 0,
-          "memory_alloc_delta_avg_mb": 0,
-          "memory_sys_avg_mb": 0,
+          "token_generation_ms": {
+            "avg": 5568.923954372626,
+            "min": 2792.376,
+            "max": 6840.229,
+            "med": 5699.339,
+            "p95": 6371.5382,
+            "p99": null
+          },
+          "e2e_ms": {
+            "avg": 6123.829918825092,
+            "min": 3429.898216,
+            "max": 7692.599159,
+            "med": 6188.80632,
+            "p95": 7256.139524299999,
+            "p99": null
+          },
+          "throughput_ok_per_s": 8.77,
+          "request_rate_per_s": 8.77,
+          "cpu_pct": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "med": 0,
+            "p95": 0,
+            "p99": null
+          },
+          "memory_alloc_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_alloc_delta_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "memory_sys_mb": {
+            "avg": 0,
+            "min": 0,
+            "max": 0
+          },
           "error_rate_pct": 0,
-          "token_size_avg_bytes": 10772,
-          "token_header_avg_bytes": 52,
-          "token_body_avg_bytes": 243
+          "token_size_bytes": {
+            "avg": 10772,
+            "min": 10772,
+            "max": 10772
+          },
+          "token_header_bytes": {
+            "avg": 52
+          },
+          "token_body_bytes": {
+            "avg": 243
+          }
         }
       ],
       "attack": null

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"runtime"
-	"runtime/metrics"
 	"sort"
 	"strings"
 	"sync"
@@ -288,55 +287,49 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 		Algorithm: algorithm,
 	}
 
-	// Sample cumulative heap allocations before/after sign.
-	// /gc/heap/allocs:bytes is monotonically increasing (not affected by GC),
-	// giving accurate bytes-allocated-during-sign regardless of collection activity.
-	_, allocBefore, _ := readMemoryMetrics()
+	// Memory: ReadMemStats is the most reliable cross-version API.
+	// TotalAlloc is cumulative (monotonically increasing), so delta = bytes
+	// actually allocated during Sign regardless of GC activity.
+	// ReadMemStats is called outside the sign timer so STW pause doesn't skew latency.
+	var memBefore, memAfter runtime.MemStats
+	runtime.ReadMemStats(&memBefore)
 
+	cpuOpBefore := readProcessCPUMicros()
 	totalStart := time.Now()
 	token, err := h.benchmarkJWT.Sign(payload)
 	signMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+	cpuOpAfter := readProcessCPUMicros()
 	totalMs := signMs
 
 	if err != nil {
 		return "", 0, 0, BenchmarkRuntimeStats{}, err
 	}
 
-	heapAfter, allocAfter, sysMem := readMemoryMetrics()
+	runtime.ReadMemStats(&memAfter)
 
+	// CPU: prefer background monitor (stable 200 ms window).
+	// Fall back to per-op Getrusage delta when monitor hasn't warmed up yet
+	// (cpuMonitor.pct == 0 within the first 200 ms of process start).
 	cpuMonitor.mu.RLock()
 	cpuPct := cpuMonitor.pct
 	cpuMonitor.mu.RUnlock()
 
+	if cpuPct == 0 && signMs > 0 {
+		wallUs := int64(signMs * 1000)
+		cpuDelta := cpuOpAfter - cpuOpBefore
+		if wallUs > 0 && cpuDelta > 0 {
+			cpuPct = float64(cpuDelta) / float64(wallUs) / float64(runtime.GOMAXPROCS(0)) * 100
+		}
+	}
+
 	stats := BenchmarkRuntimeStats{
-		MemoryAllocMB:      bytesToMB(uint64(heapAfter)),
-		MemoryAllocDeltaMB: (allocAfter - allocBefore) / 1024 / 1024,
-		MemorySysMB:        bytesToMB(uint64(sysMem)),
+		MemoryAllocMB:      float64(memAfter.HeapAlloc) / 1024 / 1024,
+		MemoryAllocDeltaMB: float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024,
+		MemorySysMB:        float64(memAfter.Sys) / 1024 / 1024,
 		CPUPct:             cpuPct,
 	}
 
 	return token, signMs, totalMs, stats, nil
-}
-
-// readMemoryMetrics returns heap-in-use, cumulative-heap-allocs, and total-mapped bytes.
-// Uses runtime/metrics (non-STW, concurrent-safe).
-func readMemoryMetrics() (heapInuse, heapAllocs, totalMem float64) {
-	samples := []metrics.Sample{
-		{Name: "/memory/classes/heap/inuse:bytes"},
-		{Name: "/gc/heap/allocs:bytes"},
-		{Name: "/memory/classes/total:bytes"},
-	}
-	metrics.Read(samples)
-	if samples[0].Value.Kind() == metrics.KindUint64 {
-		heapInuse = float64(samples[0].Value.Uint64())
-	}
-	if samples[1].Value.Kind() == metrics.KindUint64 {
-		heapAllocs = float64(samples[1].Value.Uint64())
-	}
-	if samples[2].Value.Kind() == metrics.KindUint64 {
-		totalMem = float64(samples[2].Value.Uint64())
-	}
-	return
 }
 
 func bytesToMB(v uint64) float64 {
