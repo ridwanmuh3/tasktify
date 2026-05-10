@@ -22,3 +22,6 @@ bin/
 tmp/
 
 k6/*.txt
+
+.claude
+CLAUDE.md

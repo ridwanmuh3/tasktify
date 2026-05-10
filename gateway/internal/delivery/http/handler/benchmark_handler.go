@@ -28,7 +28,10 @@ type BenchmarkRuntimeStats struct {
 	MemoryAllocMB      float64
 	MemoryAllocDeltaMB float64 // bytes allocated during sign operation (cumulative delta)
 	MemorySysMB        float64
-	CPUPct             float64 // process CPU utilization % from background sampler
+	CPUPct             float64 // process CPU utilization %
+	// GCOccurred is true when at least one GC cycle ran during the sign call.
+	// Latency of such iterations includes STW pause — treat as potentially biased.
+	GCOccurred bool
 }
 
 // cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
@@ -106,7 +109,6 @@ type BenchmarkTokenRequest struct {
 	Password  string `json:"password"`
 }
 
-// TimingStats holds descriptive statistics for a latency series.
 type TimingStats struct {
 	MinMs   float64 `json:"min_ms"`
 	MaxMs   float64 `json:"max_ms"`
@@ -118,7 +120,6 @@ type TimingStats struct {
 	SumMs   float64 `json:"sum_ms"`
 }
 
-// NumericStats holds descriptive statistics for non-latency series.
 type NumericStats struct {
 	Min   float64 `json:"min"`
 	Max   float64 `json:"max"`
@@ -134,37 +135,33 @@ type NumericStats struct {
 // TokenGenerationTimingsMs = pure JWT generation durations from the local benchmark signer.
 // TotalTimingsMs = per-iteration local handler durations around payload build + sign.
 type BenchmarkSignResult struct {
-	Algorithm                string    `json:"algorithm"`
-	Iterations               int       `json:"iterations"`
-	WarmupIterations         int       `json:"warmup_iterations"`
-	SuccessCount             int       `json:"success_count"`
+	Algorithm        string `json:"algorithm"`
+	Iterations       int    `json:"iterations"`
+	WarmupIterations int    `json:"warmup_iterations"`
+	SuccessCount     int    `json:"success_count"`
+	// GCContaminatedCount counts iterations where the Go GC ran during Sign.
+	// Those samples include STW pause overhead and may inflate latency.
+	GCContaminatedCount      int       `json:"gc_contaminated_count"`
 	PayloadNote              string    `json:"payload_note,omitempty"`
 	SignTimingsMs            []float64 `json:"sign_timings_ms"`             // backward-compatible alias
 	TokenGenerationTimingsMs []float64 `json:"token_generation_timings_ms"` // clean: JWT generation only
 	TotalTimingsMs           []float64 `json:"total_timings_ms"`            // local iteration around pure sign
-	TokenSizeBytes           []float64 `json:"token_size_bytes"`
-	TokenHeaderSizeBytes     []float64 `json:"token_header_size_bytes"`
-	TokenBodySizeBytes       []float64 `json:"token_body_size_bytes"`
-	TokenSignatureSizeBytes  []float64 `json:"token_signature_size_bytes"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
 	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`
 	AuthMemoryAllocDeltaMB   []float64 `json:"auth_memory_alloc_delta_mb"`
 	AuthMemorySysMB          []float64 `json:"auth_memory_sys_mb"`
 	Stats                    struct {
 		Sign            TimingStats `json:"sign"`             // backward-compatible alias
-		TokenGeneration TimingStats `json:"token_generation"` // clean token generation
-		Total           TimingStats `json:"total"`            // local iteration stats
-		TokenSize       struct {
-			Token     NumericStats `json:"token"`
-			Header    NumericStats `json:"header"`
-			Body      NumericStats `json:"body"`
-			Signature NumericStats `json:"signature"`
-		} `json:"token_size"`
-		Resource struct {
-			CPUUtilization      NumericStats `json:"cpu_utilization_pct"`
-			MemoryAllocMB       NumericStats `json:"memory_alloc_mb"`
-			MemoryAllocDeltaMB  NumericStats `json:"memory_alloc_delta_mb"`
-			MemorySysMB         NumericStats `json:"memory_sys_mb"`
+		TokenGeneration TimingStats `json:"token_generation"` // all samples
+		// TokenGenerationGCFree excludes iterations where GC ran during Sign.
+		// Use this as the primary result in academic papers.
+		TokenGenerationGCFree TimingStats `json:"token_generation_gc_free"` // GC-contaminated samples removed
+		Total                 TimingStats `json:"total"`                    // local iteration stats
+		Resource              struct {
+			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
+			MemoryAllocMB      NumericStats `json:"memory_alloc_mb"`
+			MemoryAllocDeltaMB NumericStats `json:"memory_alloc_delta_mb"`
+			MemorySysMB        NumericStats `json:"memory_sys_mb"`
 		} `json:"resource"`
 	} `json:"stats"`
 }
@@ -180,11 +177,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 
 	signTimings := make([]float64, 0, req.Iterations)
-	totalTimings := make([]float64, 0, req.Iterations)
-	tokenSizes := make([]float64, 0, req.Iterations)
-	tokenHeaderSizes := make([]float64, 0, req.Iterations)
-	tokenBodySizes := make([]float64, 0, req.Iterations)
-	tokenSignatureSizes := make([]float64, 0, req.Iterations)
+	gcFreeSignTimings := make([]float64, 0, req.Iterations)
 	cpuSamples := make([]float64, 0, req.Iterations)
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
@@ -195,40 +188,47 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 
 	for i := 0; i < warmupIterations; i++ {
-		if _, _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email); err != nil {
+		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, false); err != nil {
 			h.log.Warnf("benchmark warmup iter %d failed: %v", i, err)
 		}
 	}
 
+	// Force GC twice after warmup so measurement starts with a clean heap.
+	// First call triggers collection; second ensures finalizers have run.
+	runtime.GC()
+	runtime.GC()
+
+	gcContaminatedCount := 0
 	for i := 0; i < req.Iterations; i++ {
-		token, signMs, totalMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email)
+		_, signMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email, true)
 		if err != nil {
 			h.log.Warnf("benchmark iter %d failed: %v", i, err)
 			continue
 		}
 
 		signTimings = append(signTimings, signMs)
-		totalTimings = append(totalTimings, totalMs)
-		addTokenSizeSamples(token, &tokenSizes, &tokenHeaderSizes, &tokenBodySizes, &tokenSignatureSizes)
 		cpuSamples = append(cpuSamples, stats.CPUPct)
 		memAllocSamples = append(memAllocSamples, stats.MemoryAllocMB)
 		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaMB)
 		memSysSamples = append(memSysSamples, stats.MemorySysMB)
+
+		if stats.GCOccurred {
+			gcContaminatedCount++
+		} else {
+			gcFreeSignTimings = append(gcFreeSignTimings, signMs)
+		}
 	}
 
 	result := BenchmarkSignResult{
 		Algorithm:                req.Algorithm,
 		Iterations:               req.Iterations,
 		WarmupIterations:         warmupIterations,
-		SuccessCount:             len(totalTimings),
+		SuccessCount:             len(signTimings),
+		GCContaminatedCount:      gcContaminatedCount,
 		PayloadNote:              req.PayloadNote,
 		SignTimingsMs:            signTimings,
 		TokenGenerationTimingsMs: signTimings,
-		TotalTimingsMs:           totalTimings,
-		TokenSizeBytes:           tokenSizes,
-		TokenHeaderSizeBytes:     tokenHeaderSizes,
-		TokenBodySizeBytes:       tokenBodySizes,
-		TokenSignatureSizeBytes:  tokenSignatureSizes,
+		TotalTimingsMs:           signTimings,
 		AuthCPUPct:               cpuSamples,
 		AuthMemoryAllocMB:        memAllocSamples,
 		AuthMemoryAllocDeltaMB:   memAllocDeltaSamples,
@@ -236,11 +236,8 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 	result.Stats.Sign = computeTimingStats(signTimings)
 	result.Stats.TokenGeneration = result.Stats.Sign
-	result.Stats.Total = computeTimingStats(totalTimings)
-	result.Stats.TokenSize.Token = computeNumericStats(tokenSizes)
-	result.Stats.TokenSize.Header = computeNumericStats(tokenHeaderSizes)
-	result.Stats.TokenSize.Body = computeNumericStats(tokenBodySizes)
-	result.Stats.TokenSize.Signature = computeNumericStats(tokenSignatureSizes)
+	result.Stats.TokenGenerationGCFree = computeTimingStats(gcFreeSignTimings)
+	result.Stats.Total = result.Stats.Sign
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
 	result.Stats.Resource.MemoryAllocMB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaMB = computeNumericStats(memAllocDeltaSamples)
@@ -267,7 +264,7 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, signMs, _, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email)
+	token, signMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email, false)
 	if err != nil {
 		h.log.Errorf("benchmark token sign failed: %v", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate benchmark token")
@@ -290,9 +287,12 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 	})
 }
 
-func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (string, float64, float64, BenchmarkRuntimeStats, error) {
+// signBenchmarkToken signs one JWT and returns timing + runtime stats.
+// usePerOpCPU=true: per-op tick delta, accurate for isolated <1ms ops.
+// usePerOpCPU=false: 100ms background monitor, better for steady stress load.
+func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, usePerOpCPU bool) (string, float64, BenchmarkRuntimeStats, error) {
 	if h.benchmarkJWT == nil {
-		return "", 0, 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark signer not configured")
+		return "", 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark signer not configured")
 	}
 
 	userID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(strings.ToLower(email)))
@@ -310,29 +310,33 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 	runtime.ReadMemStats(&memBefore)
 
 	cpuOpBefore := readCPUTicks()
-	totalStart := time.Now()
+	t0 := time.Now()
 	token, err := h.benchmarkJWT.Sign(payload)
-	signMs := float64(time.Since(totalStart).Microseconds()) / 1000.0
+	signMs := float64(time.Since(t0).Microseconds()) / 1000.0
 	cpuOpAfter := readCPUTicks()
-	totalMs := signMs
 
 	if err != nil {
-		return "", 0, 0, BenchmarkRuntimeStats{}, err
+		return "", 0, BenchmarkRuntimeStats{}, err
 	}
 
 	runtime.ReadMemStats(&memAfter)
 
-	// CPU: prefer background monitor (stable 200 ms window).
-	// Fall back to per-op Getrusage delta when monitor hasn't warmed up yet
-	// (cpuMonitor.pct == 0 within the first 200 ms of process start).
-	cpuMonitor.mu.RLock()
-	cpuPct := cpuMonitor.pct
-	cpuMonitor.mu.RUnlock()
-
-	if cpuPct == 0 && signMs > 0 {
-		wallUs := int64(signMs * 1000)
-		cpuDelta := cpuOpAfter - cpuOpBefore
-		if wallUs > 0 && cpuDelta > 0 {
+	var cpuPct float64
+	wallUs := int64(signMs * 1000)
+	cpuDelta := cpuOpAfter - cpuOpBefore
+	if usePerOpCPU {
+		// Per-op tick delta: accurate for sub-millisecond isolated iterations where
+		// the 100ms background window would average in unrelated workload.
+		if wallUs > 0 && cpuDelta >= 0 {
+			cpuPct = float64(cpuDelta) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
+		}
+	} else {
+		// Background monitor: stable 100ms window — better under steady stress load.
+		// Falls back to per-op delta if the monitor hasn't warmed up yet.
+		cpuMonitor.mu.RLock()
+		cpuPct = cpuMonitor.pct
+		cpuMonitor.mu.RUnlock()
+		if cpuPct == 0 && wallUs > 0 && cpuDelta > 0 {
 			cpuPct = float64(cpuDelta) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
 		}
 	}
@@ -342,13 +346,10 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string) (s
 		MemoryAllocDeltaMB: float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024,
 		MemorySysMB:        float64(memAfter.Sys) / 1024 / 1024,
 		CPUPct:             cpuPct,
+		GCOccurred:         memAfter.NumGC > memBefore.NumGC,
 	}
 
-	return token, signMs, totalMs, stats, nil
-}
-
-func bytesToMB(v uint64) float64 {
-	return float64(v) / 1024.0 / 1024.0
+	return token, signMs, stats, nil
 }
 
 func computeTimingStats(timings []float64) TimingStats {
@@ -414,16 +415,3 @@ func computeNumericStats(values []float64) NumericStats {
 	}
 }
 
-func addTokenSizeSamples(token string, tokenSizes, headerSizes, bodySizes, signatureSizes *[]float64) {
-	if token == "" {
-		return
-	}
-	*tokenSizes = append(*tokenSizes, float64(len(token)))
-	parts := strings.Split(token, ".")
-	if len(parts) != 3 {
-		return
-	}
-	*headerSizes = append(*headerSizes, float64(len(parts[0])))
-	*bodySizes = append(*bodySizes, float64(len(parts[1])))
-	*signatureSizes = append(*signatureSizes, float64(len(parts[2])))
-}
