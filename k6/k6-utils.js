@@ -7,9 +7,7 @@
       },
       d: (r, e) => {
         for (var n in e)
-          t.o(e, n) &&
-            !t.o(r, n) &&
-            Object.defineProperty(r, n, { enumerable: !0, get: e[n] });
+          t.o(e, n) && !t.o(r, n) && Object.defineProperty(r, n, { enumerable: !0, get: e[n] });
       },
       o: (t, r) => Object.prototype.hasOwnProperty.call(t, r),
       r: (t) => {
@@ -62,10 +60,7 @@
           default:
             throw new Error("".concat(u, " is an unsupported time unit"));
         }
-        if (n[u])
-          throw new Error(
-            "".concat(u, " time unit is provided multiple times"),
-          );
+        if (n[u]) throw new Error("".concat(u, " time unit is provided multiple times"));
         ((n[u] = !0), o++, (e = ""));
       }
     return (e.length > 0 && (r += parseFloat(e, 10)), r);
@@ -90,14 +85,8 @@
         "only ramping-vus or ramping-arravial-rate supports stages, it is not possible to get a stage index on other executors.",
       );
     if (t.stages.length < 1)
-      throw new Error(
-        "the current scenario ".concat(t.name, " doesn't contain any stage"),
-      );
-    for (
-      var r = 0, e = new Date() - n().scenario.startTime, a = 0;
-      a < t.stages.length;
-      a++
-    )
+      throw new Error("the current scenario ".concat(t.name, " doesn't contain any stage"));
+    for (var r = 0, e = new Date() - n().scenario.startTime, a = 0; a < t.stages.length; a++)
       if (e < (r += o(t.stages[a].duration))) return a;
     return t.stages.length - 1;
   }
@@ -111,11 +100,7 @@
       var r = n().test.options.scenarios[n().scenario.name].stages,
         e = r[t],
         o = r[t - 1];
-      return e.target > o.target
-        ? "ramp-up"
-        : o.target == e.target
-          ? "steady"
-          : "ramp-down";
+      return e.target > o.target ? "ramp-up" : o.target == e.target ? "steady" : "ramp-down";
     })();
   }
   const l = require("k6/crypto");
@@ -125,10 +110,7 @@
         if (Array.isArray(t)) return f(t);
       })(t) ||
       (function (t) {
-        if (
-          ("undefined" != typeof Symbol && null != t[Symbol.iterator]) ||
-          null != t["@@iterator"]
-        )
+        if (("undefined" != typeof Symbol && null != t[Symbol.iterator]) || null != t["@@iterator"])
           return Array.from(t);
       })(t) ||
       (function (t, r) {
@@ -137,11 +119,7 @@
         var e = Object.prototype.toString.call(t).slice(8, -1);
         "Object" === e && t.constructor && (e = t.constructor.name);
         if ("Map" === e || "Set" === e) return Array.from(t);
-        if (
-          "Arguments" === e ||
-          /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)
-        )
-          return f(t, r);
+        if ("Arguments" === e || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(e)) return f(t, r);
       })(t) ||
       (function () {
         throw new TypeError(
@@ -184,9 +162,7 @@
         a = [],
         i = !0,
         u = 0;
-      i &&
-      -1 != (n = t.indexOf(r)) &&
-      ((n += r.length), -1 != (u = t.indexOf(e, n)));
+      i && -1 != (n = t.indexOf(r)) && ((n += r.length), -1 != (u = t.indexOf(e, n)));
     ) {
       var s = t.substring(n, u);
       if (!o) return s;
@@ -197,9 +173,7 @@
   function m(t, r) {
     var e = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : 10;
     function n(t, r, e) {
-      return (
-        Math.exp(-0.5 * Math.pow((e - t) / r, 2)) / (r * Math.sqrt(2 * Math.PI))
-      );
+      return Math.exp(-0.5 * Math.pow((e - t) / r, 2)) / (r * Math.sqrt(2 * Math.PI));
     }
     for (
       var o = 0,
@@ -222,22 +196,17 @@
       d++
     )
       u[d] = Math.ceil((4 * r) / (6 * e));
-    for (var h = 0; h <= e + 1; h++)
-      s.push({ duration: "".concat(u[h], "s"), target: g[h] });
+    for (var h = 0; h <= e + 1; h++) s.push({ duration: "".concat(u[h], "s"), target: g[h] });
     return s;
   }
   function v() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-      /[xy]/g,
-      function (t) {
-        var r = (16 * Math.random()) | 0;
-        return ("x" === t ? r : (3 & r) | 8).toString(16);
-      },
-    );
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (t) {
+      var r = (16 * Math.random()) | 0;
+      return ("x" === t ? r : (3 & r) | 8).toString(16);
+    });
   }
   function y() {
-    for (var t = [], r = 0; r < 256; ++r)
-      t.push((r + 256).toString(16).slice(1));
+    for (var t = [], r = 0; r < 256; ++r) t.push((r + 256).toString(16).slice(1));
     var e = new Uint8Array((0, l.randomBytes)(16));
     return (
       (e[6] = (15 & e[6]) | 64),

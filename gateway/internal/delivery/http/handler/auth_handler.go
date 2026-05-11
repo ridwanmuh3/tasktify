@@ -22,12 +22,6 @@ func NewAuthHandler(log *zap.SugaredLogger, authClient model.AuthServiceClient) 
 	}
 }
 
-type SignInRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required"`
-	Algorithm string `json:"algorithm"`
-}
-
 // SignIn - Permintaan Login (Username, Password)
 // Flow: Client -> Gateway -> Auth Service (gRPC) -> Validate -> Generate JWT (Falcon + Precomputed LDL Tree) -> Return Token
 // Sets X-Sign-Time-Ms response header with pure cryptographic signing duration (ms).

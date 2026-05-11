@@ -49,31 +49,6 @@ func grpcToHTTPError(err error) *fiber.Error {
 	}
 }
 
-type CreateTaskRequest struct {
-	Title       string `json:"title" validate:"required"`
-	Description string `json:"description"`
-	Status      string `json:"status" validate:"required"`
-	DueDate     *int64 `json:"due_date"`
-}
-
-type UpdateTaskRequest struct {
-	Title       string `json:"title" validate:"required"`
-	Description string `json:"description"`
-	Status      string `json:"status" validate:"required"`
-	DueDate     *int64 `json:"due_date"`
-}
-
-type TaskResponse struct {
-	Id          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	DueDate     int64  `json:"due_date,omitempty"`
-	UserId      string `json:"user_id"`
-	CreatedAt   int64  `json:"created_at"`
-	UpdatedAt   int64  `json:"updated_at"`
-}
-
 func toTaskResponse(task *model.Task) TaskResponse {
 	resp := TaskResponse{
 		Id:          task.Id,

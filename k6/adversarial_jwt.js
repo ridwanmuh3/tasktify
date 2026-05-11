@@ -52,8 +52,8 @@ const HOST_BASE = normalizeBase(_HOST);
 const BASE_URL = _HOST
   ? `${HOST_BASE}:5001`
   : _BASE_URL
-  ? normalizeBase(_BASE_URL)
-  : "http://localhost:5001";
+    ? normalizeBase(_BASE_URL)
+    : "http://localhost:5001";
 
 const ITERATIONS = parseInt(__ENV.ITERATIONS || "10", 10);
 const ALGORITHM = __ENV.ALGORITHM || "Falcon-Precomputed-512";
@@ -182,9 +182,7 @@ export function setup() {
     exec.test.abort(`Service ${registerUrl} unreachable after retries`);
   }
   if (regRes.status !== 201) {
-    exec.test.abort(
-      `Registration failed (${regRes.status}): ${regRes.body.slice(0, 200)}`,
-    );
+    exec.test.abort(`Registration failed (${regRes.status}): ${regRes.body.slice(0, 200)}`);
   }
 
   console.log(`[setup] Attack user registered: ${user.email}`);
@@ -282,7 +280,12 @@ export default function (data) {
     for (const alg of ["HS256", "RS256", "ES256"]) {
       const tags = { attack: "3_algorithm_confusion", alg };
       const forged = withHeader(token, { alg });
-      recordAttack(`#3 Algorithm Confusion (${alg})`, hitProtected(forged), blockRateAlgConfusion, tags);
+      recordAttack(
+        `#3 Algorithm Confusion (${alg})`,
+        hitProtected(forged),
+        blockRateAlgConfusion,
+        tags,
+      );
     }
   });
 
@@ -314,7 +317,12 @@ export default function (data) {
     const tags = { attack: "5_payload_manipulation" };
     // Modify email to "admin" without re-signing
     const forged = withPayload(token, { email: "admin@admin.com" });
-    recordAttack("#5 Payload Manipulation (email=admin)", hitProtected(forged), blockRatePayloadManip, tags);
+    recordAttack(
+      "#5 Payload Manipulation (email=admin)",
+      hitProtected(forged),
+      blockRatePayloadManip,
+      tags,
+    );
   });
 
   // ── #6 Expired Token Abuse ──────────────────────────────────
@@ -324,7 +332,12 @@ export default function (data) {
     const tags = { attack: "6_expired_token" };
     const pastExp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
     const forged = withPayload(token, { exp: pastExp });
-    recordAttack("#6 Expired Token Abuse (exp in past)", hitProtected(forged), blockRateExpiredToken, tags);
+    recordAttack(
+      "#6 Expired Token Abuse (exp in past)",
+      hitProtected(forged),
+      blockRateExpiredToken,
+      tags,
+    );
   });
 
   // ── #7 Replay Attack ────────────────────────────────────────
@@ -338,7 +351,9 @@ export default function (data) {
     const res2 = hitProtected(token); // replay
 
     check(res1, { "[#7 Replay] first request accepted (200)": (r) => r.status === 200 });
-    check(res2, { "[#7 Replay] replay also accepted — stateless JWT (200)": (r) => r.status === 200 });
+    check(res2, {
+      "[#7 Replay] replay also accepted — stateless JWT (200)": (r) => r.status === 200,
+    });
 
     const replayBlocked = isBlocked(res2);
     blockRateReplay.add(replayBlocked, tags);
@@ -352,7 +367,12 @@ export default function (data) {
     const tags = { attack: "8_missing_signature" };
     const parts = token.split(".");
     const emptyToken = parts[0] + "." + parts[1] + ".";
-    recordAttack("#8 Missing Signature (empty)", hitProtected(emptyToken), blockRateMissingSig, tags);
+    recordAttack(
+      "#8 Missing Signature (empty)",
+      hitProtected(emptyToken),
+      blockRateMissingSig,
+      tags,
+    );
   });
 
   // ── #9 Cross-Algorithm Injection (PQC vs Classic) ──────────
@@ -361,7 +381,12 @@ export default function (data) {
       const tags = { attack: "9_cross_algorithm_injection", alg };
       // Classic alg header but Falcon signature → should be rejected
       const forged = withHeader(token, { alg });
-      recordAttack(`#9 Cross-Algorithm Injection (${alg}→Falcon)`, hitProtected(forged), blockRateCrossAlg, tags);
+      recordAttack(
+        `#9 Cross-Algorithm Injection (${alg}→Falcon)`,
+        hitProtected(forged),
+        blockRateCrossAlg,
+        tags,
+      );
     }
   });
 
@@ -370,7 +395,12 @@ export default function (data) {
     for (const iss of ["example.com", "evil-service", "attacker.io", ""]) {
       const tags = { attack: "10_invalid_issuer", iss };
       const forged = withPayload(token, { iss });
-      recordAttack(`#10 Invalid Issuer (iss=${iss || "empty"})`, hitProtected(forged), blockRateInvalidIssuer, tags);
+      recordAttack(
+        `#10 Invalid Issuer (iss=${iss || "empty"})`,
+        hitProtected(forged),
+        blockRateInvalidIssuer,
+        tags,
+      );
     }
   });
 
@@ -406,16 +436,21 @@ export function handleSummary(data) {
   }
 
   const attacks = [
-    ["#1  Signature Tampering",        "attack_block_rate_1_signature_tampering",   "401/403",          true],
-    ["#2  Token Forgery",              "attack_block_rate_2_token_forgery",          "401/403",          true],
-    ["#3  Algorithm Confusion",        "attack_block_rate_3_algorithm_confusion",    "401/403",          true],
-    ["#4  None Algorithm Attack",      "attack_block_rate_4_none_algorithm",         "401/403",          true],
-    ["#5  Payload Manipulation",       "attack_block_rate_5_payload_manipulation",   "401/403",          true],
-    ["#6  Expired Token Abuse",        "attack_block_rate_6_expired_token",          "401/403",          true],
-    ["#7  Replay Attack",              "attack_block_rate_7_replay",                 "Detect (app layer)", false],
-    ["#8  Missing Sig Verification",   "attack_block_rate_8_missing_signature",      "401/403",          true],
-    ["#9  Cross-Algorithm Injection",  "attack_block_rate_9_cross_algorithm_injection", "401/403",       true],
-    ["#10 Invalid Issuer Attack",      "attack_block_rate_10_invalid_issuer",        "401/403",          true],
+    ["#1  Signature Tampering", "attack_block_rate_1_signature_tampering", "401/403", true],
+    ["#2  Token Forgery", "attack_block_rate_2_token_forgery", "401/403", true],
+    ["#3  Algorithm Confusion", "attack_block_rate_3_algorithm_confusion", "401/403", true],
+    ["#4  None Algorithm Attack", "attack_block_rate_4_none_algorithm", "401/403", true],
+    ["#5  Payload Manipulation", "attack_block_rate_5_payload_manipulation", "401/403", true],
+    ["#6  Expired Token Abuse", "attack_block_rate_6_expired_token", "401/403", true],
+    ["#7  Replay Attack", "attack_block_rate_7_replay", "Detect (app layer)", false],
+    ["#8  Missing Sig Verification", "attack_block_rate_8_missing_signature", "401/403", true],
+    [
+      "#9  Cross-Algorithm Injection",
+      "attack_block_rate_9_cross_algorithm_injection",
+      "401/403",
+      true,
+    ],
+    ["#10 Invalid Issuer Attack", "attack_block_rate_10_invalid_issuer", "401/403", true],
   ];
 
   let rows = "";

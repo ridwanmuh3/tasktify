@@ -99,8 +99,7 @@ const ATTACK_ITERATIONS = parseInt(__ENV.ATTACK_ITERATIONS || "25", 10);
 const ATTACK_GAP_S = 5;
 const RUN_ISOLATED = !STRESS_ONLY && !ATTACK_ONLY;
 const RUN_STRESS = !ISOLATED_ONLY && !ATTACK_ONLY;
-const RUN_ATTACKS =
-  ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
+const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
 
 const ALGORITHMS = [
   { id: "FNP512", name: "Falcon-Precomputed-512", category: "PQC", port: 5001 },
@@ -108,10 +107,6 @@ const ALGORITHMS = [
   { id: "MLDSA44", name: "ML-DSA-44", category: "PQC", port: 5003 },
   { id: "SLHDSA128f", name: "SLH-DSA-SHA2-128f", category: "PQC", port: 5004 },
   { id: "SLHDSA128s", name: "SLH-DSA-SHA2-128s", category: "PQC", port: 5005 },
-  // { id: "ES256",   name: "ES256",                   category: "Classic", port: 5008 },
-  // { id: "RS256",   name: "RS256",                   category: "Classic", port: 5009 },
-  // { id: "HS256",   name: "HS256",                   category: "Classic", port: 5010 },
-  // { id: "EdDSA",   name: "EdDSA",                   category: "Classic", port: 5011 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
@@ -211,18 +206,12 @@ const benchSignMax = new Trend("bench_sign_max", true);
 const benchSignStdev = new Trend("bench_sign_stdev", true);
 const benchTokenGenerationP95 = new Trend("bench_token_generation_p95", true);
 const benchTokenGenerationAvg = new Trend("bench_token_generation_avg", true);
-const benchTokenGenerationStdev = new Trend(
-  "bench_token_generation_stdev",
-  true,
-);
+const benchTokenGenerationStdev = new Trend("bench_token_generation_stdev", true);
 const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
 const benchAuthMemoryAllocAvg = new Trend("bench_auth_memory_alloc_avg", true);
-const benchAuthMemoryAllocDeltaAvg = new Trend(
-  "bench_auth_memory_alloc_delta_avg",
-  true,
-);
+const benchAuthMemoryAllocDeltaAvg = new Trend("bench_auth_memory_alloc_delta_avg", true);
 const benchAuthMemorySysAvg = new Trend("bench_auth_memory_sys_avg", true);
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
@@ -233,20 +222,11 @@ const benchFailed = new Counter("bench_failed");
 // dirty                = timings.duration (full k6 round-trip)
 // network              = dirty - clean
 const stressSignActual = new Trend("stress_sign_actual", true);
-const stressTokenGenerationClean = new Trend(
-  "stress_token_generation_clean",
-  true,
-);
+const stressTokenGenerationClean = new Trend("stress_token_generation_clean", true);
 const stressSignClean = new Trend("stress_sign_clean", true);
 const stressSignDirty = new Trend("stress_sign_dirty", true);
 const stressSignNetwork = new Trend("stress_sign_network", true);
-const stressAuthCPU = new Trend("stress_auth_cpu", true);
-const stressAuthMemoryAlloc = new Trend("stress_auth_memory_alloc", true);
-const stressAuthMemoryAllocDelta = new Trend(
-  "stress_auth_memory_alloc_delta",
-  true,
-);
-const stressAuthMemorySys = new Trend("stress_auth_memory_sys", true);
+const stressLoginDirty = new Trend("stress_login_dirty", true);
 const stressReqSuccess = new Counter("stress_req_success");
 const stressReqFailed = new Counter("stress_req_failed");
 const stressErrorRate = new Rate("stress_error_rate");
@@ -287,10 +267,7 @@ for (const alg of ALGORITHMS) {
       thresholds[`stress_token_generation_clean${tv}`] = [`p(95)<${b.actual}`];
       thresholds[`stress_sign_clean${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_sign_network${tv}`] = [`p(95)<9999999`];
-      thresholds[`stress_auth_cpu${tv}`] = [`p(95)<9999999`];
-      thresholds[`stress_auth_memory_alloc${tv}`] = [`p(95)<9999999`];
-      thresholds[`stress_auth_memory_alloc_delta${tv}`] = [`p(95)<9999999`];
-      thresholds[`stress_auth_memory_sys${tv}`] = [`p(95)<9999999`];
+      thresholds[`stress_login_dirty${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_req_success${tv}`] = [`count>=0`];
       thresholds[`stress_req_failed${tv}`] = [`count>=0`];
       thresholds[`stress_error_rate${tv}`] = [`rate<0.05`]; // <5% per scenario
@@ -431,26 +408,14 @@ export function runIsolated(data) {
     benchSignMin.add(s.sign.min_ms, tags);
     benchSignMax.add(s.sign.max_ms, tags);
     benchSignStdev.add(s.sign.stdev_ms, tags);
-    benchTokenGenerationP95.add(
-      s.token_generation?.p95_ms ?? s.sign.p95_ms,
-      tags,
-    );
-    benchTokenGenerationAvg.add(
-      s.token_generation?.avg_ms ?? s.sign.avg_ms,
-      tags,
-    );
-    benchTokenGenerationStdev.add(
-      s.token_generation?.stdev_ms ?? s.sign.stdev_ms,
-      tags,
-    );
+    benchTokenGenerationP95.add(s.token_generation?.p95_ms ?? s.sign.p95_ms, tags);
+    benchTokenGenerationAvg.add(s.token_generation?.avg_ms ?? s.sign.avg_ms, tags);
+    benchTokenGenerationStdev.add(s.token_generation?.stdev_ms ?? s.sign.stdev_ms, tags);
     benchTotalP95.add(s.total.p95_ms, tags);
     benchTotalAvg.add(s.total.avg_ms, tags);
     benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
     benchAuthMemoryAllocAvg.add(s.resource?.memory_alloc_mb?.avg ?? 0, tags);
-    benchAuthMemoryAllocDeltaAvg.add(
-      s.resource?.memory_alloc_delta_mb?.avg ?? 0,
-      tags,
-    );
+    benchAuthMemoryAllocDeltaAvg.add(s.resource?.memory_alloc_delta_mb?.avg ?? 0, tags);
     benchAuthMemorySysAvg.add(s.resource?.memory_sys_mb?.avg ?? 0, tags);
 
     const gcFree = s.token_generation_gc_free;
@@ -482,7 +447,6 @@ function getHeaderNumber(res, names) {
   }
   return null;
 }
-
 
 function warmupBenchmarkToken(base, body, headers) {
   http.post(`${base}/api/benchmark/token`, body, { headers });
@@ -549,28 +513,6 @@ export function runStress(data) {
       stressTokenGenerationClean.add(tokenGenerationMs, tags);
     }
 
-    const cpuPct = getHeaderNumber(res, ["X-Auth-CPU-Pct", "x-auth-cpu-pct"]);
-    if (cpuPct !== null) stressAuthCPU.add(cpuPct, tags);
-
-    const memAllocMB = getHeaderNumber(res, [
-      "X-Auth-Mem-Alloc-MB",
-      "x-auth-mem-alloc-mb",
-    ]);
-    if (memAllocMB !== null) stressAuthMemoryAlloc.add(memAllocMB, tags);
-
-    const memAllocDeltaMB = getHeaderNumber(res, [
-      "X-Auth-Mem-Alloc-Delta-MB",
-      "x-auth-mem-alloc-delta-mb",
-    ]);
-    if (memAllocDeltaMB !== null)
-      stressAuthMemoryAllocDelta.add(memAllocDeltaMB, tags);
-
-    const memSysMB = getHeaderNumber(res, [
-      "X-Auth-Mem-Sys-MB",
-      "x-auth-mem-sys-mb",
-    ]);
-    if (memSysMB !== null) stressAuthMemorySys.add(memSysMB, tags);
-
     let accessToken = "";
     try {
       accessToken = JSON.parse(res.body).data?.access_token || "";
@@ -588,6 +530,18 @@ export function runStress(data) {
     ok ? stressReqSuccess.add(1, tags) : stressReqFailed.add(1, tags);
     stressErrorRate.add(!ok, tags);
   });
+
+  // Full login round-trip: bcrypt verify + DB lookup + JWT sign.
+  // Measured separately so it doesn't pollute the signing latency above.
+  const loginBody = JSON.stringify({
+    email: data.user.email,
+    password: data.user.password,
+    algorithm: alg.name,
+  });
+  const loginRes = http.post(`${BASE}/api/auth/signin`, loginBody, {
+    headers: jsonHdr,
+  });
+  stressLoginDirty.add(loginRes.timings.duration, tags);
 
   sleep(0.05);
 }
@@ -717,9 +671,7 @@ export function handleSummary(data) {
           : ISOLATED_ONLY
             ? "Isolated only"
             : "Isolated + Stress + Attack",
-      endpoint: isMultiGateway
-        ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}`
-        : SINGLE_BASE,
+      endpoint: isMultiGateway ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}` : SINGLE_BASE,
       methodology: {
         primary_metric: "isolated_clean_token_generation",
         supporting_metric: "stress_concurrent_signing",
@@ -792,9 +744,7 @@ export function handleSummary(data) {
             sd: tot?.stdev_ms,
           },
           overhead_avg_ms:
-            sg?.avg_ms != null && tot?.avg_ms != null
-              ? tot.avg_ms - sg.avg_ms
-              : null,
+            sg?.avg_ms != null && tot?.avg_ms != null ? tot.avg_ms - sg.avg_ms : null,
           cpu_pct: {
             avg: cpu?.avg,
             min: cpu?.min,
@@ -829,12 +779,7 @@ export function handleSummary(data) {
       // ── Stress: extract full k6 Trend distributions ───────────
       for (const vus of CONCURRENCY_LEVELS) {
         const vusKey = String(vus);
-        const signAvg = getNumber(
-          "stress_token_generation_clean",
-          alg.name,
-          vusKey,
-          "avg",
-        );
+        const signAvg = getNumber("stress_token_generation_clean", alg.name, vusKey, "avg");
         const e2eAvg = getNumber("stress_sign_dirty", alg.name, vusKey, "avg");
 
         if (signAvg === null && e2eAvg === null) {
@@ -865,30 +810,13 @@ export function handleSummary(data) {
           },
           throughput_ok_per_s: parseFloat(getThroughput(alg.name, vusKey)) || 0,
           request_rate_per_s: parseFloat(getRequestRate(alg.name, vusKey)) || 0,
-          cpu_pct: {
-            avg: stressStat("stress_auth_cpu", "avg"),
-            min: stressStat("stress_auth_cpu", "min"),
-            max: stressStat("stress_auth_cpu", "max"),
-            med: stressStat("stress_auth_cpu", "med"),
-            p95: stressStat("stress_auth_cpu", "p(95)"),
-            p99: stressStat("stress_auth_cpu", "p(99)"),
-          },
-          memory_alloc_mb: {
-            avg: stressStat("stress_auth_memory_alloc", "avg"),
-            min: stressStat("stress_auth_memory_alloc", "min"),
-            max: stressStat("stress_auth_memory_alloc", "max"),
-            p95: stressStat("stress_auth_memory_alloc", "p(95)"),
-          },
-          memory_alloc_delta_mb: {
-            avg: stressStat("stress_auth_memory_alloc_delta", "avg"),
-            min: stressStat("stress_auth_memory_alloc_delta", "min"),
-            max: stressStat("stress_auth_memory_alloc_delta", "max"),
-            p95: stressStat("stress_auth_memory_alloc_delta", "p(95)"),
-          },
-          memory_sys_mb: {
-            avg: stressStat("stress_auth_memory_sys", "avg"),
-            min: stressStat("stress_auth_memory_sys", "min"),
-            max: stressStat("stress_auth_memory_sys", "max"),
+          login_ms: {
+            avg: stressStat("stress_login_dirty", "avg"),
+            min: stressStat("stress_login_dirty", "min"),
+            max: stressStat("stress_login_dirty", "max"),
+            med: stressStat("stress_login_dirty", "med"),
+            p95: stressStat("stress_login_dirty", "p(95)"),
+            p99: stressStat("stress_login_dirty", "p(99)"),
           },
           error_rate_pct: (() => {
             const v = getErrRate(alg.name, vusKey);
@@ -915,9 +843,7 @@ export function handleSummary(data) {
 
   function pad(s, w) {
     const str = String(s);
-    return str.length >= w
-      ? str.slice(0, w - 1) + " "
-      : str + " ".repeat(w - str.length);
+    return str.length >= w ? str.slice(0, w - 1) + " " : str + " ".repeat(w - str.length);
   }
 
   function appendRow(section, row) {
@@ -980,7 +906,7 @@ export function handleSummary(data) {
   }
 
   // ── TABLE 2: Primary stress metrics ──────────────────────────
-  const WP = [28, 6, 12, 12, 12, 12, 12];
+  const WP = [28, 6, 12, 12, 12];
 
   const hdrP = [
     pad("Algorithm", WP[0]),
@@ -988,8 +914,6 @@ export function handleSummary(data) {
     pad("Sign avg", WP[2]),
     pad("Sign p95", WP[3]),
     pad("Auth thrpt", WP[4]),
-    pad("CPU avg", WP[5]),
-    pad("Mem avg", WP[6]),
   ].join("");
 
   const unitP = [
@@ -998,21 +922,21 @@ export function handleSummary(data) {
     pad("(ms)", WP[2]),
     pad("(ms)", WP[3]),
     pad("(ok/s)", WP[4]),
-    pad("(%)", WP[5]),
-    pad("(MB)", WP[6]),
   ].join("");
 
   // ── TABLE 3: Secondary stress metrics ────────────────────────
-  const WS = [28, 6, 12, 12, 12, 12, 12];
+  const WS = [28, 6, 12, 12, 12, 12, 12, 12, 12];
 
   const hdrS = [
     pad("Algorithm", WS[0]),
     pad("VUs", WS[1]),
-    pad("E2E avg", WS[2]),
-    pad("E2E p95", WS[3]),
-    pad("RPS", WS[4]),
-    pad("ErrRate", WS[5]),
-    pad("Atk block", WS[6]),
+    pad("Login avg", WS[2]),
+    pad("Login p95", WS[3]),
+    pad("E2E avg", WS[4]),
+    pad("E2E p95", WS[5]),
+    pad("RPS", WS[6]),
+    pad("ErrRate", WS[7]),
+    pad("Atk block", WS[8]),
   ].join("");
 
   const unitS = [
@@ -1020,9 +944,11 @@ export function handleSummary(data) {
     pad("", WS[1]),
     pad("(ms)", WS[2]),
     pad("(ms)", WS[3]),
-    pad("req/s", WS[4]),
-    pad("", WS[5]),
-    pad("", WS[6]),
+    pad("(ms)", WS[4]),
+    pad("(ms)", WS[5]),
+    pad("req/s", WS[6]),
+    pad("", WS[7]),
+    pad("", WS[8]),
   ].join("");
 
   let primary = "";
@@ -1042,32 +968,26 @@ export function handleSummary(data) {
           pad(getVal("stress_token_generation_clean", n, vus, "avg"), WP[2]),
           pad(getVal("stress_token_generation_clean", n, vus, "p(95)"), WP[3]),
           pad(getThroughput(n, vus), WP[4]),
-          pad(getVal("stress_auth_cpu", n, vus, "avg"), WP[5]),
-          pad(getVal("stress_auth_memory_alloc", n, vus, "avg"), WP[6]),
         ].join("") + "\n";
 
       const rowS =
         [
           pad(label, WS[0]),
           pad(vus, WS[1]),
-          pad(getVal("stress_sign_dirty", n, vus, "avg"), WS[2]),
-          pad(getVal("stress_sign_dirty", n, vus, "p(95)"), WS[3]),
-          pad(getRequestRate(n, vus), WS[4]),
-          pad(getErrRate(n, vus), WS[5]),
-          pad(i === 0 ? attackRate : "", WS[6]),
+          pad(getVal("stress_login_dirty", n, vus, "avg"), WS[2]),
+          pad(getVal("stress_login_dirty", n, vus, "p(95)"), WS[3]),
+          pad(getVal("stress_sign_dirty", n, vus, "avg"), WS[4]),
+          pad(getVal("stress_sign_dirty", n, vus, "p(95)"), WS[5]),
+          pad(getRequestRate(n, vus), WS[6]),
+          pad(getErrRate(n, vus), WS[7]),
+          pad(i === 0 ? attackRate : "", WS[8]),
         ].join("") + "\n";
 
       primary = appendRow(primary, rowP);
       secondary = appendRow(secondary, rowS);
     }
-    const sepP =
-      pad("", WP[0] + WP[1]) +
-      "─".repeat(WP.slice(2).reduce((a, b) => a + b, 0)) +
-      "\n";
-    const sepS =
-      pad("", WS[0] + WS[1]) +
-      "─".repeat(WS.slice(2).reduce((a, b) => a + b, 0)) +
-      "\n";
+    const sepP = pad("", WP[0] + WP[1]) + "─".repeat(WP.slice(2).reduce((a, b) => a + b, 0)) + "\n";
+    const sepS = pad("", WS[0] + WS[1]) + "─".repeat(WS.slice(2).reduce((a, b) => a + b, 0)) + "\n";
     primary = appendRow(primary, sepP);
     secondary = appendRow(secondary, sepS);
   }
@@ -1103,8 +1023,8 @@ ${SEP}
 
   Sign avg/p95 = X-Token-Generation-Time-Ms header; pure JWT generation only
   Auth thrpt   = Successful benchmark-sign requests / ${STRESS_DURATION_S}s
-  CPU/Mem      = Runtime samples from benchmark gateway process
-  E2E          = Full k6 client round-trip for /api/benchmark/token
+  Login        = Full /api/auth/signin round-trip: bcrypt verify + DB lookup + JWT sign
+  E2E          = Full k6 client round-trip for /api/benchmark/token (sign only, no bcrypt/DB)
   RPS          = Total benchmark-sign requests / ${STRESS_DURATION_S}s
   Atk block    = Tampered-token /api/profile requests blocked with 401/403
   Thesis note  = Primary thesis result = isolated table; supporting system result = stress tables
@@ -1113,11 +1033,7 @@ ${SEP}
 
   return {
     stdout: table,
-    "benchmark_sign_result.json": JSON.stringify(
-      buildAcademicResult(),
-      null,
-      2,
-    ),
+    "benchmark_sign_result.json": JSON.stringify(buildAcademicResult(), null, 2),
     "benchmark_sign_raw.json": JSON.stringify(data, null, 2),
   };
 }

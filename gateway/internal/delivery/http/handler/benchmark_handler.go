@@ -24,16 +24,6 @@ type BenchmarkHandler struct {
 	benchmarkJWT jwtutils.JwtUtil
 }
 
-type BenchmarkRuntimeStats struct {
-	MemoryAllocMB      float64
-	MemoryAllocDeltaMB float64 // bytes allocated during sign operation (cumulative delta)
-	MemorySysMB        float64
-	CPUPct             float64 // process CPU utilization %
-	// GCOccurred is true when at least one GC cycle ran during the sign call.
-	// Latency of such iterations includes STW pause — treat as potentially biased.
-	GCOccurred bool
-}
-
 // cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
 // /proc/self/stat utime+stime always sums all threads — reliable in containers.
 // USER_HZ=100 so 1 tick = 10ms; formula: ticks*1e6/wallµs/GOMAXPROCS = %.
@@ -87,83 +77,6 @@ func readCPUTicks() int64 {
 
 func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
 	return &BenchmarkHandler{log: log, benchmarkJWT: benchmarkJWT}
-}
-
-// BenchmarkSignRequest defines a pure-sign isolated benchmark.
-// Email is used to derive stable JWT claims. Password is ignored and kept
-// only for backward-compatible k6 payloads.
-// PayloadNote is metadata-only — it has no effect on the signing itself
-// but is echoed in the response for experiment traceability.
-type BenchmarkSignRequest struct {
-	Algorithm        string `json:"algorithm"         validate:"required"`
-	Iterations       int    `json:"iterations"        validate:"required,min=1,max=10000"`
-	WarmupIterations int    `json:"warmup_iterations"`
-	Email            string `json:"email"             validate:"required,email"`
-	Password         string `json:"password"`
-	PayloadNote      string `json:"payload_note"` // optional experiment label
-}
-
-type BenchmarkTokenRequest struct {
-	Algorithm string `json:"algorithm" validate:"required"`
-	Email     string `json:"email"     validate:"required,email"`
-	Password  string `json:"password"`
-}
-
-type TimingStats struct {
-	MinMs   float64 `json:"min_ms"`
-	MaxMs   float64 `json:"max_ms"`
-	AvgMs   float64 `json:"avg_ms"`
-	P50Ms   float64 `json:"p50_ms"`
-	P95Ms   float64 `json:"p95_ms"`
-	P99Ms   float64 `json:"p99_ms"`
-	StdevMs float64 `json:"stdev_ms"`
-	SumMs   float64 `json:"sum_ms"`
-}
-
-type NumericStats struct {
-	Min   float64 `json:"min"`
-	Max   float64 `json:"max"`
-	Avg   float64 `json:"avg"`
-	P50   float64 `json:"p50"`
-	P95   float64 `json:"p95"`
-	P99   float64 `json:"p99"`
-	Stdev float64 `json:"stdev"`
-	Sum   float64 `json:"sum"`
-}
-
-// BenchmarkSignResult is the academic experiment output.
-// TokenGenerationTimingsMs = pure JWT generation durations from the local benchmark signer.
-// TotalTimingsMs = per-iteration local handler durations around payload build + sign.
-type BenchmarkSignResult struct {
-	Algorithm        string `json:"algorithm"`
-	Iterations       int    `json:"iterations"`
-	WarmupIterations int    `json:"warmup_iterations"`
-	SuccessCount     int    `json:"success_count"`
-	// GCContaminatedCount counts iterations where the Go GC ran during Sign.
-	// Those samples include STW pause overhead and may inflate latency.
-	GCContaminatedCount      int       `json:"gc_contaminated_count"`
-	PayloadNote              string    `json:"payload_note,omitempty"`
-	SignTimingsMs            []float64 `json:"sign_timings_ms"`             // backward-compatible alias
-	TokenGenerationTimingsMs []float64 `json:"token_generation_timings_ms"` // clean: JWT generation only
-	TotalTimingsMs           []float64 `json:"total_timings_ms"`            // local iteration around pure sign
-	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
-	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`
-	AuthMemoryAllocDeltaMB   []float64 `json:"auth_memory_alloc_delta_mb"`
-	AuthMemorySysMB          []float64 `json:"auth_memory_sys_mb"`
-	Stats                    struct {
-		Sign            TimingStats `json:"sign"`             // backward-compatible alias
-		TokenGeneration TimingStats `json:"token_generation"` // all samples
-		// TokenGenerationGCFree excludes iterations where GC ran during Sign.
-		// Use this as the primary result in academic papers.
-		TokenGenerationGCFree TimingStats `json:"token_generation_gc_free"` // GC-contaminated samples removed
-		Total                 TimingStats `json:"total"`                    // local iteration stats
-		Resource              struct {
-			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
-			MemoryAllocMB      NumericStats `json:"memory_alloc_mb"`
-			MemoryAllocDeltaMB NumericStats `json:"memory_alloc_delta_mb"`
-			MemorySysMB        NumericStats `json:"memory_sys_mb"`
-		} `json:"resource"`
-	} `json:"stats"`
 }
 
 // SignLatency runs N sequential pure-sign iterations and returns per-iteration timing data.
@@ -264,7 +177,7 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, signMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email, false)
+	token, signMs, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, false)
 	if err != nil {
 		h.log.Errorf("benchmark token sign failed: %v", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate benchmark token")
@@ -272,10 +185,6 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 
 	c.Set("X-Sign-Time-Ms", fmt.Sprintf("%.3f", signMs))
 	c.Set("X-Token-Generation-Time-Ms", fmt.Sprintf("%.3f", signMs))
-	c.Set("X-Auth-CPU-Pct", fmt.Sprintf("%.3f", stats.CPUPct))
-	c.Set("X-Auth-Mem-Alloc-MB", fmt.Sprintf("%.3f", stats.MemoryAllocMB))
-	c.Set("X-Auth-Mem-Alloc-Delta-MB", fmt.Sprintf("%.6f", stats.MemoryAllocDeltaMB))
-	c.Set("X-Auth-Mem-Sys-MB", fmt.Sprintf("%.3f", stats.MemorySysMB))
 
 	return c.JSON(model.Response[any]{
 		Status:  fiber.StatusOK,
