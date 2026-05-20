@@ -3,6 +3,9 @@
 # =========================
 
 COMPOSE = docker compose
+ATTACK_BASE_URL ?= http://localhost:5001
+ATTACK_ITERATIONS ?= 10
+ATTACK_ALGORITHM ?= Falcon-Precomputed-512
 
 # --- Key Generation ---
 # keygen: generate semua keys ke auth-service/keys dan copy ke gateway/keys (production)
@@ -118,4 +121,31 @@ bench-sign: keygen-all vendor bench-up
 bench-sign-remote:
 	k6 run --no-color -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
 
-.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote
+# --- Adversarial Attack Test ---
+attack-adversarial:
+	k6 run --no-color \
+		-e BASE_URL=$(ATTACK_BASE_URL) \
+		-e ITERATIONS=$(ATTACK_ITERATIONS) \
+		-e ALGORITHM=$(ATTACK_ALGORITHM) \
+		k6/adversarial_jwt.js
+
+attack-adversarial-bench: keygen-all vendor bench-up
+	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
+	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
+		printf "."; sleep 3; \
+	done
+	@echo " ready!"
+	k6 run --no-color \
+		-e BENCH_HOST=localhost \
+		-e ITERATIONS=$(ATTACK_ITERATIONS) \
+		-e ALGORITHM=$(ATTACK_ALGORITHM) \
+		k6/adversarial_jwt.js
+
+attack-adversarial-remote:
+	k6 run --no-color \
+		-e BASE_URL=https://poc-ridwanmuh3.my.id \
+		-e ITERATIONS=$(ATTACK_ITERATIONS) \
+		-e ALGORITHM=$(ATTACK_ALGORITHM) \
+		k6/adversarial_jwt.js
+
+.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote

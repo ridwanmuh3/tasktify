@@ -55,11 +55,6 @@ import { Trend, Counter, Rate } from "k6/metrics";
 import exec from "k6/execution";
 import { randomString } from "./k6-utils.js";
 
-// Full server-side stats stored during runIsolated, used in handleSummary.
-// k6 metrics only carry avg/p95 for isolated phase (one value per alg),
-// so we keep the raw server response to preserve min/max/p99/stdev.
-const isolatedServerStats = {};
-
 // ═══════════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════════
@@ -207,12 +202,16 @@ const benchSignStdev = new Trend("bench_sign_stdev", true);
 const benchTokenGenerationP95 = new Trend("bench_token_generation_p95", true);
 const benchTokenGenerationAvg = new Trend("bench_token_generation_avg", true);
 const benchTokenGenerationStdev = new Trend("bench_token_generation_stdev", true);
+const benchTokenGenerationGCFreeP95 = new Trend("bench_token_generation_gc_free_p95", true);
+const benchTokenGenerationGCFreeAvg = new Trend("bench_token_generation_gc_free_avg", true);
+const benchTokenGenerationGCFreeStdev = new Trend("bench_token_generation_gc_free_stdev", true);
 const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
 const benchAuthMemoryAllocAvg = new Trend("bench_auth_memory_alloc_avg", true);
 const benchAuthMemoryAllocDeltaAvg = new Trend("bench_auth_memory_alloc_delta_avg", true);
 const benchAuthMemorySysAvg = new Trend("bench_auth_memory_sys_avg", true);
+const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
 
@@ -283,11 +282,15 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_token_generation_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_generation_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_token_generation_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_token_generation_gc_free_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_token_generation_gc_free_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_token_generation_gc_free_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_total_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_delta_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>=0`];
   }
   if (RUN_ATTACKS) {
@@ -397,12 +400,6 @@ export function runIsolated(data) {
     const result = JSON.parse(res.body).data;
     const s = result.stats;
 
-    // Persist full server-side stats for handleSummary (includes min/max/p99/stdev).
-    isolatedServerStats[alg.name] = {
-      stats: s,
-      iterations: result.success_count,
-    };
-
     benchSignP95.add(s.sign.p95_ms, tags);
     benchSignAvg.add(s.sign.avg_ms, tags);
     benchSignMin.add(s.sign.min_ms, tags);
@@ -411,12 +408,18 @@ export function runIsolated(data) {
     benchTokenGenerationP95.add(s.token_generation?.p95_ms ?? s.sign.p95_ms, tags);
     benchTokenGenerationAvg.add(s.token_generation?.avg_ms ?? s.sign.avg_ms, tags);
     benchTokenGenerationStdev.add(s.token_generation?.stdev_ms ?? s.sign.stdev_ms, tags);
+    if (s.token_generation_gc_free?.avg_ms != null) {
+      benchTokenGenerationGCFreeP95.add(s.token_generation_gc_free.p95_ms, tags);
+      benchTokenGenerationGCFreeAvg.add(s.token_generation_gc_free.avg_ms, tags);
+      benchTokenGenerationGCFreeStdev.add(s.token_generation_gc_free.stdev_ms, tags);
+    }
     benchTotalP95.add(s.total.p95_ms, tags);
     benchTotalAvg.add(s.total.avg_ms, tags);
     benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
     benchAuthMemoryAllocAvg.add(s.resource?.memory_alloc_mb?.avg ?? 0, tags);
     benchAuthMemoryAllocDeltaAvg.add(s.resource?.memory_alloc_delta_mb?.avg ?? 0, tags);
     benchAuthMemorySysAvg.add(s.resource?.memory_sys_mb?.avg ?? 0, tags);
+    benchGCContaminatedCount.add(result.gc_contaminated_count ?? 0, tags);
 
     const gcFree = s.token_generation_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
@@ -690,91 +693,116 @@ export function handleSummary(data) {
     };
 
     for (const alg of ALGORITHMS) {
+      const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
+      const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
+      const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
+      const isolatedTokenGCFreeAvg = getNumber(
+        "bench_token_generation_gc_free_avg",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedTokenGCFreeP95 = getNumber(
+        "bench_token_generation_gc_free_p95",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedTokenGCFreeStdev = getNumber(
+        "bench_token_generation_gc_free_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedTotalAvg = getNumber("bench_total_avg", alg.name, null, "avg");
+      const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
+      const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
+      const isolatedMemAvg = getNumber("bench_auth_memory_alloc_avg", alg.name, null, "avg");
+      const isolatedMemDeltaAvg = getNumber(
+        "bench_auth_memory_alloc_delta_avg",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedMemSysAvg = getNumber("bench_auth_memory_sys_avg", alg.name, null, "avg");
+      const isolatedGCCnt = getCount("bench_gc_contaminated_count", alg.name, null);
+
       const item = {
         algorithm: alg.name,
         category: alg.category,
-        isolated: null,
+        isolated: RUN_ISOLATED
+          ? {
+              iterations: ITERATIONS,
+              gc_contaminated_count: isolatedGCCnt || 0,
+              token_generation_ms: {
+                avg: isolatedTokenAvg,
+                min: getNumber("bench_token_generation_avg", alg.name, null, "min"),
+                max: getNumber("bench_token_generation_avg", alg.name, null, "max"),
+                p50: getNumber("bench_token_generation_avg", alg.name, null, "med"),
+                p95: isolatedTokenP95,
+                p99: getNumber("bench_token_generation_avg", alg.name, null, "p(99)"),
+                sd: isolatedTokenStdev,
+              },
+              token_generation_gc_free_ms: isolatedTokenGCFreeAvg != null
+                ? {
+                    avg: isolatedTokenGCFreeAvg,
+                    min: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "min"),
+                    max: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "med"),
+                    p95: isolatedTokenGCFreeP95,
+                    p99: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "p(99)"),
+                    sd: isolatedTokenGCFreeStdev,
+                  }
+                : null,
+              total_ms: {
+                avg: isolatedTotalAvg,
+                min: getNumber("bench_total_avg", alg.name, null, "min"),
+                max: getNumber("bench_total_avg", alg.name, null, "max"),
+                p95: isolatedTotalP95,
+                p99: getNumber("bench_total_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_total_avg", alg.name, null, "stdev"),
+              },
+              overhead_avg_ms:
+                isolatedTokenAvg != null && isolatedTotalAvg != null
+                  ? isolatedTotalAvg - isolatedTokenAvg
+                  : null,
+              cpu_pct: {
+                avg: isolatedCPUAvg,
+                min: getNumber("bench_auth_cpu_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_cpu_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_cpu_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_cpu_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_cpu_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_cpu_avg", alg.name, null, "stdev"),
+              },
+              memory_alloc_mb: {
+                avg: isolatedMemAvg,
+                min: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_memory_alloc_avg", alg.name, null, "stdev"),
+              },
+              memory_alloc_delta_mb: {
+                avg: isolatedMemDeltaAvg,
+                min: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_memory_alloc_delta_avg", alg.name, null, "stdev"),
+              },
+              memory_sys_mb: {
+                avg: isolatedMemSysAvg,
+                min: getNumber("bench_auth_memory_sys_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_memory_sys_avg", alg.name, null, "max"),
+              },
+            }
+          : null,
         stress: [],
         attack: null,
       };
-
-      // ── Isolated: use full server-side stats (min/max/p99/stdev preserved) ──
-      const srv = isolatedServerStats[alg.name];
-      if (srv) {
-        const sg = srv.stats.token_generation ?? srv.stats.sign;
-        const sgGCFree = srv.stats.token_generation_gc_free; // GC-contaminated samples removed
-        const tot = srv.stats.total;
-        const cpu = srv.stats.resource?.cpu_utilization_pct;
-        const mem = srv.stats.resource?.memory_alloc_mb;
-        const memD = srv.stats.resource?.memory_alloc_delta_mb;
-        const memS = srv.stats.resource?.memory_sys_mb;
-        item.isolated = {
-          iterations: srv.iterations,
-          gc_contaminated_count: srv.gc_contaminated_count ?? 0,
-          // token_generation_ms includes all samples (some may have GC STW overhead).
-          token_generation_ms: {
-            avg: sg?.avg_ms,
-            min: sg?.min_ms,
-            max: sg?.max_ms,
-            p50: sg?.p50_ms,
-            p95: sg?.p95_ms,
-            p99: sg?.p99_ms,
-            sd: sg?.stdev_ms,
-          },
-          // token_generation_gc_free_ms excludes iterations where GC ran during Sign.
-          // Use this as the primary result — uncontaminated by STW pause latency.
-          token_generation_gc_free_ms:
-            sgGCFree && sgGCFree.avg_ms != null
-              ? {
-                  avg: sgGCFree.avg_ms,
-                  min: sgGCFree.min_ms,
-                  max: sgGCFree.max_ms,
-                  p50: sgGCFree.p50_ms,
-                  p95: sgGCFree.p95_ms,
-                  p99: sgGCFree.p99_ms,
-                  sd: sgGCFree.stdev_ms,
-                }
-              : null,
-          total_ms: {
-            avg: tot?.avg_ms,
-            min: tot?.min_ms,
-            max: tot?.max_ms,
-            p95: tot?.p95_ms,
-            p99: tot?.p99_ms,
-            sd: tot?.stdev_ms,
-          },
-          overhead_avg_ms:
-            sg?.avg_ms != null && tot?.avg_ms != null ? tot.avg_ms - sg.avg_ms : null,
-          cpu_pct: {
-            avg: cpu?.avg,
-            min: cpu?.min,
-            max: cpu?.max,
-            p50: cpu?.p50,
-            p95: cpu?.p95,
-            p99: cpu?.p99,
-            sd: cpu?.stdev,
-          },
-          memory_alloc_mb: {
-            avg: mem?.avg,
-            min: mem?.min,
-            max: mem?.max,
-            p50: mem?.p50,
-            p95: mem?.p95,
-            p99: mem?.p99,
-            sd: mem?.stdev,
-          },
-          memory_alloc_delta_mb: {
-            avg: memD?.avg,
-            min: memD?.min,
-            max: memD?.max,
-            p50: memD?.p50,
-            p95: memD?.p95,
-            p99: memD?.p99,
-            sd: memD?.stdev,
-          },
-          memory_sys_mb: { avg: memS?.avg, min: memS?.min, max: memS?.max },
-        };
-      }
 
       // ── Stress: extract full k6 Trend distributions ───────────
       for (const vus of CONCURRENCY_LEVELS) {

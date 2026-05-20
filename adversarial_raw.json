@@ -1,0 +1,549 @@
+{
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [
+      {
+        "checks": [
+          {
+            "name": "[#1 Signature Tampering] blocked (401/403)",
+            "path": "::1_signature_tampering::[#1 Signature Tampering] blocked (401/403)",
+            "id": "417b5478be117a60b0842f6492296a91",
+            "passes": 10,
+            "fails": 0
+          }
+        ],
+        "name": "1_signature_tampering",
+        "path": "::1_signature_tampering",
+        "id": "797f67725d46a5b13d6646fd3cc7929e",
+        "groups": []
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "name": "[#2a Token Forgery (empty sig)] blocked (401/403)",
+              "path": "::2_token_forgery::[#2a Token Forgery (empty sig)] blocked (401/403)",
+              "id": "728d5f3849c6592ab7a3b91d3578076d",
+              "passes": 10,
+              "fails": 0
+            },
+            {
+              "name": "[#2b Token Forgery (fake short sig)] blocked (401/403)",
+              "path": "::2_token_forgery::[#2b Token Forgery (fake short sig)] blocked (401/403)",
+              "id": "61fa8594f05184fa2cd256dc751e253c",
+              "passes": 10,
+              "fails": 0
+            },
+            {
+              "name": "[#2c Token Forgery (random garbage)] blocked (401/403)",
+              "path": "::2_token_forgery::[#2c Token Forgery (random garbage)] blocked (401/403)",
+              "id": "89ea26f37a01d7e7002daf069a507ada",
+              "passes": 10,
+              "fails": 0
+            }
+          ],
+        "name": "2_token_forgery",
+        "path": "::2_token_forgery",
+        "id": "87442f62f548c50dfae6f6774a761bee"
+      },
+      {
+        "name": "3_algorithm_confusion",
+        "path": "::3_algorithm_confusion",
+        "id": "46ff8862a6953b71dbdb221390a44a52",
+        "groups": [],
+        "checks": [
+            {
+              "path": "::3_algorithm_confusion::[#3 Algorithm Confusion (HS256)] blocked (401/403)",
+              "id": "7318130661300a741bfd4849c20648df",
+              "passes": 10,
+              "fails": 0,
+              "name": "[#3 Algorithm Confusion (HS256)] blocked (401/403)"
+            },
+            {
+              "name": "[#3 Algorithm Confusion (RS256)] blocked (401/403)",
+              "path": "::3_algorithm_confusion::[#3 Algorithm Confusion (RS256)] blocked (401/403)",
+              "id": "8cf7f526f8cfe1eb655a7f4c3d5777ea",
+              "passes": 10,
+              "fails": 0
+            },
+            {
+              "fails": 0,
+              "name": "[#3 Algorithm Confusion (ES256)] blocked (401/403)",
+              "path": "::3_algorithm_confusion::[#3 Algorithm Confusion (ES256)] blocked (401/403)",
+              "id": "d58ff8bd0e741c875889cd077617ac97",
+              "passes": 10
+            }
+          ]
+      },
+      {
+        "id": "715387f211909ba0a95f4d3863881706",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "[#4a None Algorithm (no sig)] blocked (401/403)",
+              "path": "::4_none_algorithm::[#4a None Algorithm (no sig)] blocked (401/403)",
+              "id": "2a29acc3b729e32edc207fbd4ab03d80",
+              "passes": 10
+            },
+            {
+              "passes": 10,
+              "fails": 0,
+              "name": "[#4b None Algorithm (with original sig)] blocked (401/403)",
+              "path": "::4_none_algorithm::[#4b None Algorithm (with original sig)] blocked (401/403)",
+              "id": "1ecc8dd63f4af3d99080f62db640255c"
+            }
+          ],
+        "name": "4_none_algorithm",
+        "path": "::4_none_algorithm"
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "[#5 Payload Manipulation (email=admin)] blocked (401/403)",
+              "path": "::5_payload_manipulation::[#5 Payload Manipulation (email=admin)] blocked (401/403)",
+              "id": "4f714783a81572f94a1fce405170972d",
+              "passes": 10
+            }
+          ],
+        "name": "5_payload_manipulation",
+        "path": "::5_payload_manipulation",
+        "id": "be192f2bd340a8bb72790b3ac0a0cbeb"
+      },
+      {
+        "checks": [
+          {
+            "path": "::6_expired_token::[#6 Expired Token Abuse (exp in past)] blocked (401/403)",
+            "id": "987a99a22969151ffd80161da17224e9",
+            "passes": 10,
+            "fails": 0,
+            "name": "[#6 Expired Token Abuse (exp in past)] blocked (401/403)"
+          }
+        ],
+        "name": "6_expired_token",
+        "path": "::6_expired_token",
+        "id": "5208aa1e040b4cbd0b55b33d2023cbb0",
+        "groups": []
+      },
+      {
+        "checks": [
+          {
+            "passes": 10,
+            "fails": 0,
+            "name": "[#7 Missing Signature (empty)] blocked (401/403)",
+            "path": "::7_missing_signature::[#7 Missing Signature (empty)] blocked (401/403)",
+            "id": "f4ee5d5cbb9d6750ec097a66a05ed849"
+          }
+        ],
+        "name": "7_missing_signature",
+        "path": "::7_missing_signature",
+        "id": "979c9c3588d2dbbc71c76e8ae15d8385",
+        "groups": []
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "name": "[#9 Cross-Algorithm Injection (RS256→Falcon)] blocked (401/403)",
+              "path": "::8_cross_algorithm_injection::[#9 Cross-Algorithm Injection (RS256→Falcon)] blocked (401/403)",
+              "id": "ad5ac0709d24c5e699bd98ea6ded642a",
+              "passes": 10,
+              "fails": 0
+            },
+            {
+              "path": "::8_cross_algorithm_injection::[#9 Cross-Algorithm Injection (HS256→Falcon)] blocked (401/403)",
+              "id": "8bf9f73a9cdf9f2368acea0a31ca19dc",
+              "passes": 10,
+              "fails": 0,
+              "name": "[#9 Cross-Algorithm Injection (HS256→Falcon)] blocked (401/403)"
+            },
+            {
+              "id": "cb130d4dbc42ac78be154983a29761f4",
+              "passes": 10,
+              "fails": 0,
+              "name": "[#9 Cross-Algorithm Injection (ES256→Falcon)] blocked (401/403)",
+              "path": "::8_cross_algorithm_injection::[#9 Cross-Algorithm Injection (ES256→Falcon)] blocked (401/403)"
+            }
+          ],
+        "name": "8_cross_algorithm_injection",
+        "path": "::8_cross_algorithm_injection",
+        "id": "bd11a44f9dc75e0433b6cab46f790e9e"
+      }
+    ],
+    "checks": [
+      {
+        "fails": 10,
+        "name": "[sanity] valid token accepted (200)",
+        "path": "::[sanity] valid token accepted (200)",
+        "id": "58dbcbddd3c0ba8c3303a5dec8e8631f",
+        "passes": 0
+      }
+    ]
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": true
+  },
+  "state": {
+    "isStdOutTTY": true,
+    "isStdErrTTY": true,
+    "testRunDurationMs": 36380.691571
+  },
+  "metrics": {
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 130027,
+        "rate": 3574.0661978962466
+      }
+    },
+    "attack_block_rate_5_payload_manipulation": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 0,
+        "rate": 1,
+        "passes": 10
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_10_invalid_issuer": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 0,
+        "fails": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_4_none_algorithm": {
+      "values": {
+        "rate": 1,
+        "passes": 20,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "http_req_sending": {
+      "values": {
+        "p(90)": 0.55874,
+        "p(95)": 0.6595260000000001,
+        "avg": 0.38908012280701737,
+        "min": 0.080438,
+        "med": 0.412231,
+        "max": 1.326405
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 892.183245,
+        "p(90)": 614.704121,
+        "p(95)": 753.443683,
+        "avg": 356.90047336363637,
+        "min": 48.510884,
+        "med": 420.505127
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.533953888888889,
+        "min": 0,
+        "med": 0,
+        "max": 47.680348,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.935672514619883,
+        "passes": 160,
+        "fails": 11
+      }
+    },
+    "vus": {
+      "values": {
+        "value": 1,
+        "min": 0,
+        "max": 1
+      },
+      "type": "gauge",
+      "contains": "default"
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 3476.3395360000004,
+        "min": 2111.318192,
+        "med": 3712.8529485,
+        "max": 4558.333974,
+        "p(90)": 4051.0228272,
+        "p(95)": 4304.6784006
+      }
+    },
+    "attack_blocked": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 150,
+        "rate": 4.1230662068988515
+      }
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.002007,
+        "max": 719.365246,
+        "p(90)": 0.00294,
+        "p(95)": 0.0032915,
+        "avg": 4.88182787134503,
+        "min": 0.000301
+      }
+    },
+    "attack_block_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 150,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.85": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_2_token_forgery": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 30,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 171,
+        "rate": 4.700295475864691
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 10,
+        "rate": 0.2748710804599235
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 47189,
+        "rate": 1297.0891415823328
+      }
+    },
+    "attack_block_rate_8_missing_signature": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 10,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 3.433646514619883,
+        "min": 0,
+        "med": 0,
+        "max": 520.350509,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "attack_block_rate_9_cross_algorithm_injection": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 30,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 109.6417228421053,
+        "min": 39.482266,
+        "med": 47.894733,
+        "max": 1104.57475,
+        "p(90)": 300.589052,
+        "p(95)": 441.9383255
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 150,
+        "fails": 10,
+        "rate": 0.9375
+      }
+    },
+    "http_req_duration": {
+      "contains": "time",
+      "values": {
+        "med": 98.199979,
+        "max": 1105.062761,
+        "p(90)": 473.20926,
+        "p(95)": 605.5894215000001,
+        "avg": 200.8910630994151,
+        "min": 40.161971
+      },
+      "type": "trend"
+    },
+    "attack_block_rate_6_expired_token": {
+      "values": {
+        "rate": 1,
+        "passes": 10,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "group_duration": {
+      "contains": "time",
+      "values": {
+        "p(95)": 1105.3203356999998,
+        "avg": 363.3357954,
+        "min": 43.892579,
+        "med": 191.50870600000002,
+        "max": 1519.216542,
+        "p(90)": 953.3877355000002
+      },
+      "type": "trend"
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 90.86026013450292,
+        "min": 0.055492,
+        "med": 39.111764,
+        "max": 1044.266588,
+        "p(90)": 374.43675,
+        "p(95)": 465.3667595
+      }
+    },
+    "attack_block_rate_1_signature_tampering": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 10,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_3_algorithm_confusion": {
+      "values": {
+        "rate": 1,
+        "passes": 30,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    }
+  },
+  "setup_data": {
+    "user": {
+      "email": "attack-villlpfc@attack.test",
+      "name": "attack-villlpfc",
+      "password": "AttackTest!123"
+    }
+  }
+}
