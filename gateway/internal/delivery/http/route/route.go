@@ -34,7 +34,7 @@ func (c *RouteConfig) Setup() {
 	// Public routes
 	auth := api.Group("/auth")
 	auth.Post("/signin", c.AuthHandler.SignIn)
-	// auth.Post("/refresh", c.AuthHandler.RefreshToken)
+	auth.Post("/refresh", c.AuthHandler.RefreshToken)
 	auth.Post("/register", c.UserHandler.Register)
 
 	// Protected: /profile — PQC signature verified in middleware

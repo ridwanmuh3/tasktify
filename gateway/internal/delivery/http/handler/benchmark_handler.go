@@ -91,6 +91,9 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 
 	signTimings := make([]float64, 0, req.Iterations)
 	gcFreeSignTimings := make([]float64, 0, req.Iterations)
+	refreshTokenTimings := make([]float64, 0, req.Iterations)
+	gcFreeRefreshTokenTimings := make([]float64, 0, req.Iterations)
+	totalTimings := make([]float64, 0, req.Iterations)
 	cpuSamples := make([]float64, 0, req.Iterations)
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
@@ -101,7 +104,10 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 
 	for i := 0; i < warmupIterations; i++ {
-		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, false); err != nil {
+		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseAccess, false); err != nil {
+			h.log.Warnf("benchmark warmup access iter %d failed: %v", i, err)
+		}
+		if _, _, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseRefresh, false); err != nil {
 			h.log.Warnf("benchmark warmup iter %d failed: %v", i, err)
 		}
 	}
@@ -113,13 +119,23 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 
 	gcContaminatedCount := 0
 	for i := 0; i < req.Iterations; i++ {
-		_, signMs, stats, err := h.signBenchmarkToken(req.Algorithm, req.Email, true)
+		_, signMs, accessStats, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseAccess, true)
 		if err != nil {
-			h.log.Warnf("benchmark iter %d failed: %v", i, err)
+			h.log.Warnf("benchmark access iter %d failed: %v", i, err)
+			continue
+		}
+		_, refreshMs, refreshStats, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseRefresh, true)
+		if err != nil {
+			h.log.Warnf("benchmark refresh iter %d failed: %v", i, err)
 			continue
 		}
 
+		stats := combineBenchmarkStats(accessStats, refreshStats)
+		totalMs := signMs + refreshMs
+
 		signTimings = append(signTimings, signMs)
+		refreshTokenTimings = append(refreshTokenTimings, refreshMs)
+		totalTimings = append(totalTimings, totalMs)
 		cpuSamples = append(cpuSamples, stats.CPUPct)
 		memAllocSamples = append(memAllocSamples, stats.MemoryAllocMB)
 		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaMB)
@@ -129,6 +145,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 			gcContaminatedCount++
 		} else {
 			gcFreeSignTimings = append(gcFreeSignTimings, signMs)
+			gcFreeRefreshTokenTimings = append(gcFreeRefreshTokenTimings, refreshMs)
 		}
 	}
 
@@ -141,7 +158,8 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		PayloadNote:              req.PayloadNote,
 		SignTimingsMs:            signTimings,
 		TokenGenerationTimingsMs: signTimings,
-		TotalTimingsMs:           signTimings,
+		RefreshTokenTimingsMs:    refreshTokenTimings,
+		TotalTimingsMs:           totalTimings,
 		AuthCPUPct:               cpuSamples,
 		AuthMemoryAllocMB:        memAllocSamples,
 		AuthMemoryAllocDeltaMB:   memAllocDeltaSamples,
@@ -150,7 +168,9 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	result.Stats.Sign = computeTimingStats(signTimings)
 	result.Stats.TokenGeneration = result.Stats.Sign
 	result.Stats.TokenGenerationGCFree = computeTimingStats(gcFreeSignTimings)
-	result.Stats.Total = result.Stats.Sign
+	result.Stats.RefreshToken = computeTimingStats(refreshTokenTimings)
+	result.Stats.RefreshTokenGCFree = computeTimingStats(gcFreeRefreshTokenTimings)
+	result.Stats.Total = computeTimingStats(totalTimings)
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
 	result.Stats.Resource.MemoryAllocMB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaMB = computeNumericStats(memAllocDeltaSamples)
@@ -158,6 +178,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 
 	c.Set("X-Bench-Sign-P95-Ms", fmt.Sprintf("%.3f", result.Stats.Sign.P95Ms))
 	c.Set("X-Bench-Token-Generation-P95-Ms", fmt.Sprintf("%.3f", result.Stats.TokenGeneration.P95Ms))
+	c.Set("X-Bench-Refresh-Token-Generation-P95-Ms", fmt.Sprintf("%.3f", result.Stats.RefreshToken.P95Ms))
 	c.Set("X-Bench-Total-P95-Ms", fmt.Sprintf("%.3f", result.Stats.Total.P95Ms))
 
 	return c.JSON(model.Response[any]{
@@ -177,7 +198,7 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, signMs, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, false)
+	token, signMs, _, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseAccess, false)
 	if err != nil {
 		h.log.Errorf("benchmark token sign failed: %v", err)
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to generate benchmark token")
@@ -199,7 +220,7 @@ func (h *BenchmarkHandler) SignToken(c fiber.Ctx) error {
 // signBenchmarkToken signs one JWT and returns timing + runtime stats.
 // usePerOpCPU=true: per-op tick delta, accurate for isolated <1ms ops.
 // usePerOpCPU=false: 100ms background monitor, better for steady stress load.
-func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, usePerOpCPU bool) (string, float64, BenchmarkRuntimeStats, error) {
+func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, tokenUse string, usePerOpCPU bool) (string, float64, BenchmarkRuntimeStats, error) {
 	if h.benchmarkJWT == nil {
 		return "", 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark signer not configured")
 	}
@@ -209,6 +230,7 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, us
 		UserID:    userID,
 		Email:     email,
 		Algorithm: algorithm,
+		TokenUse:  tokenUse,
 	}
 
 	// Memory: ReadMemStats is the most reliable cross-version API.
@@ -259,6 +281,21 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, us
 	}
 
 	return token, signMs, stats, nil
+}
+
+func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) BenchmarkRuntimeStats {
+	cpuPct := accessStats.CPUPct
+	if refreshStats.CPUPct > cpuPct {
+		cpuPct = refreshStats.CPUPct
+	}
+
+	return BenchmarkRuntimeStats{
+		MemoryAllocMB:      refreshStats.MemoryAllocMB,
+		MemoryAllocDeltaMB: accessStats.MemoryAllocDeltaMB + refreshStats.MemoryAllocDeltaMB,
+		MemorySysMB:        refreshStats.MemorySysMB,
+		CPUPct:             cpuPct,
+		GCOccurred:         accessStats.GCOccurred || refreshStats.GCOccurred,
+	}
 }
 
 func computeTimingStats(timings []float64) TimingStats {
@@ -323,4 +360,3 @@ func computeNumericStats(values []float64) NumericStats {
 		Sum:   t.SumMs,
 	}
 }
-

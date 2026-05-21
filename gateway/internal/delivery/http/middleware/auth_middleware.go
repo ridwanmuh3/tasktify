@@ -38,6 +38,9 @@ func (m *AuthMiddleware) Handle(c fiber.Ctx) error {
 		m.log.Warnf("token verification failed: %v", err)
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid or expired token")
 	}
+	if claims.TokenUse != "" && claims.TokenUse != jwtutils.TokenUseAccess {
+		return fiber.NewError(fiber.StatusUnauthorized, "invalid token type")
+	}
 
 	// Set user info ke locals untuk diteruskan sebagai X-User-ID
 	c.Locals("user_id", claims.UserID.String())

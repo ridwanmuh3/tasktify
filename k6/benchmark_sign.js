@@ -11,6 +11,7 @@
  *
  *   Phase 2 — STRESS TEST (10 / 30 / 50 VUs, constant-vus)
  *     Each VU hits /api/benchmark/token directly.
+ *     Each VU also signs in and calls /api/auth/refresh to measure refresh latency.
  *     Shows how latency and throughput degrade under concurrent load.
  *     Thresholds fail the run if p95 or error rate exceeds per-algorithm budget.
  *
@@ -36,6 +37,7 @@
  * Latency taxonomy:
  *   token_generation_clean = X-Token-Generation-Time-Ms / X-Sign-Time-Ms header
  *                            pure JWT generation only, no DB/bcrypt/auth-service latency
+ *   refresh_generation     = X-Refresh-Token-Generation-Time-Ms from /api/auth/refresh
  *   clean                  = k6 timings.waiting — TTFB/server processing approx
  *   dirty                  = k6 timings.duration — full client round-trip
  *   network                = dirty − clean
@@ -205,6 +207,21 @@ const benchTokenGenerationStdev = new Trend("bench_token_generation_stdev", true
 const benchTokenGenerationGCFreeP95 = new Trend("bench_token_generation_gc_free_p95", true);
 const benchTokenGenerationGCFreeAvg = new Trend("bench_token_generation_gc_free_avg", true);
 const benchTokenGenerationGCFreeStdev = new Trend("bench_token_generation_gc_free_stdev", true);
+const benchRefreshTokenGenerationP95 = new Trend("bench_refresh_token_generation_p95", true);
+const benchRefreshTokenGenerationAvg = new Trend("bench_refresh_token_generation_avg", true);
+const benchRefreshTokenGenerationStdev = new Trend("bench_refresh_token_generation_stdev", true);
+const benchRefreshTokenGenerationGCFreeP95 = new Trend(
+  "bench_refresh_token_generation_gc_free_p95",
+  true,
+);
+const benchRefreshTokenGenerationGCFreeAvg = new Trend(
+  "bench_refresh_token_generation_gc_free_avg",
+  true,
+);
+const benchRefreshTokenGenerationGCFreeStdev = new Trend(
+  "bench_refresh_token_generation_gc_free_stdev",
+  true,
+);
 const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
@@ -226,6 +243,14 @@ const stressSignClean = new Trend("stress_sign_clean", true);
 const stressSignDirty = new Trend("stress_sign_dirty", true);
 const stressSignNetwork = new Trend("stress_sign_network", true);
 const stressLoginDirty = new Trend("stress_login_dirty", true);
+const stressRefreshTokenGenerationClean = new Trend(
+  "stress_refresh_token_generation_clean",
+  true,
+);
+const stressRefreshDirty = new Trend("stress_refresh_dirty", true);
+const stressRefreshSuccess = new Counter("stress_refresh_success");
+const stressRefreshFailed = new Counter("stress_refresh_failed");
+const stressRefreshErrorRate = new Rate("stress_refresh_error_rate");
 const stressReqSuccess = new Counter("stress_req_success");
 const stressReqFailed = new Counter("stress_req_failed");
 const stressErrorRate = new Rate("stress_error_rate");
@@ -247,6 +272,7 @@ if (RUN_ISOLATED) {
 
 if (RUN_STRESS) {
   thresholds.stress_error_rate = ["rate<0.01"]; // overall <1% error rate
+  thresholds.stress_refresh_error_rate = ["rate<0.05"];
 }
 
 if (RUN_ATTACKS) {
@@ -267,6 +293,11 @@ for (const alg of ALGORITHMS) {
       thresholds[`stress_sign_clean${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_sign_network${tv}`] = [`p(95)<9999999`];
       thresholds[`stress_login_dirty${tv}`] = [`p(95)<9999999`];
+      thresholds[`stress_refresh_token_generation_clean${tv}`] = [`p(95)<${b.actual}`];
+      thresholds[`stress_refresh_dirty${tv}`] = [`p(95)<9999999`];
+      thresholds[`stress_refresh_success${tv}`] = [`count>=0`];
+      thresholds[`stress_refresh_failed${tv}`] = [`count>=0`];
+      thresholds[`stress_refresh_error_rate${tv}`] = [`rate<0.10`];
       thresholds[`stress_req_success${tv}`] = [`count>=0`];
       thresholds[`stress_req_failed${tv}`] = [`count>=0`];
       thresholds[`stress_error_rate${tv}`] = [`rate<0.05`]; // <5% per scenario
@@ -285,6 +316,12 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_token_generation_gc_free_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_generation_gc_free_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_token_generation_gc_free_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_refresh_token_generation_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_refresh_token_generation_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_refresh_token_generation_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_refresh_token_generation_gc_free_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_refresh_token_generation_gc_free_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_refresh_token_generation_gc_free_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_total_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
@@ -413,6 +450,16 @@ export function runIsolated(data) {
       benchTokenGenerationGCFreeAvg.add(s.token_generation_gc_free.avg_ms, tags);
       benchTokenGenerationGCFreeStdev.add(s.token_generation_gc_free.stdev_ms, tags);
     }
+    if (s.refresh_token_generation?.avg_ms != null) {
+      benchRefreshTokenGenerationP95.add(s.refresh_token_generation.p95_ms, tags);
+      benchRefreshTokenGenerationAvg.add(s.refresh_token_generation.avg_ms, tags);
+      benchRefreshTokenGenerationStdev.add(s.refresh_token_generation.stdev_ms, tags);
+    }
+    if (s.refresh_token_generation_gc_free?.avg_ms != null) {
+      benchRefreshTokenGenerationGCFreeP95.add(s.refresh_token_generation_gc_free.p95_ms, tags);
+      benchRefreshTokenGenerationGCFreeAvg.add(s.refresh_token_generation_gc_free.avg_ms, tags);
+      benchRefreshTokenGenerationGCFreeStdev.add(s.refresh_token_generation_gc_free.stdev_ms, tags);
+    }
     benchTotalP95.add(s.total.p95_ms, tags);
     benchTotalAvg.add(s.total.avg_ms, tags);
     benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
@@ -428,6 +475,9 @@ export function runIsolated(data) {
         ` warmup=${result.warmup_iterations}` +
         ` gc_contaminated=${gcCount}` +
         ` | token_generation(all): avg=${(s.token_generation?.avg_ms ?? s.sign.avg_ms)?.toFixed(3)} p95=${(s.token_generation?.p95_ms ?? s.sign.p95_ms)?.toFixed(3)} stdev=${(s.token_generation?.stdev_ms ?? s.sign.stdev_ms)?.toFixed(3)} ms` +
+        (s.refresh_token_generation?.avg_ms != null
+          ? ` | refresh_generation(all): avg=${s.refresh_token_generation.avg_ms?.toFixed(3)} p95=${s.refresh_token_generation.p95_ms?.toFixed(3)} stdev=${s.refresh_token_generation.stdev_ms?.toFixed(3)} ms`
+          : "") +
         (gcFree && gcFree.avg_ms != null
           ? ` | token_generation(gc_free): avg=${gcFree.avg_ms?.toFixed(3)} p95=${gcFree.p95_ms?.toFixed(3)} stdev=${gcFree.stdev_ms?.toFixed(3)} ms`
           : "") +
@@ -545,6 +595,54 @@ export function runStress(data) {
     headers: jsonHdr,
   });
   stressLoginDirty.add(loginRes.timings.duration, tags);
+
+  let refreshToken = "";
+  try {
+    refreshToken = JSON.parse(loginRes.body).data?.refresh_token || "";
+  } catch {
+    refreshToken = "";
+  }
+
+  if (refreshToken) {
+    const refreshRes = http.post(
+      `${BASE}/api/auth/refresh`,
+      JSON.stringify({ refresh_token: refreshToken }),
+      { headers: jsonHdr },
+    );
+    stressRefreshDirty.add(refreshRes.timings.duration, tags);
+
+    const refreshGenerationMs = getHeaderNumber(refreshRes, [
+      "X-Refresh-Token-Generation-Time-Ms",
+      "x-refresh-token-generation-time-ms",
+    ]);
+    if (refreshGenerationMs !== null) {
+      stressRefreshTokenGenerationClean.add(refreshGenerationMs, tags);
+    }
+
+    let newAccessToken = "";
+    let newRefreshToken = "";
+    try {
+      const refreshData = JSON.parse(refreshRes.body).data || {};
+      newAccessToken = refreshData.access_token || "";
+      newRefreshToken = refreshData.refresh_token || "";
+    } catch {
+      newAccessToken = "";
+      newRefreshToken = "";
+    }
+
+    const refreshOk = check(refreshRes, {
+      [`[refresh|${alg.name}|${vuCount}VU] 200`]: (r) => r.status === 200,
+      [`[refresh|${alg.name}|${vuCount}VU] has token pair`]: () => {
+        return !!newAccessToken && !!newRefreshToken;
+      },
+    });
+
+    refreshOk ? stressRefreshSuccess.add(1, tags) : stressRefreshFailed.add(1, tags);
+    stressRefreshErrorRate.add(!refreshOk, tags);
+  } else {
+    stressRefreshFailed.add(1, tags);
+    stressRefreshErrorRate.add(true, tags);
+  }
 
   sleep(0.05);
 }
@@ -686,6 +784,7 @@ export function handleSummary(data) {
         notes: [
           "Isolated metrics use gateway-local pure signing path.",
           "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
+          "Refresh metrics use /api/auth/refresh with refresh tokens returned by /api/auth/signin.",
           "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios.",
         ],
       },
@@ -696,6 +795,24 @@ export function handleSummary(data) {
       const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
       const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
       const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
+      const isolatedRefreshAvg = getNumber(
+        "bench_refresh_token_generation_avg",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedRefreshP95 = getNumber(
+        "bench_refresh_token_generation_p95",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedRefreshStdev = getNumber(
+        "bench_refresh_token_generation_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedTokenGCFreeAvg = getNumber(
         "bench_token_generation_gc_free_avg",
         alg.name,
@@ -710,6 +827,24 @@ export function handleSummary(data) {
       );
       const isolatedTokenGCFreeStdev = getNumber(
         "bench_token_generation_gc_free_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedRefreshGCFreeAvg = getNumber(
+        "bench_refresh_token_generation_gc_free_avg",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedRefreshGCFreeP95 = getNumber(
+        "bench_refresh_token_generation_gc_free_p95",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedRefreshGCFreeStdev = getNumber(
+        "bench_refresh_token_generation_gc_free_stdev",
         alg.name,
         null,
         "avg",
@@ -752,6 +887,46 @@ export function handleSummary(data) {
                     p95: isolatedTokenGCFreeP95,
                     p99: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "p(99)"),
                     sd: isolatedTokenGCFreeStdev,
+                  }
+                : null,
+              refresh_token_generation_ms: {
+                avg: isolatedRefreshAvg,
+                min: getNumber("bench_refresh_token_generation_avg", alg.name, null, "min"),
+                max: getNumber("bench_refresh_token_generation_avg", alg.name, null, "max"),
+                p50: getNumber("bench_refresh_token_generation_avg", alg.name, null, "med"),
+                p95: isolatedRefreshP95,
+                p99: getNumber("bench_refresh_token_generation_avg", alg.name, null, "p(99)"),
+                sd: isolatedRefreshStdev,
+              },
+              refresh_token_generation_gc_free_ms: isolatedRefreshGCFreeAvg != null
+                ? {
+                    avg: isolatedRefreshGCFreeAvg,
+                    min: getNumber(
+                      "bench_refresh_token_generation_gc_free_avg",
+                      alg.name,
+                      null,
+                      "min",
+                    ),
+                    max: getNumber(
+                      "bench_refresh_token_generation_gc_free_avg",
+                      alg.name,
+                      null,
+                      "max",
+                    ),
+                    p50: getNumber(
+                      "bench_refresh_token_generation_gc_free_avg",
+                      alg.name,
+                      null,
+                      "med",
+                    ),
+                    p95: isolatedRefreshGCFreeP95,
+                    p99: getNumber(
+                      "bench_refresh_token_generation_gc_free_avg",
+                      alg.name,
+                      null,
+                      "p(99)",
+                    ),
+                    sd: isolatedRefreshGCFreeStdev,
                   }
                 : null,
               total_ms: {
@@ -808,9 +983,15 @@ export function handleSummary(data) {
       for (const vus of CONCURRENCY_LEVELS) {
         const vusKey = String(vus);
         const signAvg = getNumber("stress_token_generation_clean", alg.name, vusKey, "avg");
+        const refreshAvg = getNumber(
+          "stress_refresh_token_generation_clean",
+          alg.name,
+          vusKey,
+          "avg",
+        );
         const e2eAvg = getNumber("stress_sign_dirty", alg.name, vusKey, "avg");
 
-        if (signAvg === null && e2eAvg === null) {
+        if (signAvg === null && refreshAvg === null && e2eAvg === null) {
           continue;
         }
 
@@ -827,6 +1008,22 @@ export function handleSummary(data) {
             med: stressStat("stress_token_generation_clean", "med"),
             p95: stressStat("stress_token_generation_clean", "p(95)"),
             p99: stressStat("stress_token_generation_clean", "p(99)"),
+          },
+          refresh_token_generation_ms: {
+            avg: stressStat("stress_refresh_token_generation_clean", "avg"),
+            min: stressStat("stress_refresh_token_generation_clean", "min"),
+            max: stressStat("stress_refresh_token_generation_clean", "max"),
+            med: stressStat("stress_refresh_token_generation_clean", "med"),
+            p95: stressStat("stress_refresh_token_generation_clean", "p(95)"),
+            p99: stressStat("stress_refresh_token_generation_clean", "p(99)"),
+          },
+          refresh_ms: {
+            avg: stressStat("stress_refresh_dirty", "avg"),
+            min: stressStat("stress_refresh_dirty", "min"),
+            max: stressStat("stress_refresh_dirty", "max"),
+            med: stressStat("stress_refresh_dirty", "med"),
+            p95: stressStat("stress_refresh_dirty", "p(95)"),
+            p99: stressStat("stress_refresh_dirty", "p(99)"),
           },
           e2e_ms: {
             avg: stressStat("stress_sign_dirty", "avg"),
@@ -849,6 +1046,12 @@ export function handleSummary(data) {
           error_rate_pct: (() => {
             const v = getErrRate(alg.name, vusKey);
             return v === "—" ? null : parseFloat(v);
+          })(),
+          refresh_error_rate_pct: (() => {
+            const key = `stress_refresh_error_rate{alg:${alg.name},vus:${vusKey}}`;
+            if (!(key in m)) return null;
+            const v = m[key].values.rate;
+            return v === undefined ? null : v * 100;
           })(),
         });
       }
@@ -879,7 +1082,7 @@ export function handleSummary(data) {
   }
 
   // ── TABLE 1: Isolated clean token-generation baseline ─────────
-  const WI = [28, 6, 12, 12, 12, 12, 12, 10, 10];
+  const WI = [28, 6, 12, 12, 12, 12, 12, 12, 12, 10, 10];
 
   const hdrI = [
     pad("Algorithm", WI[0]),
@@ -887,10 +1090,12 @@ export function handleSummary(data) {
     pad("Token avg", WI[2]),
     pad("Token p95", WI[3]),
     pad("Token stdev", WI[4]),
-    pad("E2E avg", WI[5]),
-    pad("E2E p95", WI[6]),
-    pad("CPU avg", WI[7]),
-    pad("Mem avg", WI[8]),
+    pad("Refresh avg", WI[5]),
+    pad("Refresh p95", WI[6]),
+    pad("E2E avg", WI[7]),
+    pad("E2E p95", WI[8]),
+    pad("CPU avg", WI[9]),
+    pad("Mem avg", WI[10]),
   ].join("");
 
   const unitI = [
@@ -901,8 +1106,10 @@ export function handleSummary(data) {
     pad("(ms)", WI[4]),
     pad("(ms)", WI[5]),
     pad("(ms)", WI[6]),
-    pad("(%)", WI[7]),
-    pad("(MB)", WI[8]),
+    pad("(ms)", WI[7]),
+    pad("(ms)", WI[8]),
+    pad("(%)", WI[9]),
+    pad("(MB)", WI[10]),
   ].join("");
 
   let isolated = "";
@@ -912,6 +1119,8 @@ export function handleSummary(data) {
     const sa = getVal("bench_token_generation_avg", n, null, "avg");
     const sp = getVal("bench_token_generation_p95", n, null, "avg");
     const ss = getVal("bench_token_generation_stdev", n, null, "avg");
+    const ra = getVal("bench_refresh_token_generation_avg", n, null, "avg");
+    const rp = getVal("bench_refresh_token_generation_p95", n, null, "avg");
     const ta = getVal("bench_total_avg", n, null, "avg");
     const tp = getVal("bench_total_p95", n, null, "avg");
     const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
@@ -924,24 +1133,28 @@ export function handleSummary(data) {
         pad(sa, WI[2]),
         pad(sp, WI[3]),
         pad(ss, WI[4]),
-        pad(ta, WI[5]),
-        pad(tp, WI[6]),
-        pad(cpu, WI[7]),
-        pad(mem, WI[8]),
+        pad(ra, WI[5]),
+        pad(rp, WI[6]),
+        pad(ta, WI[7]),
+        pad(tp, WI[8]),
+        pad(cpu, WI[9]),
+        pad(mem, WI[10]),
       ].join("") + "\n";
 
     isolated = appendRow(isolated, row);
   }
 
   // ── TABLE 2: Primary stress metrics ──────────────────────────
-  const WP = [28, 6, 12, 12, 12];
+  const WP = [28, 6, 12, 12, 12, 12, 12];
 
   const hdrP = [
     pad("Algorithm", WP[0]),
     pad("VUs", WP[1]),
     pad("Sign avg", WP[2]),
     pad("Sign p95", WP[3]),
-    pad("Auth thrpt", WP[4]),
+    pad("Refresh avg", WP[4]),
+    pad("Refresh p95", WP[5]),
+    pad("Auth thrpt", WP[6]),
   ].join("");
 
   const unitP = [
@@ -949,22 +1162,26 @@ export function handleSummary(data) {
     pad("", WP[1]),
     pad("(ms)", WP[2]),
     pad("(ms)", WP[3]),
-    pad("(ok/s)", WP[4]),
+    pad("(ms)", WP[4]),
+    pad("(ms)", WP[5]),
+    pad("(ok/s)", WP[6]),
   ].join("");
 
   // ── TABLE 3: Secondary stress metrics ────────────────────────
-  const WS = [28, 6, 12, 12, 12, 12, 12, 12, 12];
+  const WS = [28, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12];
 
   const hdrS = [
     pad("Algorithm", WS[0]),
     pad("VUs", WS[1]),
     pad("Login avg", WS[2]),
     pad("Login p95", WS[3]),
-    pad("E2E avg", WS[4]),
-    pad("E2E p95", WS[5]),
-    pad("RPS", WS[6]),
-    pad("ErrRate", WS[7]),
-    pad("Atk block", WS[8]),
+    pad("Refresh avg", WS[4]),
+    pad("Refresh p95", WS[5]),
+    pad("E2E avg", WS[6]),
+    pad("E2E p95", WS[7]),
+    pad("RPS", WS[8]),
+    pad("ErrRate", WS[9]),
+    pad("Atk block", WS[10]),
   ].join("");
 
   const unitS = [
@@ -974,9 +1191,11 @@ export function handleSummary(data) {
     pad("(ms)", WS[3]),
     pad("(ms)", WS[4]),
     pad("(ms)", WS[5]),
-    pad("req/s", WS[6]),
-    pad("", WS[7]),
-    pad("", WS[8]),
+    pad("(ms)", WS[6]),
+    pad("(ms)", WS[7]),
+    pad("req/s", WS[8]),
+    pad("", WS[9]),
+    pad("", WS[10]),
   ].join("");
 
   let primary = "";
@@ -995,7 +1214,9 @@ export function handleSummary(data) {
           pad(vus, WP[1]),
           pad(getVal("stress_token_generation_clean", n, vus, "avg"), WP[2]),
           pad(getVal("stress_token_generation_clean", n, vus, "p(95)"), WP[3]),
-          pad(getThroughput(n, vus), WP[4]),
+          pad(getVal("stress_refresh_token_generation_clean", n, vus, "avg"), WP[4]),
+          pad(getVal("stress_refresh_token_generation_clean", n, vus, "p(95)"), WP[5]),
+          pad(getThroughput(n, vus), WP[6]),
         ].join("") + "\n";
 
       const rowS =
@@ -1004,11 +1225,13 @@ export function handleSummary(data) {
           pad(vus, WS[1]),
           pad(getVal("stress_login_dirty", n, vus, "avg"), WS[2]),
           pad(getVal("stress_login_dirty", n, vus, "p(95)"), WS[3]),
-          pad(getVal("stress_sign_dirty", n, vus, "avg"), WS[4]),
-          pad(getVal("stress_sign_dirty", n, vus, "p(95)"), WS[5]),
-          pad(getRequestRate(n, vus), WS[6]),
-          pad(getErrRate(n, vus), WS[7]),
-          pad(i === 0 ? attackRate : "", WS[8]),
+          pad(getVal("stress_refresh_dirty", n, vus, "avg"), WS[4]),
+          pad(getVal("stress_refresh_dirty", n, vus, "p(95)"), WS[5]),
+          pad(getVal("stress_sign_dirty", n, vus, "avg"), WS[6]),
+          pad(getVal("stress_sign_dirty", n, vus, "p(95)"), WS[7]),
+          pad(getRequestRate(n, vus), WS[8]),
+          pad(getErrRate(n, vus), WS[9]),
+          pad(i === 0 ? attackRate : "", WS[10]),
         ].join("") + "\n";
 
       primary = appendRow(primary, rowP);
@@ -1050,8 +1273,10 @@ ${SEP}
   ${secondary.trimEnd().split("\n").join("\n  ")}
 
   Sign avg/p95 = X-Token-Generation-Time-Ms header; pure JWT generation only
+  Refresh avg/p95 = X-Refresh-Token-Generation-Time-Ms header on /api/auth/refresh
   Auth thrpt   = Successful benchmark-sign requests / ${STRESS_DURATION_S}s
   Login        = Full /api/auth/signin round-trip: bcrypt verify + DB lookup + JWT sign
+  Refresh      = Full /api/auth/refresh round-trip: refresh-token verify + JWT rotation
   E2E          = Full k6 client round-trip for /api/benchmark/token (sign only, no bcrypt/DB)
   RPS          = Total benchmark-sign requests / ${STRESS_DURATION_S}s
   Atk block    = Tampered-token /api/profile requests blocked with 401/403

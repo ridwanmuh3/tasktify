@@ -18,15 +18,22 @@ type JwtUtil interface {
 
 type JWTClaims struct {
 	jwt.RegisteredClaims
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	TokenUse string    `json:"token_use,omitempty"`
 }
 
 type JWTPayload struct {
 	UserID    uuid.UUID
 	Email     string
 	Algorithm string // optional: override signing algorithm
+	TokenUse  string
 }
+
+const (
+	TokenUseAccess  = "access"
+	TokenUseRefresh = "refresh"
+)
 
 // AlgConfig holds the signing method, sign key, and verify key for a single algorithm.
 type AlgConfig struct {
@@ -76,10 +83,15 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 	}
 
 	currentTime := time.Now()
+	tokenUse := payload.TokenUse
+	if tokenUse == "" {
+		tokenUse = TokenUseAccess
+	}
 
 	token := jwt.NewWithClaims(j.method, JWTClaims{
-		UserID: payload.UserID,
-		Email:  payload.Email,
+		UserID:   payload.UserID,
+		Email:    payload.Email,
+		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
@@ -153,10 +165,15 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 	}
 
 	currentTime := time.Now()
+	tokenUse := payload.TokenUse
+	if tokenUse == "" {
+		tokenUse = TokenUseAccess
+	}
 
 	token := jwt.NewWithClaims(cfg.Method, JWTClaims{
-		UserID: payload.UserID,
-		Email:  payload.Email,
+		UserID:   payload.UserID,
+		Email:    payload.Email,
+		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
@@ -202,4 +219,15 @@ func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
 		return claims, nil
 	}
 	return nil, errors.New("token is not valid")
+}
+
+func AlgorithmFromToken(tokenStr string) (string, error) {
+	token, _, err := jwt.NewParser().ParseUnverified(tokenStr, jwt.MapClaims{})
+	if err != nil {
+		return "", err
+	}
+	if token.Method == nil {
+		return "", errors.New("token algorithm unavailable")
+	}
+	return token.Method.Alg(), nil
 }

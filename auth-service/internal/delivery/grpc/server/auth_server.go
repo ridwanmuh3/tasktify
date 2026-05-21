@@ -27,20 +27,31 @@ func NewAuthServer(log *zap.SugaredLogger, authService *service.AuthService) *Au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, request *model.SignInRequest) (*model.AuthResponse, error) {
-	accessToken, refreshToken, tokenGenerationMs, runtimeStats, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
+	accessToken, refreshToken, timings, runtimeStats, err := s.authService.SignIn(ctx, request.Email, request.Password, request.Algorithm)
 	if err != nil {
 		return nil, err
 	}
 
 	// Expose clean token-generation latency and auth-service resource usage
 	// as gRPC trailers so gateway can forward them as k6-visible headers.
-	grpc.SetTrailer(ctx, metadata.Pairs(
-		"x-sign-time-ms", fmt.Sprintf("%.3f", tokenGenerationMs),
-		"x-token-generation-time-ms", fmt.Sprintf("%.3f", tokenGenerationMs),
-		"x-auth-cpu-pct", fmt.Sprintf("%.3f", runtimeStats.CPUPct),
-		"x-auth-mem-alloc-mb", fmt.Sprintf("%.3f", runtimeStats.MemoryAllocMB),
-		"x-auth-mem-sys-mb", fmt.Sprintf("%.3f", runtimeStats.MemorySysMB),
-	))
+	setAuthTrailers(ctx, timings, runtimeStats)
+
+	return &model.AuthResponse{
+		Auth: &model.Auth{
+			TokenType:    "Bearer",
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
+}
+
+func (s *AuthServer) RefreshToken(ctx context.Context, request *model.RefreshTokenRequest) (*model.AuthResponse, error) {
+	accessToken, refreshToken, timings, runtimeStats, err := s.authService.RefreshToken(ctx, request.UserId, request.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	setAuthTrailers(ctx, timings, runtimeStats)
 
 	return &model.AuthResponse{
 		Auth: &model.Auth{
@@ -56,4 +67,16 @@ func (s *AuthServer) Verify(ctx context.Context, request *model.VerifyRequest) (
 		return nil, err
 	}
 	return new(emptypb.Empty), nil
+}
+
+func setAuthTrailers(ctx context.Context, timings service.TokenGenerationTimings, runtimeStats service.RuntimeStats) {
+	grpc.SetTrailer(ctx, metadata.Pairs(
+		"x-sign-time-ms", fmt.Sprintf("%.3f", timings.AccessTokenMs),
+		"x-access-token-generation-time-ms", fmt.Sprintf("%.3f", timings.AccessTokenMs),
+		"x-refresh-token-generation-time-ms", fmt.Sprintf("%.3f", timings.RefreshTokenMs),
+		"x-token-generation-time-ms", fmt.Sprintf("%.3f", timings.TotalMs),
+		"x-auth-cpu-pct", fmt.Sprintf("%.3f", runtimeStats.CPUPct),
+		"x-auth-mem-alloc-mb", fmt.Sprintf("%.3f", runtimeStats.MemoryAllocMB),
+		"x-auth-mem-sys-mb", fmt.Sprintf("%.3f", runtimeStats.MemorySysMB),
+	))
 }

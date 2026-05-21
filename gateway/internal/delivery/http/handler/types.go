@@ -8,6 +8,11 @@ type SignInRequest struct {
 	Algorithm string `json:"algorithm"`
 }
 
+type RefreshTokenRequest struct {
+	UserID       string `json:"user_id"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 // User
 
 type RegisterRequest struct {
@@ -99,6 +104,7 @@ type BenchmarkSignResult struct {
 	PayloadNote              string    `json:"payload_note,omitempty"`
 	SignTimingsMs            []float64 `json:"sign_timings_ms"`
 	TokenGenerationTimingsMs []float64 `json:"token_generation_timings_ms"`
+	RefreshTokenTimingsMs    []float64 `json:"refresh_token_generation_timings_ms"`
 	TotalTimingsMs           []float64 `json:"total_timings_ms"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
 	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`
@@ -108,6 +114,8 @@ type BenchmarkSignResult struct {
 		Sign                  TimingStats `json:"sign"`
 		TokenGeneration       TimingStats `json:"token_generation"`
 		TokenGenerationGCFree TimingStats `json:"token_generation_gc_free"`
+		RefreshToken          TimingStats `json:"refresh_token_generation"`
+		RefreshTokenGCFree    TimingStats `json:"refresh_token_generation_gc_free"`
 		Total                 TimingStats `json:"total"`
 		Resource              struct {
 			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
