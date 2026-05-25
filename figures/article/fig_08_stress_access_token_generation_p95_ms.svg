@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="6.333in" height="3.733in" viewBox="0 0 1900 1120">
+<rect width="1900" height="1120" fill="#FFFFFF"/>
+<style>
+text { font-family: Arial, Helvetica, sans-serif; fill: #1F2933; }
+.subtitle { font-size: 24px; fill: #52616F; }
+.axis { font-size: 23px; fill: #2F3A45; }
+.tick { font-size: 21px; fill: #425466; }
+.label { font-size: 22px; fill: #2F3A45; }
+.value { font-size: 21px; fill: #1F2933; font-weight: 700; }
+.legend-title { font-size: 24px; font-weight: 700; }
+.legend { font-size: 22px; fill: #273444; }
+.note { font-size: 19px; fill: #627084; }
+</style>
+<text class="subtitle" x="70" y="58">P95 server-side token generation by concurrency. Stress duration 30 s per VU level.</text>
+<line x1="175" x2="1445" y1="950.00" y2="950.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="957.00" text-anchor="end">0.1</text>
+<line x1="175" x2="1445" y1="899.13" y2="899.13" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="906.13" text-anchor="end">0.2</text>
+<line x1="175" x2="1445" y1="831.87" y2="831.87" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="838.87" text-anchor="end">0.5</text>
+<line x1="175" x2="1445" y1="781.00" y2="781.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="788.00" text-anchor="end">1</text>
+<line x1="175" x2="1445" y1="730.13" y2="730.13" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="737.13" text-anchor="end">2</text>
+<line x1="175" x2="1445" y1="662.87" y2="662.87" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="669.87" text-anchor="end">5</text>
+<line x1="175" x2="1445" y1="612.00" y2="612.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="619.00" text-anchor="end">10</text>
+<line x1="175" x2="1445" y1="561.13" y2="561.13" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="568.13" text-anchor="end">20</text>
+<line x1="175" x2="1445" y1="493.87" y2="493.87" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="500.87" text-anchor="end">50</text>
+<line x1="175" x2="1445" y1="443.00" y2="443.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="450.00" text-anchor="end">100</text>
+<line x1="175" x2="1445" y1="392.13" y2="392.13" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="399.13" text-anchor="end">200</text>
+<line x1="175" x2="1445" y1="324.87" y2="324.87" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="331.87" text-anchor="end">500</text>
+<line x1="175" x2="1445" y1="274.00" y2="274.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="281.00" text-anchor="end">1000</text>
+<line x1="175" x2="1445" y1="223.13" y2="223.13" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="230.13" text-anchor="end">2000</text>
+<line x1="175" x2="1445" y1="155.87" y2="155.87" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="162.87" text-anchor="end">5000</text>
+<line x1="175" x2="1445" y1="105.00" y2="105.00" stroke="#E5E7EB" stroke-width="2"/>
+<text class="tick" x="157.00" y="112.00" text-anchor="end">10000</text>
+<line x1="175" x2="1445" y1="950" y2="950" stroke="#2F3A45" stroke-width="3"/>
+<line x1="175" x2="175" y1="105" y2="950" stroke="#2F3A45" stroke-width="3"/>
+<text class="axis" x="60.00" y="527.50" text-anchor="middle" transform="rotate(-90.00 60.00 527.50)">P95 latency (ms, log10)</text>
+<line x1="175.00" x2="175.00" y1="105" y2="950" stroke="#E5E7EB" stroke-width="1.5"/>
+<text class="tick" x="175.00" y="995.00" text-anchor="middle">10</text>
+<line x1="810.00" x2="810.00" y1="105" y2="950" stroke="#E5E7EB" stroke-width="1.5"/>
+<text class="tick" x="810.00" y="995.00" text-anchor="middle">30</text>
+<line x1="1445.00" x2="1445.00" y1="105" y2="950" stroke="#E5E7EB" stroke-width="1.5"/>
+<text class="tick" x="1445.00" y="995.00" text-anchor="middle">50</text>
+<text class="axis" x="810.00" y="1048.00" text-anchor="middle">Concurrent virtual users (VUs)</text>
+<path d="M 175.00 802.86 L 810.00 812.14 L 1445.00 802.27" fill="none" stroke="#0072B2" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.00" cy="802.86" r="10" fill="#0072B2" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="810.00" cy="812.14" r="10" fill="#0072B2" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="1445.00" cy="802.27" r="10" fill="#0072B2" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M 175.00 784.30 L 810.00 788.85 L 1445.00 801.34" fill="none" stroke="#E69F00" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.00" cy="784.30" r="10" fill="#E69F00" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="810.00" cy="788.85" r="10" fill="#E69F00" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="1445.00" cy="801.34" r="10" fill="#E69F00" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M 175.00 849.34 L 810.00 833.91 L 1445.00 828.98" fill="none" stroke="#009E73" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.00" cy="849.34" r="10" fill="#009E73" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="810.00" cy="833.91" r="10" fill="#009E73" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="1445.00" cy="828.98" r="10" fill="#009E73" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M 175.00 511.22 L 810.00 454.32 L 1445.00 517.14" fill="none" stroke="#CC79A7" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.00" cy="511.22" r="10" fill="#CC79A7" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="810.00" cy="454.32" r="10" fill="#CC79A7" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="1445.00" cy="517.14" r="10" fill="#CC79A7" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M 175.00 241.72 L 810.00 175.74 L 1445.00 135.18" fill="none" stroke="#D55E00" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.00" cy="241.72" r="10" fill="#D55E00" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="810.00" cy="175.74" r="10" fill="#D55E00" stroke="#FFFFFF" stroke-width="4"/>
+<circle cx="1445.00" cy="135.18" r="10" fill="#D55E00" stroke="#FFFFFF" stroke-width="4"/>
+<rect x="179.00" y="197.72" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="206.88" y="218.20" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">1552</text>
+<rect x="179.00" y="467.22" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="206.88" y="487.70" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">39.5</text>
+<rect x="179.00" y="740.30" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="212.10" y="760.78" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.956</text>
+<rect x="179.00" y="818.86" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="212.10" y="839.34" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.742</text>
+<rect x="179.00" y="865.34" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="212.10" y="885.82" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.394</text>
+<rect x="782.12" y="131.74" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="810.00" y="152.22" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">3814</text>
+<rect x="782.12" y="410.32" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="810.00" y="430.80" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">85.7</text>
+<rect x="776.90" y="744.85" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="810.00" y="765.33" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.899</text>
+<rect x="776.90" y="828.14" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="810.00" y="848.62" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.654</text>
+<rect x="776.90" y="789.91" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="810.00" y="810.39" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.486</text>
+<rect x="1385.24" y="109.00" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="1413.12" y="129.48" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">6629</text>
+<rect x="1385.24" y="473.14" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="1413.12" y="493.62" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">36.4</text>
+<rect x="1374.80" y="757.34" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="1407.90" y="777.82" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.758</text>
+<rect x="1374.80" y="818.27" width="66.20" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="1407.90" y="838.75" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.748</text>
+<rect x="1385.24" y="870.98" width="55.76" height="28.00" rx="5" fill="#FFFFFF" stroke="#D7DEE8" stroke-width="1.2" opacity="0.95"/>
+<text x="1413.12" y="891.46" text-anchor="middle" font-size="18" font-weight="700" fill="#1F2933">0.52</text>
+<text class="note" x="175.00" y="1086.00" text-anchor="start">Log10 axis used for latency range.</text>
+<text class="legend-title" x="1515.00" y="123.00" text-anchor="start">Algorithm</text>
+<rect x="1515" y="147" width="26" height="26" rx="3" fill="#0072B2"/>
+<text class="legend" x="1557.00" y="168.00" text-anchor="start">Falcon-Precomp. 512</text>
+<rect x="1515" y="189" width="26" height="26" rx="3" fill="#E69F00"/>
+<text class="legend" x="1557.00" y="210.00" text-anchor="start">Falcon-512</text>
+<rect x="1515" y="231" width="26" height="26" rx="3" fill="#009E73"/>
+<text class="legend" x="1557.00" y="252.00" text-anchor="start">ML-DSA-44</text>
+<rect x="1515" y="273" width="26" height="26" rx="3" fill="#CC79A7"/>
+<text class="legend" x="1557.00" y="294.00" text-anchor="start">SLH-DSA-128f</text>
+<rect x="1515" y="315" width="26" height="26" rx="3" fill="#D55E00"/>
+<text class="legend" x="1557.00" y="336.00" text-anchor="start">SLH-DSA-128s</text>
+</svg>

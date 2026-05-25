@@ -1,151 +1,126 @@
 # =========================
-# Tasktify - Root Makefile
+# Tasktify - Workspace Makefile
 # =========================
 
-COMPOSE = docker compose
-ATTACK_BASE_URL ?= http://localhost:5001
-ATTACK_ITERATIONS ?= 10
-ATTACK_ALGORITHM ?= Falcon-Precomputed-512
+.DEFAULT_GOAL := help
 
-# --- Key Generation ---
-# keygen: generate semua keys ke auth-service/keys dan copy ke gateway/keys (production)
-keygen:
-	mkdir -p auth-service/keys gateway/keys
-	cd cmd/keygen && go run main.go ../../auth-service/keys
-	cp -r auth-service/keys/. gateway/keys/
+BACKEND_DIR := backend
+FRONTEND_DIR := frontend
 
-# keygen-all: generate semua keys ke ./keys untuk benchmark (shared oleh semua service)
-keygen-all:
-	mkdir -p keys
-	cd cmd/keygen && go run main.go ../../keys
+help:
+	@echo "Tasktify workspace targets"
+	@echo ""
+	@echo "Setup:"
+	@echo "  make env              Create backend .env when missing"
+	@echo "  make install          Install frontend dependencies"
+	@echo "  make keys             Generate production JWT keys"
+	@echo "  make vendor           Vendor Go backend dependencies for Docker"
+	@echo ""
+	@echo "Run local services:"
+	@echo "  make gateway          Run gateway locally"
+	@echo "  make auth             Run auth-service locally"
+	@echo "  make todo             Run todo-service locally"
+	@echo "  make frontend         Run Svelte dev server"
+	@echo ""
+	@echo "Compose:"
+	@echo "  make up               Build frontend, start stack"
+	@echo "  make up-build         Build images, build frontend, start stack"
+	@echo "  make down             Stop stack"
+	@echo "  make clean            Stop stack and remove volumes"
+	@echo "  make compose-config   Validate production Compose config"
+	@echo "  make bench-config     Validate benchmark Compose config"
+	@echo "  make ps               Show production Compose services"
+	@echo "  make logs             Follow all logs"
+	@echo "  make logs-gateway     Follow gateway logs"
+	@echo "  make logs-auth        Follow auth logs"
+	@echo "  make logs-todo        Follow todo logs"
+	@echo "  make logs-caddy       Follow Caddy logs"
+	@echo ""
+	@echo "Build/test:"
+	@echo "  make build            Build backend binaries"
+	@echo "  make build-frontend   Build frontend dist"
+	@echo "  make test             Run backend Go tests"
+	@echo "  make check            Run frontend check and Compose config validation"
 
-# --- Proto Compilation ---
-compile-proto:
-	cd auth-service && protoc --go_out . --go-grpc_out . proto/*.proto
-	cd todo-service && protoc --go_out . --go-grpc_out . proto/*.proto
-	cp auth-service/proto/auth.proto auth-service/proto/user.proto gateway/proto/
-	cp todo-service/proto/task.proto gateway/proto/
-	cd gateway && protoc --go_out . --go-grpc_out . proto/*.proto
+env:
+	$(MAKE) -C $(BACKEND_DIR) env
 
-# --- Docker Compose ---
+install:
+	$(MAKE) -C $(BACKEND_DIR) frontend-install
+
+keys keygen:
+	$(MAKE) -C $(BACKEND_DIR) keygen
+
+vendor:
+	$(MAKE) -C $(BACKEND_DIR) vendor
+
+gateway run-gateway:
+	$(MAKE) -C $(BACKEND_DIR) run-gateway
+
+auth run-auth:
+	$(MAKE) -C $(BACKEND_DIR) run-auth
+
+todo run-todo:
+	$(MAKE) -C $(BACKEND_DIR) run-todo
+
+frontend run-frontend:
+	$(MAKE) -C $(BACKEND_DIR) run-frontend
+
 up:
-	$(COMPOSE) up -d
+	$(MAKE) -C $(BACKEND_DIR) up
 
 up-build:
-	$(COMPOSE) up -d --build
+	$(MAKE) -C $(BACKEND_DIR) up-build
 
 down:
-	$(COMPOSE) down
+	$(MAKE) -C $(BACKEND_DIR) down
 
 clean:
-	$(COMPOSE) down -v
+	$(MAKE) -C $(BACKEND_DIR) clean
+
+compose-config:
+	$(MAKE) -C $(BACKEND_DIR) compose-config
+
+bench-config:
+	$(MAKE) -C $(BACKEND_DIR) bench-config
+
+ps:
+	$(MAKE) -C $(BACKEND_DIR) ps
 
 logs:
-	$(COMPOSE) logs -f
+	$(MAKE) -C $(BACKEND_DIR) logs
 
 logs-gateway:
-	$(COMPOSE) logs -f gateway
+	$(MAKE) -C $(BACKEND_DIR) logs-gateway
 
 logs-auth:
-	$(COMPOSE) logs -f auth-service
+	$(MAKE) -C $(BACKEND_DIR) logs-auth
 
 logs-todo:
-	$(COMPOSE) logs -f todo-service
+	$(MAKE) -C $(BACKEND_DIR) logs-todo
 
 logs-caddy:
-	$(COMPOSE) logs -f caddy
+	$(MAKE) -C $(BACKEND_DIR) logs-caddy
 
-# --- Production Deploy ---
-deploy: vendor keygen
-	$(COMPOSE) up -d --build
-
-# --- Local Development ---
-run-gateway:
-	cd gateway && APP_MODE=dev go run ./cmd/app/main.go
-
-run-auth:
-	cd auth-service && APP_MODE=dev go run ./cmd/app/main.go
-
-run-todo:
-	cd todo-service && APP_MODE=dev go run ./cmd/app/main.go
-
-# --- Build ---
 build:
-	cd gateway && go build -o ../bin/gateway ./cmd/app/main.go
-	cd auth-service && go build -o ../bin/auth-service ./cmd/app/main.go
-	cd todo-service && go build -o ../bin/todo-service ./cmd/app/main.go
+	$(MAKE) -C $(BACKEND_DIR) build
 
-# --- Tidy ---
-tidy:
-	cd pkg && go mod tidy
-	cd gateway && go mod tidy
-	cd auth-service && go mod tidy
-	cd todo-service && go mod tidy
+build-frontend:
+	$(MAKE) -C $(BACKEND_DIR) build-frontend
 
-# --- Vendor (required before docker build) ---
-vendor:
-	cd auth-service && go mod vendor
-	cd gateway && go mod vendor
-	cd todo-service && go mod vendor
+proto compile-proto:
+	$(MAKE) -C $(BACKEND_DIR) compile-proto
 
-# --- Benchmark ---
-bench-up: vendor
-	$(COMPOSE) -f docker-compose.benchmark.yml up -d --build
+test:
+	$(MAKE) -C $(BACKEND_DIR) test
 
-bench-down:
-	$(COMPOSE) -f docker-compose.benchmark.yml down -v
+check:
+	$(MAKE) -C $(BACKEND_DIR) check
 
-bench-logs:
-	$(COMPOSE) -f docker-compose.benchmark.yml logs -f
+bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote:
+	$(MAKE) -C $(BACKEND_DIR) $@
 
-bench-run:
-	k6 run -e BENCH_HOST=localhost k6/benchmark_compare.js
+attack-adversarial attack-adversarial-bench attack-adversarial-remote:
+	$(MAKE) -C $(BACKEND_DIR) $@
 
-# keygen-all + vendor + bench-up + jalankan k6
-bench: keygen-all vendor bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
-	k6 run -e BENCH_HOST=localhost k6/benchmark_compare.js
-
-bench-sign: keygen-all vendor bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
-	k6 run --no-color -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee result.txt
-
-bench-sign-remote:
-	k6 run --no-color -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
-
-# --- Adversarial Attack Test ---
-attack-adversarial:
-	k6 run --no-color \
-		-e BASE_URL=$(ATTACK_BASE_URL) \
-		-e ITERATIONS=$(ATTACK_ITERATIONS) \
-		-e ALGORITHM=$(ATTACK_ALGORITHM) \
-		k6/adversarial_jwt.js
-
-attack-adversarial-bench: keygen-all vendor bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
-	k6 run --no-color \
-		-e BENCH_HOST=localhost \
-		-e ITERATIONS=$(ATTACK_ITERATIONS) \
-		-e ALGORITHM=$(ATTACK_ALGORITHM) \
-		k6/adversarial_jwt.js
-
-attack-adversarial-remote:
-	k6 run --no-color \
-		-e BASE_URL=https://poc-ridwanmuh3.my.id \
-		-e ITERATIONS=$(ATTACK_ITERATIONS) \
-		-e ALGORITHM=$(ATTACK_ALGORITHM) \
-		k6/adversarial_jwt.js
-
-.PHONY: keygen keygen-all compile-proto up up-build down clean logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway run-auth run-todo build tidy vendor bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote

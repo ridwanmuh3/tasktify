@@ -17,11 +17,14 @@ bin/
 
 # Vendored dependencies
 **/vendor/
+**/node_modules/
 
 # Temporary
 tmp/
+**/dist/
+**/.vite/
 
-k6/*.txt
+**/k6/*.txt
 
 .claude
 CLAUDE.md

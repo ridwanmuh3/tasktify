@@ -40,7 +40,7 @@ Dari satu file `.proto`, `protoc` menghasilkan kode Go secara otomatis — terma
 
 ### File Proto yang Digunakan
 
-**`auth-service/proto/auth.proto`** — Layanan autentikasi:
+**`backend/auth-service/proto/auth.proto`** — Layanan autentikasi:
 ```protobuf
 service AuthService {
     rpc SignIn(SignInRequest) returns (AuthResponse);
@@ -49,7 +49,7 @@ service AuthService {
 }
 ```
 
-**`auth-service/proto/user.proto`** — Manajemen pengguna:
+**`backend/auth-service/proto/user.proto`** — Manajemen pengguna:
 ```protobuf
 service UserService {
     rpc Create(CreateUserRequest) returns (google.protobuf.Empty);
@@ -60,7 +60,7 @@ service UserService {
 }
 ```
 
-**`todo-service/proto/task.proto`** — Manajemen tugas:
+**`backend/todo-service/proto/task.proto`** — Manajemen tugas:
 ```protobuf
 service TaskService {
     rpc Create(CreateTaskRequest) returns (google.protobuf.Empty);
@@ -100,7 +100,7 @@ Client ◀─── Response ─── Server
 
 ### 4.1 Mendaftarkan Server
 
-**Auth Service** (`auth-service/cmd/app/main.go`):
+**Auth Service** (`backend/auth-service/cmd/app/main.go`):
 ```go
 srv := grpc.NewServer(
     grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -114,7 +114,7 @@ srv := grpc.NewServer(
 )
 ```
 
-**Todo Service** (`todo-service/cmd/app/main.go`):
+**Todo Service** (`backend/todo-service/cmd/app/main.go`):
 ```go
 srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor.AuthInterceptor))
 ```
@@ -217,7 +217,7 @@ Metadata di gRPC setara dengan HTTP headers — pasangan key-value yang dikirim 
 Ketika klien sudah login dan mengirim permintaan ke endpoint tugas, gateway perlu meneruskan identitas pengguna ke Todo Service. Ini dilakukan lewat metadata:
 
 ```go
-// gateway/internal/delivery/http/handler/task_handler.go
+// backend/gateway/internal/delivery/http/handler/task_handler.go
 func forwardContext(c fiber.Ctx) context.Context {
     userID := c.Locals("user_id").(string)  // diambil dari JWT yang sudah diverifikasi
     md := metadata.Pairs("x-user-id", userID)
@@ -236,7 +236,7 @@ h.taskClient.Create(ctx, grpcReq)  // x-user-id terkirim dalam metadata
 Di Todo Service, interceptor membaca `x-user-id` dari metadata masuk:
 
 ```go
-// todo-service/internal/delivery/grpc/interceptor/auth_interceptor.go
+// backend/todo-service/internal/delivery/grpc/interceptor/auth_interceptor.go
 md, ok := metadata.FromIncomingContext(ctx)
 userIDs := md.Get("x-user-id")
 // → inject ke context
@@ -246,7 +246,7 @@ return handler(authCtx, req)  // teruskan ke handler dengan context baru
 
 Server kemudian membaca dari context:
 ```go
-// todo-service/internal/delivery/grpc/server/task_server.go
+// backend/todo-service/internal/delivery/grpc/server/task_server.go
 func getUserID(ctx context.Context) (string, error) {
     userID, ok := ctx.Value(AuthContextKey).(string)
     // ...
@@ -259,7 +259,7 @@ func getUserID(ctx context.Context) (string, error) {
 Trailing metadata dikirim di akhir respons (setelah body) — digunakan untuk mengirimkan data observabilitas dari auth-service ke gateway:
 
 ```go
-// auth-service/internal/delivery/grpc/server/auth_server.go
+// backend/auth-service/internal/delivery/grpc/server/auth_server.go
 grpc.SetTrailer(ctx, metadata.Pairs(
     "x-sign-time-ms",             fmt.Sprintf("%.3f", tokenGenerationMs),
     "x-token-generation-time-ms", fmt.Sprintf("%.3f", tokenGenerationMs),
@@ -271,7 +271,7 @@ grpc.SetTrailer(ctx, metadata.Pairs(
 
 Gateway menangkap trailer ini dan meneruskannya ke klien sebagai HTTP response header:
 ```go
-// gateway/internal/delivery/http/handler/auth_handler.go
+// backend/gateway/internal/delivery/http/handler/auth_handler.go
 var trailer metadata.MD
 resp, err := h.authClient.SignIn(ctx, req, grpc.Trailer(&trailer))
 
@@ -302,7 +302,7 @@ Auth Service (ukur sign time)
 Interceptor di gRPC setara dengan middleware di HTTP. Interceptor berjalan **sebelum** setiap handler RPC dipanggil.
 
 ```go
-// todo-service/cmd/app/main.go
+// backend/todo-service/cmd/app/main.go
 srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor.AuthInterceptor))
 ```
 
@@ -344,7 +344,7 @@ gRPC berjalan di atas HTTP/2, yang menggunakan **satu koneksi TCP yang di-multip
 ### Konfigurasi Client (Gateway)
 
 ```go
-// gateway/internal/config/grpc.go
+// backend/gateway/internal/config/grpc.go
 grpc.WithKeepaliveParams(keepalive.ClientParameters{
     Time:                20 * time.Second,  // kirim ping setiap 20 detik jika tidak ada aktivitas
     Timeout:             10 * time.Second,  // tunggu 10 detik untuk ack ping
@@ -355,7 +355,7 @@ grpc.WithKeepaliveParams(keepalive.ClientParameters{
 ### Konfigurasi Server (Auth Service)
 
 ```go
-// auth-service/cmd/app/main.go
+// backend/auth-service/cmd/app/main.go
 grpc.KeepaliveParams(keepalive.ServerParameters{
     Time:    30 * time.Second,
     Timeout: 10 * time.Second,
@@ -376,7 +376,7 @@ Skenario stress test mengirim 10–50 permintaan konkuren selama 30 detik, disel
 Gateway membuat satu koneksi gRPC per service (bukan per permintaan):
 
 ```go
-// gateway/internal/config/grpc.go
+// backend/gateway/internal/config/grpc.go
 func NewAuthServiceConn(config *viper.Viper, log *zap.SugaredLogger) *grpc.ClientConn {
     addr := config.GetString("AUTH_SERVICE_ADDR")  // default: localhost:3001
     conn, err := grpc.NewClient(addr, grpcClientOpts...)
@@ -448,7 +448,7 @@ Bagian ini menjelaskan perubahan teknis spesifik yang diterapkan **di dalam lapi
 **Solusi:** Timer diletakkan **di dalam proses server**, mengelilingi hanya pemanggilan `Sign()`:
 
 ```go
-// auth-service/internal/service/auth_service.go
+// backend/auth-service/internal/service/auth_service.go
 signStart := time.Now()
 accessToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{...})
 signTimeMs := float64(time.Since(signStart).Microseconds()) / 1000.0
@@ -487,7 +487,7 @@ Endpoint ini tidak melalui auth-service, tidak ada DB query, tidak ada bcrypt. P
 **Solusi:** 20 iterasi warmup dijalankan sebelum pengukuran dimulai, hasilnya dibuang:
 
 ```go
-// gateway/internal/delivery/http/handler/benchmark_handler.go
+// backend/gateway/internal/delivery/http/handler/benchmark_handler.go
 for i := 0; i < warmupIterations; i++ {
     h.signBenchmarkToken(req.Algorithm, req.Email, false)  // hasil tidak disimpan
 }
@@ -523,7 +523,7 @@ Dua kali pemanggilan: pertama men-trigger koleksi, kedua memastikan semua finali
 **Solusi:** Setiap iterasi mendeteksi apakah GC berjalan selama `Sign()` dengan membandingkan `runtime.MemStats.NumGC` sebelum dan sesudah:
 
 ```go
-// gateway/internal/delivery/http/handler/benchmark_handler.go
+// backend/gateway/internal/delivery/http/handler/benchmark_handler.go
 stats := BenchmarkRuntimeStats{
     GCOccurred: memAfter.NumGC > memBefore.NumGC,  // true jika ada ≥1 siklus GC
 }
@@ -631,4 +631,4 @@ if usePerOpCPU {
 
 ---
 
-*Dokumen ini dibuat berdasarkan kode sumber di direktori `auth-service/`, `todo-service/`, dan `gateway/`.*
+*Dokumen ini dibuat berdasarkan kode sumber di direktori `backend/auth-service/`, `backend/todo-service/`, dan `backend/gateway/`.*

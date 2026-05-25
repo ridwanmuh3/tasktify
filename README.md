@@ -1,0 +1,435 @@
+# Tasktify
+
+Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks multiple JWT signing algorithms with k6.
+
+Primary research path measures JWT signing latency for:
+
+| Algorithm                | Category                                  | Benchmark port |
+| ------------------------ | ----------------------------------------- | -------------- |
+| `Falcon-Precomputed-512` | PQC, FN-DSA-512 with precomputed LDL tree | `5001`         |
+| `Falcon-512`             | PQC, FN-DSA-512 original signer           | `5002`         |
+| `ML-DSA-44`              | PQC, FIPS 204 / Dilithium2 class          | `5003`         |
+| `SLH-DSA-SHA2-128f`      | PQC, FIPS 205 / SPHINCS+ fast variant     | `5004`         |
+| `SLH-DSA-SHA2-128s`      | PQC, FIPS 205 / SPHINCS+ small variant    | `5005`         |
+
+## System Architecture
+
+Production topology:
+
+```text
+Client / k6
+    |
+    | HTTP/JSON
+    v
+Caddy reverse proxy (:80, :443)
+    |
+    | HTTP/JSON
+    v
+Gateway service (:3000, Fiber)
+    |                         |
+    | gRPC                    | gRPC
+    v                         v
+Auth service (:3001)          Todo service (:3002)
+UserService + AuthService     TaskService
+    |                         |
+    | PostgreSQL              | PostgreSQL
+    v                         v
+tasktify database             tasktify database
+```
+
+Benchmark topology in `backend/docker-compose.benchmark.yml` starts one auth-service plus one gateway per algorithm. Shared `bench-todo` and `bench-postgres` keep task/database infrastructure constant while each algorithm gets isolated gateway/auth process pair.
+
+| Component      | Path                                           | Responsibility                                                                       |
+| -------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Frontend       | `frontend/`                                    | Svelte client, built to static assets and served by Caddy in production             |
+| Gateway        | `backend/gateway/`                                     | Public HTTP API, JWT verification, route dispatch, benchmark endpoints, gRPC clients |
+| Auth service   | `backend/auth-service/`                                | User CRUD, sign-in, refresh token, bcrypt password check, JWT signing                |
+| Todo service   | `backend/todo-service/`                                | Task CRUD, user scoping through `x-user-id` gRPC metadata                            |
+| Shared package | `backend/pkg/`                                         | JWT implementation, PQC signing methods, key loaders, Falcon precompute code         |
+| Key generator  | `backend/cmd/keygen/`                                  | Generate algorithm keys for production and benchmark runs                            |
+| k6 scripts     | `backend/k6/`                                          | Isolated signing, stress, refresh, and tampered-token benchmark scenarios            |
+| API specs      | `backend/api/`, `backend/gateway/api/`, and service `api/` folders | OpenAPI specifications                                                               |
+| Technical docs | `docs/`                                        | gRPC implementation notes and benchmark scenario methodology                         |
+
+### Runtime Flow
+
+Register flow:
+
+```text
+POST /api/auth/register
+Gateway -> Auth UserService.Create -> PostgreSQL users table
+```
+
+Sign-in flow:
+
+```text
+POST /api/auth/signin
+Gateway -> AuthService.SignIn
+Auth service -> PostgreSQL user lookup -> bcrypt check -> JWT access + refresh signing
+Auth service -> gRPC trailers with signing/runtime metrics
+Gateway -> HTTP response headers + token payload
+```
+
+Protected API flow:
+
+```text
+GET /api/profile or /api/tasks/*
+Gateway AuthMiddleware -> parse JWT -> validate alg/issuer/signature -> set user locals
+Task routes -> gRPC metadata x-user-id -> Todo AuthInterceptor -> task service
+```
+
+Benchmark flow:
+
+```text
+POST /api/benchmark/sign
+Gateway signs tokens in-process, skips DB/bcrypt/auth-service path, returns per-iteration stats.
+
+POST /api/benchmark/token
+Gateway signs one token in-process, returns token plus X-Token-Generation-Time-Ms header.
+```
+
+### Data Ownership
+
+| Data             | Owner                             | Storage                                                           |
+| ---------------- | --------------------------------- | ----------------------------------------------------------------- |
+| Users            | `auth-service`                    | `users` table, `backend/auth-service/internal/entity/user_entity.go`      |
+| Tasks            | `todo-service`                    | `tasks` table, `backend/todo-service/internal/entity/task_entity.go`      |
+| JWT keys         | `backend/cmd/keygen` output               | `backend/auth-service/keys`, `backend/gateway/keys`, or `backend/keys` for benchmark |
+| JWT verification | `gateway`                         | Public keys loaded from `KEYS_DIR`                                |
+| JWT signing      | `auth-service`, benchmark handler | Private keys loaded from `KEYS_DIR`                               |
+
+## Routes
+
+Default production base URL is gateway HTTP port `http://localhost:3000`. Caddy publishes same gateway through HTTPS domain configured in `backend/Caddyfile`.
+
+Response envelope:
+
+```json
+{
+  "status": 200,
+  "message": "success",
+  "data": {}
+}
+```
+
+### Public Routes
+
+| Method | Path                   | Body                                                    | Result                                                |
+| ------ | ---------------------- | ------------------------------------------------------- | ----------------------------------------------------- |
+| `GET`  | `/`                    | none                                                    | `"API OK"`                                            |
+| `GET`  | `/health`              | none                                                    | `{"status":"ok"}`                                     |
+| `POST` | `/api/auth/register`   | `name`, `email`, `password`                             | Creates user, returns `201`                           |
+| `POST` | `/api/auth/signin`     | `email`, `password`, optional `algorithm`               | Returns `token_type`, `access_token`, `refresh_token` |
+| `POST` | `/api/auth/refresh`    | `refresh_token`, optional `user_id`                     | Returns new access and refresh tokens                 |
+| `POST` | `/api/benchmark/sign`  | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated signing stats                                |
+| `POST` | `/api/benchmark/token` | `algorithm`, `email`                                    | One benchmark token plus signing-time headers         |
+
+Sign-in and refresh response headers:
+
+| Header                               | Meaning                                |
+| ------------------------------------ | -------------------------------------- |
+| `X-Sign-Time-Ms`                     | Token signing time in milliseconds     |
+| `X-Access-Token-Generation-Time-Ms`  | Access-token generation time           |
+| `X-Refresh-Token-Generation-Time-Ms` | Refresh-token generation time          |
+| `X-Token-Generation-Time-Ms`         | Total or current token generation time |
+| `X-Auth-CPU-Pct`                     | Auth-service CPU sample                |
+| `X-Auth-Mem-Alloc-MB`                | Auth-service allocated heap sample     |
+| `X-Auth-Mem-Sys-MB`                  | Auth-service system memory sample      |
+
+### Protected Routes
+
+Protected routes require:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+Gateway rejects missing headers, non-Bearer format, invalid/expired signatures, and refresh tokens used as access tokens.
+
+| Method   | Path             | Body                                                                   | Result                     |
+| -------- | ---------------- | ---------------------------------------------------------------------- | -------------------------- |
+| `GET`    | `/api/profile`   | none                                                                   | Current user profile       |
+| `POST`   | `/api/tasks/`    | `title`, `status`, optional `description`, optional `due_date` Unix ms | Creates task               |
+| `GET`    | `/api/tasks/`    | none                                                                   | Lists current user tasks   |
+| `GET`    | `/api/tasks/:id` | none                                                                   | Gets one current user task |
+| `PUT`    | `/api/tasks/:id` | `title`, `status`, optional `description`, optional `due_date` Unix ms | Updates task               |
+| `DELETE` | `/api/tasks/:id` | none                                                                   | Deletes task               |
+
+gRPC error mapping in gateway:
+
+| gRPC code         | HTTP status |
+| ----------------- | ----------- |
+| `InvalidArgument` | `400`       |
+| `Unauthenticated` | `401`       |
+| `NotFound`        | `404`       |
+| Other errors      | `500`       |
+
+## Implementation Requirements
+
+### Toolchain
+
+| Requirement      | Version / note                                                         |
+| ---------------- | ---------------------------------------------------------------------- |
+| Go               | `1.25.7` in all Go modules                                             |
+| Docker Compose   | Needed for production and benchmark stacks                             |
+| PostgreSQL       | `postgres:18-alpine` in Compose                                        |
+| k6               | `0.50+` recommended by benchmark docs                                  |
+| Protocol Buffers | `protoc`, `protoc-gen-go`, `protoc-gen-go-grpc` for proto regeneration |
+| Caddy            | `caddy:2-alpine` in production Compose                                 |
+
+### Go Modules
+
+| Module         | Purpose                            |
+| -------------- | ---------------------------------- |
+| `gateway`      | Fiber HTTP server and gRPC clients |
+| `auth-service` | gRPC auth/user server              |
+| `todo-service` | gRPC task server                   |
+| `pkg`          | JWT/PQC shared library             |
+| `backend/cmd/keygen`   | Key generation CLI                 |
+
+Core dependencies include `gofiber/fiber/v3`, `google.golang.org/grpc`, `gorm.io/gorm`, `gorm.io/driver/postgres`, `go-playground/validator/v10`, `spf13/viper`, `zap`, `bcrypt`, `cloudflare/circl`, and local `backend/pkg/jwt` plus `backend/pkg/fndsa`.
+
+### Environment Variables
+
+| Variable             | Used by            | Required meaning                                           |
+| -------------------- | ------------------ | ---------------------------------------------------------- |
+| `APP_MODE`           | all services       | `dev` reads `.env`; `production` reads process environment |
+| `APP_PORT`           | gateway            | HTTP listen port, default Compose value `3000`             |
+| `APP_PREFORK`        | gateway            | Fiber prefork flag                                         |
+| `GRPC_PORT`          | auth/todo          | gRPC listen port, `3001` or `3002`                         |
+| `AUTH_SERVICE_ADDR`  | gateway            | Auth gRPC address, e.g. `auth-service:3001`                |
+| `TODO_SERVICE_ADDR`  | gateway            | Todo gRPC address, e.g. `todo-service:3002`                |
+| `DB_USER`            | auth/todo/postgres | PostgreSQL user                                            |
+| `DB_PASSWORD`        | auth/todo/postgres | PostgreSQL password                                        |
+| `DB_NAME`            | auth/todo/postgres | PostgreSQL database                                        |
+| `DB_HOST`            | auth/todo          | PostgreSQL host                                            |
+| `DB_PORT`            | auth/todo          | PostgreSQL port                                            |
+| `DB_SSL_MODE`        | auth/todo          | Usually `disable` in Compose                               |
+| `DB_POOL_IDLE`       | auth/todo          | GORM idle connection pool size                             |
+| `DB_MAX_POOL`        | auth/todo          | GORM max open connections                                  |
+| `DB_MAX_LIFETIME`    | auth/todo          | Connection lifetime seconds                                |
+| `JWT_DEFAULT_ALG`    | gateway/auth       | Default signing algorithm                                  |
+| `JWT_ALLOWED_ALGS`   | gateway/auth       | Comma-separated algorithm allowlist                        |
+| `JWT_ISSUER`         | gateway/auth       | Expected JWT issuer, Compose value `tasktify`              |
+| `JWT_TOKEN_DURATION` | gateway/auth       | Token lifetime in minutes                                  |
+| `KEYS_DIR`           | gateway/auth       | Directory containing PEM keys                              |
+
+Production `JWT_ALLOWED_ALGS` must match between gateway and auth-service. Benchmark Compose narrows this list to one algorithm per gateway/auth pair.
+
+### Key Files
+
+Production keys:
+
+```bash
+cd backend
+make keygen
+```
+
+Command generates keys into `backend/auth-service/keys` and copies them to `backend/gateway/keys`.
+
+Benchmark keys:
+
+```bash
+cd backend
+make keygen-all
+```
+
+Command generates shared keys into `backend/keys/`, mounted by all benchmark containers.
+
+Expected key filenames come from `backend/pkg/utils/jwtutils/loader.go`, including `FNDSA-512_pk.pem`, `FNDSA-512_sk.pem`, `ML-DSA-44_pk.pem`, `ML-DSA-44_sk.pem`, `SLH-DSA-SHA2-128f_pk.pem`, and matching private-key files.
+
+### Build And Run
+
+Production-like stack:
+
+```bash
+cd backend
+cp .env.example .env
+make keygen
+make vendor
+make up-build
+curl http://localhost/health
+```
+
+Production HTTP flow is `Caddy TLS/static frontend -> /api proxy -> gateway`. Caddy serves `frontend/dist`, applies hardened browser headers, and keeps 64 KB request-header buffers for PQC JWT Authorization headers.
+
+Stop stack:
+
+```bash
+make down
+```
+
+Remove volumes:
+
+```bash
+make clean
+```
+
+Local service mode:
+
+```bash
+make run-auth
+make run-todo
+make run-gateway
+```
+
+Proto regeneration:
+
+```bash
+cd backend
+make compile-proto
+```
+
+Benchmark stack:
+
+```bash
+cd backend
+make keygen-all
+make vendor
+make bench-up
+k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
+```
+
+Remote benchmark:
+
+```bash
+make bench-sign-remote
+```
+
+## Benchmark JSON Results
+
+Current result files:
+
+| File                         | Purpose                               |
+| ---------------------------- | ------------------------------------- |
+| `benchmark_sign_result.json` | Academic summary grouped by algorithm |
+| `benchmark_sign_raw.json`    | Full k6 raw metric dump               |
+| `result.txt`                 | Human-readable k6 stdout              |
+
+Run metadata from `benchmark_sign_result.json`:
+
+| Field                        | Value                             |
+| ---------------------------- | --------------------------------- |
+| `generated_at`               | `2026-05-21T03:34:25.259Z`        |
+| `endpoint`                   | `https://poc-ridwanmuh3.my.id`    |
+| `mode`                       | `Isolated + Stress + Attack`      |
+| `primary_metric`             | `isolated_clean_token_generation` |
+| `isolated_iterations`        | `100`                             |
+| `isolated_warmup_iterations` | `20`                              |
+| `stress_duration_seconds`    | `30`                              |
+| `concurrency_levels`         | `10`, `30`, `50`                  |
+
+Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. GC-free metric removes iterations where Go GC ran during signing.
+
+### Isolated Results
+
+Values below come from `benchmark_sign_result.json`. Units are milliseconds unless column name says otherwise.
+
+| Algorithm                | Iter | GC contaminated | Access avg | Access p95 | Access stdev | Refresh avg | Refresh p95 | CPU avg % | Heap alloc MB | Alloc delta MB |
+| ------------------------ | ---: | --------------: | ---------: | ---------: | -----------: | ----------: | ----------: | --------: | ------------: | -------------: |
+| `Falcon-Precomputed-512` |  100 |               5 |      0.284 |      0.344 |        0.050 |       0.295 |       0.415 |   120.895 |         2.698 |          0.091 |
+| `Falcon-512`             |  100 |               6 |      0.341 |      0.422 |        0.043 |       0.354 |       0.452 |   104.484 |         2.798 |          0.114 |
+| `ML-DSA-44`              |  100 |               2 |      0.098 |      0.244 |        0.070 |       0.109 |       0.243 |   115.447 |         2.721 |          0.043 |
+| `SLH-DSA-SHA2-128f`      |  100 |              10 |     12.046 |     12.462 |        0.301 |      12.044 |      12.429 |    59.081 |         2.836 |          0.211 |
+| `SLH-DSA-SHA2-128s`      |  100 |               5 |    248.870 |    263.372 |        8.111 |     247.588 |     258.625 |    50.164 |         3.053 |          0.126 |
+
+Result reading:
+
+- `ML-DSA-44` has lowest isolated access-token signing average at `0.098 ms`.
+- `Falcon-Precomputed-512` signs faster than `Falcon-512` in isolated average, `0.284 ms` vs `0.341 ms`.
+- `SLH-DSA-SHA2-128s` is slowest isolated signer, with `248.870 ms` average and `263.372 ms` p95.
+
+### Stress Results
+
+Stress phase uses `/api/benchmark/token`, `/api/auth/signin`, and `/api/auth/refresh` at 10, 30, and 50 VUs. Values come from `benchmark_sign_result.json`; all error-rate values are `0`.
+
+| Algorithm                | VUs | Sign avg | Sign p95 |  E2E p95 | Login p95 | Refresh p95 | Throughput ok/s |
+| ------------------------ | --: | -------: | -------: | -------: | --------: | ----------: | --------------: |
+| `Falcon-Precomputed-512` |  10 |    0.418 |    0.742 |  117.627 |   275.370 |     188.308 |           26.83 |
+| `Falcon-Precomputed-512` |  30 |    0.415 |    0.654 |   68.819 |  1395.385 |    1219.381 |           22.33 |
+| `Falcon-Precomputed-512` |  50 |    0.413 |    0.748 |   76.032 |  2174.233 |    2137.003 |           22.83 |
+| `Falcon-512`             |  10 |    0.523 |    0.956 |   84.491 |   309.218 |     203.734 |           25.53 |
+| `Falcon-512`             |  30 |    0.504 |    0.899 |  124.337 |   906.812 |     593.971 |           27.67 |
+| `Falcon-512`             |  50 |    0.511 |    0.758 |  132.346 |  2429.321 |    2220.635 |           21.70 |
+| `ML-DSA-44`              |  10 |    0.194 |    0.394 |   81.170 |   290.151 |     210.904 |           26.10 |
+| `ML-DSA-44`              |  30 |    0.230 |    0.486 |   90.315 |  1311.638 |    1374.570 |           21.60 |
+| `ML-DSA-44`              |  50 |    0.266 |    0.520 |  107.458 |  2284.412 |    2436.186 |           21.33 |
+| `SLH-DSA-SHA2-128f`      |  10 |   20.377 |   39.474 |  389.473 |   782.439 |     918.115 |           10.90 |
+| `SLH-DSA-SHA2-128f`      |  30 |   31.899 |   85.706 |  942.078 |  2160.787 |    2512.400 |           11.40 |
+| `SLH-DSA-SHA2-128f`      |  50 |   19.162 |   36.419 |  751.799 |  4151.146 |    3699.200 |           13.17 |
+| `SLH-DSA-SHA2-128s`      |  10 |  786.799 | 1552.408 | 1624.340 |  3515.741 |    3242.158 |            1.67 |
+| `SLH-DSA-SHA2-128s`      |  30 | 2842.993 | 3814.459 | 4067.915 |  9250.730 |    9967.187 |            2.00 |
+| `SLH-DSA-SHA2-128s`      |  50 | 4257.338 | 6628.612 | 6814.575 | 19911.388 |   23039.505 |            2.43 |
+
+Stress thresholds in `benchmark_sign_raw.json` all pass. `stress_error_rate` is `0`, and `stress_refresh_error_rate` is `0`.
+
+### Attack Results
+
+`benchmark_sign_result.json` has `attack: null` per algorithm, but `benchmark_sign_raw.json` contains attack metrics. Tampered-token block rate is `100%` overall and `100%` for every algorithm.
+
+| Metric                                          | Passes | Fails |  Rate | Threshold           |
+| ----------------------------------------------- | -----: | ----: | ----: | ------------------- |
+| `attack_block_rate`                             |    125 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate{alg:Falcon-Precomputed-512}` |     25 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate{alg:Falcon-512}`             |     25 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate{alg:ML-DSA-44}`              |     25 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate{alg:SLH-DSA-SHA2-128f}`      |     25 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate{alg:SLH-DSA-SHA2-128s}`      |     25 |     0 | 1.000 | `rate>0.99`, passed |
+
+Raw aggregate `http_req_failed` is `0.5308%` because k6 counts intentional `401` responses from tampered-token attacks as failed HTTP requests. Custom attack checks confirm those `401` responses are expected blocks.
+
+### Raw k6 Summary
+
+From `benchmark_sign_raw.json`:
+
+| Metric                      |                             Value |
+| --------------------------- | --------------------------------: |
+| Test duration               |                  `1133026.708 ms` |
+| `checks`                    |         `31003` passes, `0` fails |
+| `http_reqs`                 |  `23549` requests, `20.784 req/s` |
+| `iterations`                | `7839` iterations, `6.919 iter/s` |
+| `stress_error_rate`         |                               `0` |
+| `stress_refresh_error_rate` |                               `0` |
+| Threshold checks            |       `329` evaluated, `0` failed |
+
+## Testing Result
+
+Commands run with `GOCACHE=/tmp/go-build-cache` on current workspace:
+
+| Command                           | Result                                                                                                                           |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `go test ./...` in `pkg`          | Passed. `backend/pkg/fndsa` `99.369s`, `backend/pkg/jwt` `100.513s`, `backend/pkg/jwt/request` `0.027s`, `backend/pkg/utils/jwtutils` `0.007s [no tests to run]` |
+| `go test ./...` in `gateway`      | Passed. `backend/gateway/test` `0.005s`; other packages reported `[no test files]`                                                       |
+| `go test ./...` in `auth-service` | Passed. `backend/auth-service/test` `0.012s`; other packages reported `[no test files]`                                                  |
+| `go test ./...` in `todo-service` | Passed. `backend/todo-service/cmd/app` `0.035s`, `backend/todo-service/test` `0.015s`; other packages reported `[no test files]`                 |
+| `go test ./...` in `backend/cmd/keygen`   | Passed. Package reported `[no test files]`                                                                                       |
+
+No failing Go tests were observed in this run.
+
+## Make Targets
+
+Run these from `backend/`.
+
+| Target                    | Action                                                                    |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `make keygen`             | Generate production keys into `auth-service/keys`, copy to `gateway/keys` |
+| `make keygen-all`         | Generate benchmark keys into `keys/`                                 |
+| `make compile-proto`      | Regenerate service and gateway Go protobuf files                          |
+| `make up`                 | Start production Compose stack                                            |
+| `make up-build`           | Build and start production Compose stack                                  |
+| `make down`               | Stop production stack                                                     |
+| `make clean`              | Stop production stack and remove volumes                                  |
+| `make vendor`             | Vendor dependencies for Docker builds                                     |
+| `make tidy`               | Run `go mod tidy` in Go modules                                           |
+| `make build`              | Build gateway, auth-service, and todo-service binaries into `bin/`        |
+| `make bench-up`           | Build and start benchmark Compose stack                                   |
+| `make bench-down`         | Stop benchmark stack and remove volumes                                   |
+| `make bench-sign`         | Run local benchmark and write `result.txt`                                |
+| `make bench-sign-remote`  | Run remote benchmark against `https://poc-ridwanmuh3.my.id`               |
+| `make attack-adversarial` | Run adversarial JWT test against configurable base URL                    |
+
+## Related Documentation
+
+- `docs/grpc-implementation.md` explains gRPC contracts, metadata, trailers, keep-alive, and benchmark bias controls.
+- `docs/skenario-pengujian.md` explains k6 scenario design, isolated/stress/attack phases, metrics, thresholds, and output files.
+- `backend/api/api-spec.yml` and service `backend/api/spec.yaml` files contain OpenAPI-level API specifications.

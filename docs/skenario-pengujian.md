@@ -1,7 +1,7 @@
 # Skenario Pengujian Performa Tanda Tangan Digital Post-Quantum
 
 **Dokumen:** Metodologi & Skenario Pengujian  
-**Berkas Skrip:** `k6/benchmark_sign.js`  
+**Berkas Skrip:** `backend/k6/benchmark_sign.js`  
 **Alat Pengujian:** k6 v0.50+ (Grafana Labs)  
 **Tanggal:** Mei 2026
 
@@ -397,6 +397,8 @@ Falcon-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisia
 ## 12. Perintah Eksekusi
 
 ```bash
+cd backend
+
 # Mode standar (semua fase, single gateway):
 k6 run -e BASE_URL=http://localhost:8080 k6/benchmark_sign.js
 
@@ -412,4 +414,4 @@ k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 ---
 
-*Dokumen ini dibuat berdasarkan kode sumber `k6/benchmark_sign.js` dan `gateway/internal/delivery/http/handler/benchmark_handler.go`.*
+*Dokumen ini dibuat berdasarkan kode sumber `backend/k6/benchmark_sign.js` dan `backend/gateway/internal/delivery/http/handler/benchmark_handler.go`.*

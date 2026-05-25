@@ -1,0 +1,203 @@
+services:
+  # =========================
+  # Caddy Reverse Proxy (HTTPS)
+  # =========================
+  caddy:
+    image: caddy:2-alpine
+    container_name: tasktify-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/data/logs
+    depends_on:
+      gateway:
+        condition: service_healthy
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - frontend
+
+  # =========================
+  # PostgreSQL Database
+  # =========================
+  postgres:
+    image: postgres:18-alpine
+    container_name: tasktify-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-tasktify}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  # =========================
+  # Auth Service (gRPC :3001)
+  # =========================
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: tasktify-auth-service
+    restart: unless-stopped
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-tasktify}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      # Increase idle pool to sustain 50-VU concurrent sign-in requests
+      DB_POOL_IDLE: 25
+      DB_MAX_POOL: 100
+      DB_MAX_LIFETIME: 300
+      APP_NAME: auth-service
+      APP_MODE: production
+      GRPC_PORT: 3001
+      # All 5 PQC algorithms enabled — keys loaded from KEYS_DIR at startup.
+      # Run `make keygen` first to populate auth-service/keys/.
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
+      KEYS_DIR: /app/keys
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+    volumes:
+      - ./auth-service/keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # TCP probe — checks gRPC port is listening before gateway starts.
+    # busybox nc is available in Alpine-based images.
+    healthcheck:
+      test:
+        ["CMD-SHELL", "nc -z localhost 3001 2>/dev/null && exit 0 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - backend
+
+  # =========================
+  # Todo Service (gRPC :3002)
+  # =========================
+  todo-service:
+    build:
+      context: .
+      dockerfile: todo-service/Dockerfile
+    container_name: tasktify-todo-service
+    restart: unless-stopped
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-tasktify}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 25
+      DB_MAX_POOL: 100
+      DB_MAX_LIFETIME: 300
+      APP_NAME: todo-service
+      APP_MODE: production
+      GRPC_PORT: 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD-SHELL", "nc -z localhost 3002 2>/dev/null && exit 0 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - backend
+
+  # =========================
+  # API Gateway (HTTP :3000)
+  # =========================
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: tasktify-gateway
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      APP_NAME: gateway
+      APP_PREFORK: "false"
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: auth-service:3001
+      TODO_SERVICE_ADDR: todo-service:3002
+      # Must match auth-service JWT_ALLOWED_ALGS exactly
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
+      KEYS_DIR: /app/keys
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+    # Gateway shares the same public-key files as auth-service (verify-only).
+    # auth-service/keys is populated by `make keygen`.
+    volumes:
+      - ./auth-service/keys:/app/keys
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      todo-service:
+        condition: service_healthy
+    # Overrides Dockerfile HEALTHCHECK — shorter interval for faster startup detection.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3000/health 2>/dev/null || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+  caddy_logs:
