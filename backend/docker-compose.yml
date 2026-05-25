@@ -70,10 +70,10 @@ services:
       APP_NAME: auth-service
       APP_MODE: production
       GRPC_PORT: 3001
-      # All 5 PQC algorithms enabled — keys loaded from KEYS_DIR at startup.
+      # Production app uses Falcon-Precomputed-512 only.
       # Run `make keygen` first to populate auth-service/keys/.
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
@@ -155,9 +155,8 @@ services:
       APP_MODE: production
       AUTH_SERVICE_ADDR: auth-service:3001
       TODO_SERVICE_ADDR: todo-service:3002
-      # Must match auth-service JWT_ALLOWED_ALGS exactly
       JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512,Falcon-512,SLH-DSA-SHA2-128f,SLH-DSA-SHA2-128s,SLH-DSA-SHAKE-128f,SLH-DSA-SHAKE-128s,ML-DSA-44
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60

@@ -4,37 +4,24 @@
     Calendar,
     CheckSquare,
     Eye,
-    KeyRound,
     ListChecks,
     LoaderCircle,
     LogIn,
     LogOut,
     Pencil,
     Plus,
-    RefreshCw,
     Save,
     Search,
-    ShieldCheck,
     Square,
     Trash2,
     User,
     X
   } from "lucide-svelte";
   import { ApiError, request } from "./lib/api.js";
-  import { compactToken, decodeJwt, formatClaimDate, tokenRemaining } from "./lib/token.js";
+  import { decodeJwt } from "./lib/token.js";
 
   const STORAGE_KEY = "tasktify.session";
   const DEFAULT_ALGORITHM = "Falcon-Precomputed-512";
-
-  const algorithms = [
-    "Falcon-Precomputed-512",
-    "Falcon-512",
-    "ML-DSA-44",
-    "SLH-DSA-SHA2-128f",
-    "SLH-DSA-SHA2-128s",
-    "SLH-DSA-SHAKE-128f",
-    "SLH-DSA-SHAKE-128s"
-  ];
 
   const statusOptions = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 
@@ -43,8 +30,7 @@
   let authForm = {
     name: "",
     email: "",
-    password: "",
-    algorithm: DEFAULT_ALGORITHM
+    password: ""
   };
   let session = emptySession();
   let profile = null;
@@ -57,7 +43,6 @@
   let loadingAuth = false;
   let loadingTasks = false;
   let savingTask = false;
-  let refreshing = false;
   let errorMessage = "";
   let noticeMessage = "";
   let noticeTimer;
@@ -81,8 +66,7 @@
       token_type: "Bearer",
       access_token: "",
       refresh_token: "",
-      saved_at: "",
-      metrics: {}
+      saved_at: ""
     };
   }
 
@@ -145,20 +129,19 @@
         });
       }
 
-      const { payload, headers } = await request("/api/auth/signin", {
+      const { payload } = await request("/api/auth/signin", {
         method: "POST",
         body: {
           email: authForm.email.trim(),
           password: authForm.password,
-          algorithm: authForm.algorithm
+          algorithm: DEFAULT_ALGORITHM
         }
       });
 
       writeSession({
         ...emptySession(),
         ...(payload?.data || {}),
-        saved_at: new Date().toISOString(),
-        metrics: readAuthMetrics(headers)
+        saved_at: new Date().toISOString()
       });
 
       await bootstrapSession();
@@ -180,21 +163,20 @@
       });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401 && retry && session.refresh_token) {
-        await refreshSession(false);
+        await refreshSession();
         return authedRequest(path, options, false);
       }
       throw error;
     }
   }
 
-  async function refreshSession(showMessage = true) {
-    refreshing = true;
+  async function refreshSession() {
     clearMessages();
     try {
       const decodedRefresh = decodeJwt(session.refresh_token);
       const decodedAccess = decodeJwt(session.access_token);
       const userId = decodedRefresh?.payload?.user_id || decodedAccess?.payload?.user_id || "";
-      const { payload, headers } = await request("/api/auth/refresh", {
+      const { payload } = await request("/api/auth/refresh", {
         method: "POST",
         body: {
           user_id: userId,
@@ -205,18 +187,11 @@
       writeSession({
         ...session,
         ...(payload?.data || {}),
-        saved_at: new Date().toISOString(),
-        metrics: readAuthMetrics(headers)
+        saved_at: new Date().toISOString()
       });
-
-      if (showMessage) {
-        showNotice("Token extended");
-      }
     } catch (error) {
       clearSession();
       handleError(error);
-    } finally {
-      refreshing = false;
     }
   }
 
@@ -425,25 +400,6 @@
     };
   }
 
-  function readAuthMetrics(headers) {
-    const metricHeaders = [
-      ["access_ms", "X-Access-Token-Generation-Time-Ms"],
-      ["refresh_ms", "X-Refresh-Token-Generation-Time-Ms"],
-      ["total_ms", "X-Token-Generation-Time-Ms"],
-      ["sign_ms", "X-Sign-Time-Ms"],
-      ["cpu_pct", "X-Auth-CPU-Pct"],
-      ["mem_alloc_mb", "X-Auth-Mem-Alloc-MB"]
-    ];
-
-    return metricHeaders.reduce((metrics, [key, header]) => {
-      const value = headers.get(header);
-      if (value) {
-        metrics[key] = value;
-      }
-      return metrics;
-    }, {});
-  }
-
   function handleError(error) {
     if (error instanceof ApiError) {
       errorMessage = error.message;
@@ -524,96 +480,75 @@
   </main>
 {:else if !authenticated}
   <main class="auth-page">
-    <section class="auth-visual" aria-label="Tasktify">
-      <div class="brand-row">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span>Tasktify</span>
-      </div>
-      <h1>Tasktify</h1>
-      <p>JWT task console</p>
-      <div class="auth-telemetry" aria-hidden="true">
-        <div>
-          <span>API</span>
-          <strong>/api</strong>
-        </div>
-        <div>
-          <span>JWT</span>
-          <strong>PQC</strong>
-        </div>
-        <div>
-          <span>Tasks</span>
-          <strong>CRUD</strong>
-        </div>
-      </div>
-    </section>
-
     <section class="auth-panel">
-      <div class="segmented" aria-label="Authentication mode">
-        <button
-          type="button"
-          class:active={authMode === "signin"}
-          on:click={() => (authMode = "signin")}
-        >
-          Sign in
-        </button>
-        <button
-          type="button"
-          class:active={authMode === "register"}
-          on:click={() => (authMode = "register")}
-        >
-          Register
-        </button>
-      </div>
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="brand-row">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>Tasktify</span>
+          </div>
+        </div>
 
-      <form class="auth-form" on:submit|preventDefault={handleAuthSubmit}>
-        {#if authMode === "register"}
-          <label>
-            <span>Name</span>
-            <input bind:value={authForm.name} autocomplete="name" required />
-          </label>
-        {/if}
+        <h1>{authMode === "register" ? "Create account" : "Welcome back"}</h1>
 
-        <label>
-          <span>Email</span>
-          <input bind:value={authForm.email} type="email" autocomplete="email" required />
-        </label>
+        <div class="segmented" aria-label="Authentication mode">
+          <button
+            type="button"
+            class:active={authMode === "signin"}
+            on:click={() => (authMode = "signin")}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            class:active={authMode === "register"}
+            on:click={() => (authMode = "register")}
+          >
+            Register
+          </button>
+        </div>
 
-        <label>
-          <span>Password</span>
-          <input
-            bind:value={authForm.password}
-            type="password"
-            autocomplete={authMode === "register" ? "new-password" : "current-password"}
-            minlength="6"
-            required
-          />
-        </label>
-
-        <label>
-          <span>JWT algorithm</span>
-          <select bind:value={authForm.algorithm}>
-            {#each algorithms as algorithm}
-              <option value={algorithm}>{algorithm}</option>
-            {/each}
-          </select>
-        </label>
-
-        {#if errorMessage}
-          <p class="form-error">{errorMessage}</p>
-        {/if}
-        {#if noticeMessage}
-          <p class="form-notice">{noticeMessage}</p>
-        {/if}
-
-        <button class="button-primary" type="submit" disabled={loadingAuth}>
-          {#if loadingAuth}
-            <LoaderCircle class="spin" size={18} aria-hidden="true" />
-          {:else}
-            <LogIn size={18} aria-hidden="true" />
+        <form class="auth-form" on:submit|preventDefault={handleAuthSubmit}>
+          {#if authMode === "register"}
+            <label>
+              <span>Name</span>
+              <input bind:value={authForm.name} autocomplete="name" required />
+            </label>
           {/if}
-          {authMode === "register" ? "Register and sign in" : "Sign in"}
-        </button>
-      </form>
+
+          <label>
+            <span>Email</span>
+            <input bind:value={authForm.email} type="email" autocomplete="email" required />
+          </label>
+
+          <label>
+            <span>Password</span>
+            <input
+              bind:value={authForm.password}
+              type="password"
+              autocomplete={authMode === "register" ? "new-password" : "current-password"}
+              minlength="6"
+              required
+            />
+          </label>
+
+          {#if errorMessage}
+            <p class="form-error">{errorMessage}</p>
+          {/if}
+          {#if noticeMessage}
+            <p class="form-notice">{noticeMessage}</p>
+          {/if}
+
+          <button class="button-primary" type="submit" disabled={loadingAuth}>
+            {#if loadingAuth}
+              <LoaderCircle class="spin" size={18} aria-hidden="true" />
+            {:else}
+              <LogIn size={18} aria-hidden="true" />
+            {/if}
+            {authMode === "register" ? "Create account" : "Sign in"}
+          </button>
+        </form>
+      </div>
     </section>
   </main>
 {:else}
@@ -625,21 +560,6 @@
       </div>
 
       <div class="topbar-actions">
-        <span class="token-chip">
-          <ShieldCheck size={16} aria-hidden="true" />
-          {accessJwt?.header?.alg || "JWT"}
-          <span>{tokenRemaining(accessJwt?.payload?.exp)}</span>
-        </span>
-        <button
-          class="icon-text-button"
-          type="button"
-          on:click={() => refreshSession(true)}
-          disabled={refreshing}
-          title="Extend token"
-        >
-          <RefreshCw class={refreshing ? "spin" : ""} size={17} aria-hidden="true" />
-          Refresh
-        </button>
         <button class="icon-button on-dark" type="button" on:click={logout} title="Logout" aria-label="Logout">
           <LogOut size={18} aria-hidden="true" />
         </button>
@@ -656,13 +576,12 @@
       <section class="task-column">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Tasks</p>
-            <h1>Task board</h1>
+            <h1>Tasks</h1>
           </div>
           <div class="head-actions">
             <button class="button-outline" type="button" on:click={checkAllVisibleTasks} disabled={visibleIncompleteCount === 0}>
               <CheckSquare size={18} aria-hidden="true" />
-              Check all
+              Complete all
             </button>
             <button class="button-primary" type="button" on:click={startCreateTask}>
               <Plus size={18} aria-hidden="true" />
@@ -782,7 +701,6 @@
         <section class="tool-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Task</p>
               <h2>{taskMode === "edit" ? "Edit task" : "Add task"}</h2>
             </div>
             {#if taskMode === "edit"}
@@ -829,7 +747,6 @@
         <section class="tool-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Selected</p>
               <h2>Task detail</h2>
             </div>
           </div>
@@ -869,8 +786,7 @@
         <section class="tool-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Profile</p>
-              <h2>JWT user</h2>
+              <h2>Profile</h2>
             </div>
             <User size={20} aria-hidden="true" />
           </div>
@@ -885,48 +801,9 @@
               <dd>{profile?.email || accessJwt?.payload?.email || "-"}</dd>
             </div>
             <div>
-              <dt>User ID</dt>
-              <dd>{profile?.id || accessJwt?.payload?.user_id || "-"}</dd>
+              <dt>Security</dt>
+              <dd>Falcon Precomputed 512</dd>
             </div>
-          </dl>
-        </section>
-
-        <section class="tool-panel token-panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Token</p>
-              <h2>JWT session</h2>
-            </div>
-            <KeyRound size={20} aria-hidden="true" />
-          </div>
-
-          <dl class="detail-list compact">
-            <div>
-              <dt>Access token</dt>
-              <dd>{compactToken(session.access_token)}</dd>
-            </div>
-            <div>
-              <dt>Refresh token</dt>
-              <dd>{compactToken(session.refresh_token)}</dd>
-            </div>
-            <div>
-              <dt>Algorithm</dt>
-              <dd>{accessJwt?.header?.alg || "-"}</dd>
-            </div>
-            <div>
-              <dt>Token use</dt>
-              <dd>{accessJwt?.payload?.token_use || "access"}</dd>
-            </div>
-            <div>
-              <dt>Expires</dt>
-              <dd>{formatClaimDate(accessJwt?.payload?.exp)}</dd>
-            </div>
-            {#if Object.keys(session.metrics || {}).length > 0}
-              <div>
-                <dt>Generation</dt>
-                <dd>{session.metrics.total_ms || session.metrics.sign_ms || "-"} ms</dd>
-              </div>
-            {/if}
           </dl>
         </section>
       </aside>
