@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import csv
-import html
 import json
 import math
 import os
@@ -28,12 +27,11 @@ W = 1900
 H = 1120
 MARGIN = {
     "left": 175,
-    "right": 455,
+    "right": 120,
     "top": 105,
-    "bottom": 170,
+    "bottom": 245,
 }
 
-FONT_FAMILY = "Arial, Helvetica, sans-serif"
 FONT_REGULAR = Path("/usr/share/fonts/google-droid-sans-fonts/DroidSans.ttf")
 FONT_BOLD = Path("/usr/share/fonts/google-droid-sans-fonts/DroidSans-Bold.ttf")
 TEXT = "#1F2933"
@@ -78,12 +76,12 @@ COLORS = {
 ATTACK_COLOR = "#009E73"
 LABEL_BG = "#FFFFFF"
 LABEL_BORDER = "#D7DEE8"
-VALUE_SIZE = 21
-STRESS_VALUE_SIZE = 18
-
-
-def esc(value: object) -> str:
-    return html.escape(str(value), quote=True)
+VALUE_SIZE = 23
+STRESS_VALUE_SIZE = 20
+TICK_SIZE = 24
+AXIS_SIZE = 26
+LEGEND_TITLE_SIZE = 27
+LEGEND_SIZE = 25
 
 
 def read_json_file(label: str, candidates: tuple[Path, ...]) -> object:
@@ -148,10 +146,10 @@ def draw_png_multiline(
     x: float,
     y: float,
     lines: list[str],
-    size: int = 21,
+    size: int = 23,
     fill: str = "#425466",
     anchor: str = "ma",
-    line_height: int = 27,
+    line_height: int = 30,
 ) -> None:
     for idx, line in enumerate(lines):
         draw.text((x, y + idx * line_height), line, fill=fill, font=font(size), anchor=anchor)
@@ -181,17 +179,34 @@ def draw_rotated_png_text(
 
 def draw_png_algorithm_legend(
     draw: ImageDraw.ImageDraw,
-    x: int,
+    left: int,
     y: int,
-    title: str = "Algorithm",
+    width: int,
 ) -> None:
-    draw_png_text(draw, x, y, title, 24, fill=TEXT, bold=True)
-    y += 42
-    for alg in ALGORITHM_ORDER:
+    marker = 24
+    marker_gap = 11
+
+    cell_width = width / len(ALGORITHM_ORDER)
+    for idx, alg in enumerate(ALGORITHM_ORDER):
         color = COLORS[alg]
-        draw.rounded_rectangle((x, y - 18, x + 26, y + 8), radius=3, fill=color)
-        draw_png_text(draw, x + 42, y + 3, ALGORITHM_SHORT[alg], 22, fill="#273444")
-        y += 42
+        label = ALGORITHM_SHORT[alg]
+        label_width = draw.textlength(label, font=font(LEGEND_SIZE))
+        item_width = marker + marker_gap + label_width
+        x = left + idx * cell_width + (cell_width - item_width) / 2
+        draw.rounded_rectangle((x, y - 12, x + marker, y + 12), radius=3, fill=color)
+        draw_png_text(draw, x + marker + marker_gap, y, label, LEGEND_SIZE, fill="#273444", anchor="lm")
+
+
+def draw_png_attack_legend(draw: ImageDraw.ImageDraw, left: int, y: int, width: int) -> None:
+    label = "Blocked request rate"
+    marker = 24
+    marker_gap = 11
+    label_width = draw.textlength(label, font=font(LEGEND_SIZE))
+    total_width = marker + marker_gap + label_width
+    x = left + (width - total_width) / 2
+
+    draw.rounded_rectangle((x, y - 12, x + marker, y + 12), radius=3, fill=ATTACK_COLOR)
+    draw_png_text(draw, x + marker + marker_gap, y, label, LEGEND_SIZE, fill="#273444", anchor="lm")
 
 
 def draw_png_axes(
@@ -205,70 +220,16 @@ def draw_png_axes(
     for tick in ticks:
         y = y_map(tick)
         draw.line((left, y, right, y), fill=GRID, width=2)
-        draw_png_text(draw, left - 18, y + 7, fmt(tick), 21, fill="#425466", anchor="ra")
+        draw_png_text(draw, left - 18, y + 8, fmt(tick), TICK_SIZE, fill="#425466", anchor="ra")
     draw.line((left, bottom, right, bottom), fill=AXIS, width=3)
     draw.line((left, top, left, bottom), fill=AXIS, width=3)
-    draw_rotated_png_text(img, 60, (top + bottom) / 2, y_label, 23, fill=AXIS)
+    draw_rotated_png_text(img, 60, (top + bottom) / 2, y_label, AXIS_SIZE, fill=AXIS)
 
 
 def save_png(img: Image.Image, name: str) -> Path:
     path = OUT_DIR / f"{name}.png"
     img.save(path, dpi=(300, 300))
     return path
-
-
-def svg_start() -> list[str]:
-    return [
-        (
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'width="{W / 300:.3f}in" height="{H / 300:.3f}in" '
-            f'viewBox="0 0 {W} {H}">'
-        ),
-        f'<rect width="{W}" height="{H}" fill="{WHITE}"/>',
-        "<style>",
-        f"text {{ font-family: {FONT_FAMILY}; fill: {TEXT}; }}",
-        ".axis { font-size: 23px; fill: #2F3A45; }",
-        ".tick { font-size: 21px; fill: #425466; }",
-        ".label { font-size: 22px; fill: #2F3A45; }",
-        ".value { font-size: 21px; fill: #1F2933; font-weight: 700; }",
-        ".legend-title { font-size: 24px; font-weight: 700; }",
-        ".legend { font-size: 22px; fill: #273444; }",
-        "</style>",
-    ]
-
-
-def svg_text(
-    parts: list[str],
-    x: float,
-    y: float,
-    text: str,
-    cls: str = "label",
-    anchor: str = "start",
-    rotate: float | None = None,
-) -> None:
-    transform = ""
-    if rotate is not None:
-        transform = f' transform="rotate({rotate:.2f} {x:.2f} {y:.2f})"'
-    parts.append(
-        f'<text class="{cls}" x="{x:.2f}" y="{y:.2f}" '
-        f'text-anchor="{anchor}"{transform}>{esc(text)}</text>'
-    )
-
-
-def svg_multiline(
-    parts: list[str],
-    x: float,
-    y: float,
-    lines: list[str],
-    cls: str = "tick",
-    anchor: str = "middle",
-    line_height: int = 26,
-) -> None:
-    parts.append(f'<text class="{cls}" x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}">')
-    for idx, line in enumerate(lines):
-        dy = 0 if idx == 0 else line_height
-        parts.append(f'<tspan x="{x:.2f}" dy="{dy}">{esc(line)}</tspan>')
-    parts.append("</text>")
 
 
 def plot_area() -> tuple[int, int, int, int]:
@@ -283,18 +244,9 @@ def clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
 
 
-def svg_text_dims(text: str, size: int) -> tuple[float, float]:
-    return max(24, len(text) * size * 0.58 + 14), size + 10
-
-
 def png_text_dims(draw: ImageDraw.ImageDraw, text: str, size: int, bold: bool = True) -> tuple[float, float]:
     bbox = draw.textbbox((0, 0), text, font=font(size, bold))
     return (bbox[2] - bbox[0]) + 14, (bbox[3] - bbox[1]) + 10
-
-
-def label_box(cx: float, cy: float, text: str, size: int) -> tuple[float, float, float, float]:
-    tw, th = svg_text_dims(text, size)
-    return cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2
 
 
 def overlap_area(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
@@ -303,41 +255,23 @@ def overlap_area(a: tuple[float, float, float, float], b: tuple[float, float, fl
     return width * height
 
 
-def clamp_label_center(
-    cx: float,
-    cy: float,
-    text: str,
-    bounds: tuple[float, float, float, float],
-    size: int = VALUE_SIZE,
-) -> tuple[float, float, float, float]:
-    left, top, right, bottom = bounds
-    tw, th = svg_text_dims(text, size)
-    cx = clamp(cx, left + tw / 2 + 4, right - tw / 2 - 4)
-    cy = clamp(cy, top + th / 2 + 4, bottom - th / 2 - 4)
-    return cx, cy, tw, th
+def expand_box(box: tuple[float, float, float, float], padding: float) -> tuple[float, float, float, float]:
+    return (box[0] - padding, box[1] - padding, box[2] + padding, box[3] + padding)
 
 
-def svg_value_label(
-    parts: list[str],
+def value_label_box(
+    draw: ImageDraw.ImageDraw,
     x: float,
     y: float,
     text: str,
     bounds: tuple[float, float, float, float],
     size: int = VALUE_SIZE,
-) -> tuple[float, float, float, float]:
-    cx, cy, tw, th = clamp_label_center(x, y, text, bounds, size)
-    box_x = cx - tw / 2
-    box_y = cy - th / 2
-    text_y = cy + size * 0.36
-    parts.append(
-        f'<rect x="{box_x:.2f}" y="{box_y:.2f}" width="{tw:.2f}" height="{th:.2f}" '
-        f'rx="5" fill="{LABEL_BG}" stroke="{LABEL_BORDER}" stroke-width="1.2" opacity="0.95"/>'
-    )
-    parts.append(
-        f'<text x="{cx:.2f}" y="{text_y:.2f}" text-anchor="middle" '
-        f'font-size="{size}" font-weight="700" fill="{TEXT}">{esc(text)}</text>'
-    )
-    return box_x, box_y, box_x + tw, box_y + th
+) -> tuple[float, float, tuple[float, float, float, float]]:
+    left, top, right, bottom = bounds
+    tw, th = png_text_dims(draw, text, size, True)
+    cx = clamp(x, left + tw / 2 + 4, right - tw / 2 - 4)
+    cy = clamp(y, top + th / 2 + 4, bottom - th / 2 - 4)
+    return cx, cy, (cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)
 
 
 def png_value_label(
@@ -348,45 +282,72 @@ def png_value_label(
     bounds: tuple[float, float, float, float],
     size: int = VALUE_SIZE,
 ) -> tuple[float, float, float, float]:
-    left, top, right, bottom = bounds
-    tw, th = png_text_dims(draw, text, size, True)
-    cx = clamp(x, left + tw / 2 + 4, right - tw / 2 - 4)
-    cy = clamp(y, top + th / 2 + 4, bottom - th / 2 - 4)
-    box = (cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)
+    cx, cy, box = value_label_box(draw, x, y, text, bounds, size)
     draw.rounded_rectangle(box, radius=5, fill=LABEL_BG, outline=LABEL_BORDER, width=1)
     draw_png_text(draw, cx, cy, text, size, fill=TEXT, bold=True, anchor="mm")
     return box
 
 
+def point_label_offsets() -> list[tuple[int, int]]:
+    base = [
+        (0, -34),
+        (0, 34),
+        (52, -16),
+        (-52, -16),
+        (52, 24),
+        (-52, 24),
+        (0, -62),
+        (0, 62),
+        (82, 0),
+        (-82, 0),
+    ]
+    offsets: list[tuple[int, int]] = []
+    seen: set[tuple[int, int]] = set()
+    for offset in base:
+        seen.add(offset)
+        offsets.append(offset)
+    for radius in (44, 68, 94, 124, 158, 196, 238):
+        for deg in (-90, 90, -45, 45, -135, 135, 0, 180, -70, 70, -110, 110):
+            offset = (
+                round(math.cos(math.radians(deg)) * radius),
+                round(math.sin(math.radians(deg)) * radius),
+            )
+            if offset not in seen:
+                seen.add(offset)
+                offsets.append(offset)
+    return offsets
+
+
 def placed_point_labels(
+    draw: ImageDraw.ImageDraw,
     raw_labels: list[tuple[float, float, str]],
     bounds: tuple[float, float, float, float],
     size: int = STRESS_VALUE_SIZE,
 ) -> list[tuple[float, float, str, tuple[float, float, float, float]]]:
-    offsets = [
-        (0, -30),
-        (0, 30),
-        (46, -12),
-        (-46, -12),
-        (46, 24),
-        (-46, 24),
-        (0, -56),
-        (0, 56),
-        (72, 0),
-        (-72, 0),
-    ]
+    offsets = point_label_offsets()
     used: list[tuple[float, float, float, float]] = []
     placed: list[tuple[float, float, str, tuple[float, float, float, float]]] = []
-    for x, y, text in sorted(raw_labels, key=lambda item: (item[0], item[1])):
+
+    ranked_labels: list[tuple[int, float, float, str]] = []
+    for idx, (x, y, text) in enumerate(raw_labels):
+        crowding = sum(
+            1
+            for other_idx, (other_x, other_y, _) in enumerate(raw_labels)
+            if other_idx != idx and abs(x - other_x) < 160 and abs(y - other_y) < 95
+        )
+        ranked_labels.append((-crowding, x, y, text))
+
+    for _, x, y, text in sorted(ranked_labels):
         candidates: list[tuple[float, float, tuple[float, float, float, float], float]] = []
         for dx, dy in offsets:
-            cx, cy, tw, th = clamp_label_center(x + dx, y + dy, text, bounds, size)
-            box = (cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)
-            overlap = sum(overlap_area(box, existing) for existing in used)
-            distance = abs(dx) + abs(dy)
-            candidates.append((cx, cy, box, overlap * 1000 + distance))
+            cx, cy, box = value_label_box(draw, x + dx, y + dy, text, bounds, size)
+            padded_box = expand_box(box, 4)
+            overlap = sum(overlap_area(padded_box, existing) for existing in used)
+            edge_penalty = (abs((x + dx) - cx) + abs((y + dy) - cy)) * 4
+            distance = math.hypot(dx, dy)
+            candidates.append((cx, cy, box, overlap * 10000 + edge_penalty + distance))
         cx, cy, box, _ = min(candidates, key=lambda item: item[3])
-        used.append(box)
+        used.append(expand_box(box, 4))
         placed.append((cx, cy, text, box))
     return placed
 
@@ -440,24 +401,6 @@ def log_ticks(values: list[float]) -> tuple[list[float], float, float]:
     return ticks, y_min, y_max
 
 
-def draw_axes(
-    parts: list[str],
-    y_label: str,
-    ticks: list[float],
-    y_min: float,
-    y_max: float,
-    y_map,
-) -> None:
-    left, top, right, bottom = plot_area()
-    for tick in ticks:
-        y = y_map(tick)
-        parts.append(f'<line x1="{left}" x2="{right}" y1="{y:.2f}" y2="{y:.2f}" stroke="{GRID}" stroke-width="2"/>')
-        svg_text(parts, left - 18, y + 7, fmt(tick), "tick", "end")
-    parts.append(f'<line x1="{left}" x2="{right}" y1="{bottom}" y2="{bottom}" stroke="{AXIS}" stroke-width="3"/>')
-    parts.append(f'<line x1="{left}" x2="{left}" y1="{top}" y2="{bottom}" stroke="{AXIS}" stroke-width="3"/>')
-    svg_text(parts, 60, (top + bottom) / 2, y_label, "axis", "middle", rotate=-90)
-
-
 def make_y_map(values: list[float], log_scale: bool):
     left, top, right, bottom = plot_area()
     if log_scale:
@@ -478,64 +421,9 @@ def make_y_map(values: list[float], log_scale: bool):
     return mapper, ticks, y_min, y_max
 
 
-def draw_algorithm_legend(parts: list[str], x: int, y: int, title: str = "Algorithm") -> None:
-    svg_text(parts, x, y, title, "legend-title")
-    y += 42
-    for alg in ALGORITHM_ORDER:
-        color = COLORS[alg]
-        parts.append(f'<rect x="{x}" y="{y - 18}" width="26" height="26" rx="3" fill="{color}"/>')
-        svg_text(parts, x + 42, y + 3, ALGORITHM_SHORT[alg], "legend")
-        y += 42
-
-
-def write_svg(name: str, parts: list[str]) -> Path:
-    path = OUT_DIR / f"{name}.svg"
-    path.write_text("\n".join(parts) + "\n", encoding="utf-8")
-    return path
-
-
 def isolated_values(benchmark: dict, accessor) -> list[tuple[str, float]]:
     by_alg = {item["algorithm"]: item for item in benchmark["algorithms"]}
     return [(alg, float(accessor(by_alg[alg]))) for alg in ALGORITHM_ORDER]
-
-
-def draw_isolated_metric(
-    name: str,
-    y_label: str,
-    values: list[tuple[str, float]],
-    log_scale: bool,
-) -> Path:
-    parts = svg_start()
-    left, top, right, bottom = plot_area()
-    raw_values = [v for _, v in values]
-    y_map, ticks, y_min, y_max = make_y_map(raw_values, log_scale)
-    draw_axes(parts, y_label, ticks, y_min, y_max, y_map)
-
-    width = right - left
-    gap = 54
-    slot = (width - gap * (len(values) - 1)) / len(values)
-    bar_w = min(112, slot * 0.62)
-    baseline = bottom
-    marker_r = 13
-    label_bounds = (left, top, right, bottom)
-
-    for idx, (alg, value) in enumerate(values):
-        cx = left + slot / 2 + idx * (slot + gap)
-        color = COLORS[alg]
-        y = y_map(value)
-        if log_scale:
-            parts.append(f'<line x1="{cx:.2f}" x2="{cx:.2f}" y1="{baseline:.2f}" y2="{y:.2f}" stroke="{color}" stroke-width="8" stroke-linecap="round" opacity="0.85"/>')
-            parts.append(f'<circle cx="{cx:.2f}" cy="{y:.2f}" r="{marker_r}" fill="{color}" stroke="{WHITE}" stroke-width="4"/>')
-        else:
-            x = cx - bar_w / 2
-            h = baseline - y
-            parts.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w:.2f}" height="{h:.2f}" fill="{color}" rx="5"/>')
-        svg_value_label(parts, cx, y - 30, fmt(value), label_bounds, VALUE_SIZE)
-        svg_multiline(parts, cx, bottom + 42, ALGORITHM_WRAP[alg], "tick", "middle", 26)
-
-    draw_algorithm_legend(parts, right + 70, top + 18)
-    parts.append("</svg>")
-    return write_svg(name, parts)
 
 
 def render_isolated_metric_png(
@@ -575,7 +463,7 @@ def render_isolated_metric_png(
         png_value_label(draw, cx, y - 30, fmt(value), label_bounds, VALUE_SIZE)
         draw_png_multiline(draw, cx, bottom + 42, ALGORITHM_WRAP[alg])
 
-    draw_png_algorithm_legend(draw, right + 70, top + 18)
+    draw_png_algorithm_legend(draw, left, H - 64, right - left)
     return save_png(img, name)
 
 
@@ -585,52 +473,6 @@ def stress_series(benchmark: dict, accessor) -> dict[str, list[tuple[int, float]
     for alg in ALGORITHM_ORDER:
         result[alg] = [(int(row["vus"]), float(accessor(row))) for row in by_alg[alg]["stress"]]
     return result
-
-
-def draw_stress_metric(
-    name: str,
-    y_label: str,
-    series: dict[str, list[tuple[int, float]]],
-    log_scale: bool,
-) -> Path:
-    parts = svg_start()
-    left, top, right, bottom = plot_area()
-    all_values = [value for rows in series.values() for _, value in rows]
-    y_map, ticks, y_min, y_max = make_y_map(all_values, log_scale)
-    draw_axes(parts, y_label, ticks, y_min, y_max, y_map)
-
-    x_values = sorted({x for rows in series.values() for x, _ in rows})
-    x_min, x_max = min(x_values), max(x_values)
-
-    def x_map(v: int) -> float:
-        if x_max == x_min:
-            return (left + right) / 2
-        return left + (v - x_min) / (x_max - x_min) * (right - left)
-
-    for vu in x_values:
-        x = x_map(vu)
-        parts.append(f'<line x1="{x:.2f}" x2="{x:.2f}" y1="{top}" y2="{bottom}" stroke="{GRID}" stroke-width="1.5"/>')
-        svg_text(parts, x, bottom + 45, str(vu), "tick", "middle")
-
-    svg_text(parts, (left + right) / 2, H - 72, "Concurrent virtual users (VUs)", "axis", "middle")
-
-    raw_labels: list[tuple[float, float, str]] = []
-    label_bounds = (left, top, right, bottom)
-    for alg in ALGORITHM_ORDER:
-        color = COLORS[alg]
-        points = [(x_map(vu), y_map(value), value) for vu, value in series[alg]]
-        path_data = " ".join(("M" if idx == 0 else "L") + f" {x:.2f} {y:.2f}" for idx, (x, y, _) in enumerate(points))
-        parts.append(f'<path d="{path_data}" fill="none" stroke="{color}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>')
-        for x, y, value in points:
-            parts.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="10" fill="{color}" stroke="{WHITE}" stroke-width="4"/>')
-            raw_labels.append((x, y, fmt(value)))
-
-    for x, y, text, _ in placed_point_labels(raw_labels, label_bounds, STRESS_VALUE_SIZE):
-        svg_value_label(parts, x, y, text, label_bounds, STRESS_VALUE_SIZE)
-
-    draw_algorithm_legend(parts, right + 70, top + 18)
-    parts.append("</svg>")
-    return write_svg(name, parts)
 
 
 def render_stress_metric_png(
@@ -656,14 +498,14 @@ def render_stress_metric_png(
     for vu in x_values:
         x = x_map(vu)
         draw.line((x, top, x, bottom), fill=GRID, width=2)
-        draw_png_text(draw, x, bottom + 45, str(vu), 21, fill="#425466", anchor="ma")
+        draw_png_text(draw, x, bottom + 48, str(vu), TICK_SIZE, fill="#425466", anchor="ma")
 
     draw_png_text(
         draw,
         (left + right) / 2,
-        H - 72,
+        bottom + 108,
         "Concurrent virtual users (VUs)",
-        23,
+        AXIS_SIZE,
         fill=AXIS,
         anchor="ma",
     )
@@ -679,51 +521,11 @@ def render_stress_metric_png(
             draw.ellipse((x - 10, y - 10, x + 10, y + 10), fill=color)
             raw_labels.append((x, y, fmt(value)))
 
-    for x, y, text, _ in placed_point_labels(raw_labels, label_bounds, STRESS_VALUE_SIZE):
+    for x, y, text, _ in placed_point_labels(draw, raw_labels, label_bounds, STRESS_VALUE_SIZE):
         png_value_label(draw, x, y, text, label_bounds, STRESS_VALUE_SIZE)
 
-    draw_png_algorithm_legend(draw, right + 70, top + 18)
+    draw_png_algorithm_legend(draw, left, H - 64, right - left)
     return save_png(img, name)
-
-
-def draw_attack_metric(adversarial: dict) -> Path:
-    name = "fig_13_security_attack_block_rate_pct"
-    parts = svg_start()
-    left = 430
-    top = 115
-    right = W - 275
-    bottom = H - 170
-    width = right - left
-    attacks = adversarial["attacks"]
-    row_h = (bottom - top) / len(attacks)
-    label_bounds = (left, top, right, bottom)
-
-    for tick in [0, 25, 50, 75, 100]:
-        x = left + tick / 100 * width
-        parts.append(f'<line x1="{x:.2f}" x2="{x:.2f}" y1="{top}" y2="{bottom}" stroke="{GRID}" stroke-width="2"/>')
-        svg_text(parts, x, bottom + 44, str(tick), "tick", "middle")
-    parts.append(f'<line x1="{left}" x2="{right}" y1="{bottom}" y2="{bottom}" stroke="{AXIS}" stroke-width="3"/>')
-    parts.append(f'<line x1="{left}" x2="{left}" y1="{top}" y2="{bottom}" stroke="{AXIS}" stroke-width="3"/>')
-    svg_text(parts, (left + right) / 2, H - 72, "Block rate (%)", "axis", "middle")
-
-    for idx, attack in enumerate(attacks):
-        y = top + idx * row_h + row_h * 0.58
-        bar_h = min(46, row_h * 0.52)
-        rate = float(attack["block_rate_pct"])
-        svg_text(parts, left - 26, y + 8, f"#{attack['id']} {attack['name']}", "tick", "end")
-        parts.append(
-            f'<rect x="{left}" y="{y - bar_h / 2:.2f}" width="{rate / 100 * width:.2f}" '
-            f'height="{bar_h:.2f}" fill="{ATTACK_COLOR}" rx="5"/>'
-        )
-        svg_value_label(parts, left + rate / 100 * width - 34, y, f"{fmt(rate)}%", label_bounds, VALUE_SIZE)
-
-    legend_x = right + 65
-    svg_text(parts, legend_x, top + 10, "Legend", "legend-title")
-    parts.append(f'<rect x="{legend_x}" y="{top + 34}" width="26" height="26" rx="3" fill="{ATTACK_COLOR}"/>')
-    svg_text(parts, legend_x + 42, top + 57, "Blocked request rate", "legend")
-
-    parts.append("</svg>")
-    return write_svg(name, parts)
 
 
 def render_attack_metric_png(adversarial: dict) -> Path:
@@ -731,8 +533,8 @@ def render_attack_metric_png(adversarial: dict) -> Path:
     img, draw = new_png_canvas()
     left = 430
     top = 115
-    right = W - 275
-    bottom = H - 170
+    right = W - 120
+    bottom = H - 245
     width = right - left
     attacks = adversarial["attacks"]
     row_h = (bottom - top) / len(attacks)
@@ -741,16 +543,16 @@ def render_attack_metric_png(adversarial: dict) -> Path:
     for tick in [0, 25, 50, 75, 100]:
         x = left + tick / 100 * width
         draw.line((x, top, x, bottom), fill=GRID, width=2)
-        draw_png_text(draw, x, bottom + 44, str(tick), 21, fill="#425466", anchor="ma")
+        draw_png_text(draw, x, bottom + 48, str(tick), TICK_SIZE, fill="#425466", anchor="ma")
     draw.line((left, bottom, right, bottom), fill=AXIS, width=3)
     draw.line((left, top, left, bottom), fill=AXIS, width=3)
-    draw_png_text(draw, (left + right) / 2, H - 72, "Block rate (%)", 23, fill=AXIS, anchor="ma")
+    draw_png_text(draw, (left + right) / 2, bottom + 108, "Block rate (%)", AXIS_SIZE, fill=AXIS, anchor="ma")
 
     for idx, attack in enumerate(attacks):
         y = top + idx * row_h + row_h * 0.58
         bar_h = min(46, row_h * 0.52)
         rate = float(attack["block_rate_pct"])
-        draw_png_text(draw, left - 26, y + 8, f"#{attack['id']} {attack['name']}", 21, fill="#425466", anchor="ra")
+        draw_png_text(draw, left - 26, y + 8, f"#{attack['id']} {attack['name']}", TICK_SIZE, fill="#425466", anchor="ra")
         draw.rounded_rectangle(
             (left, y - bar_h / 2, left + rate / 100 * width, y + bar_h / 2),
             radius=5,
@@ -758,10 +560,7 @@ def render_attack_metric_png(adversarial: dict) -> Path:
         )
         png_value_label(draw, left + rate / 100 * width - 34, y, f"{fmt(rate)}%", label_bounds, VALUE_SIZE)
 
-    legend_x = right + 65
-    draw_png_text(draw, legend_x, top + 10, "Legend", 24, fill=TEXT, bold=True)
-    draw.rounded_rectangle((legend_x, top + 34, legend_x + 26, top + 60), radius=3, fill=ATTACK_COLOR)
-    draw_png_text(draw, legend_x + 42, top + 57, "Blocked request rate", 22, fill="#273444")
+    draw_png_attack_legend(draw, left, H - 64, right - left)
     return save_png(img, name)
 
 
@@ -834,14 +633,13 @@ def write_captions(figures: list[dict]) -> None:
 def write_manifest(figures: list[dict]) -> None:
     with (OUT_DIR / "article_graphics_manifest.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["figure_id", "name", "metric", "svg", "png"])
+        writer.writerow(["figure_id", "name", "metric", "png"])
         for fig in figures:
             writer.writerow(
                 [
                     fig["figure_id"],
                     fig["name"],
                     fig["metric"],
-                    f"{fig['name']}.svg",
                     f"{fig['name']}.png" if fig.get("png") else "",
                 ]
             )
@@ -988,12 +786,6 @@ def main() -> None:
     figures: list[dict] = []
     for name, fig_id, title, y_label, accessor, log_scale, metric in isolated_specs:
         values = isolated_values(benchmark, accessor)
-        draw_isolated_metric(
-            name,
-            y_label,
-            values,
-            log_scale,
-        )
         render_isolated_metric_png(name, y_label, values, log_scale)
         figures.append(
             {
@@ -1007,12 +799,6 @@ def main() -> None:
 
     for name, fig_id, title, y_label, accessor, log_scale, metric in stress_specs:
         series = stress_series(benchmark, accessor)
-        draw_stress_metric(
-            name,
-            y_label,
-            series,
-            log_scale,
-        )
         render_stress_metric_png(name, y_label, series, log_scale)
         figures.append(
             {
@@ -1024,7 +810,6 @@ def main() -> None:
             }
         )
 
-    draw_attack_metric(adversarial)
     render_attack_metric_png(adversarial)
     figures.append(
         {

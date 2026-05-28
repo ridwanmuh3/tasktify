@@ -2,8 +2,10 @@ package main
 
 import (
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"todo-service/internal/config"
 	"todo-service/internal/delivery/grpc/interceptor"
@@ -15,7 +17,17 @@ func main() {
 	log := config.NewLogger(viperConfig)
 	db := config.NewDB(viperConfig, log)
 	validate := config.NewValidator(viperConfig)
-	srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor.AuthInterceptor))
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.AuthInterceptor),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Time:    30 * time.Second,
+			Timeout: 10 * time.Second,
+		}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             5 * time.Second,
+			PermitWithoutStream: true,
+		}),
+	)
 
 	db.AutoMigrate(&entity.Task{})
 

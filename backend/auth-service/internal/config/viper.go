@@ -14,18 +14,17 @@ func NewViper() *viper.Viper {
 	}
 
 	config := viper.New()
+	config.AutomaticEnv()
 
 	if mode == "dev" {
-		config.SetConfigFile(".env")
+		config.SetConfigName(".env")
+		config.SetConfigType("env")
 		config.AddConfigPath(".")
 		config.AddConfigPath("..")
 
 		if err := config.ReadInConfig(); err != nil {
 			panic(fmt.Errorf("failed to read config on env file: %w", err))
 		}
-	} else {
-		// Mode production: hanya membaca dari Environment Variables sistem
-		config.AutomaticEnv()
 	}
 
 	return config

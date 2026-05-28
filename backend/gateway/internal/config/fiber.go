@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/spf13/viper"
 
 	"github.com/ridwanmuh3/tasktify/gateway/internal/exception"
@@ -19,7 +20,7 @@ import (
 const pqcReadBufferSize = 64 * 1024 // 64 KB
 
 func NewFiber(config *viper.Viper) *fiber.App {
-	return fiber.New(fiber.Config{
+	app := fiber.New(fiber.Config{
 		AppName:      config.GetString("APP_NAME"),
 		JSONEncoder:  sonic.Marshal,
 		JSONDecoder:  sonic.Unmarshal,
@@ -28,4 +29,23 @@ func NewFiber(config *viper.Viper) *fiber.App {
 		// Default 4096 causes Fasthttp to reject requests with large JWT tokens.
 		ReadBufferSize: pqcReadBufferSize,
 	})
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{
+			fiber.MethodGet,
+			fiber.MethodPost,
+			fiber.MethodPut,
+			fiber.MethodDelete,
+			fiber.MethodOptions,
+		},
+		AllowHeaders: []string{
+			fiber.HeaderAccept,
+			fiber.HeaderAuthorization,
+			fiber.HeaderContentType,
+			fiber.HeaderOrigin,
+		},
+	}))
+
+	return app
 }

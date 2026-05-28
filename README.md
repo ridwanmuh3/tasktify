@@ -82,10 +82,15 @@ Benchmark flow:
 
 ```text
 POST /api/benchmark/sign
-Gateway signs tokens in-process, skips DB/bcrypt/auth-service path, returns per-iteration stats.
+Gateway signs tokens in-process, skips DB/bcrypt/auth-service path, and returns batch timing stats.
+Use this for isolated signing experiments. Request controls iterations and warmup_iterations.
+Each measured iteration signs one access token and one refresh token, then returns raw timings,
+p50/p95/p99 summaries, GC-free samples, CPU, and memory metrics.
 
 POST /api/benchmark/token
-Gateway signs one token in-process, returns token plus X-Token-Generation-Time-Ms header.
+Gateway signs one access token in-process, skips DB/bcrypt/auth-service path, and returns token payload.
+Use this for stress tests that need one usable Bearer token per request.
+Response includes X-Sign-Time-Ms and X-Token-Generation-Time-Ms headers.
 ```
 
 ### Data Ownership
@@ -268,9 +273,13 @@ make clean
 Local service mode:
 
 ```bash
-make run-auth
-make run-todo
-make run-gateway
+make dev
+```
+
+Frontend already running:
+
+```bash
+make dev-api
 ```
 
 Proto regeneration:

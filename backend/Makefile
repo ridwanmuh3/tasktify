@@ -7,17 +7,24 @@
 COMPOSE_PROJECT_NAME ?= tasktify
 BENCH_COMPOSE_PROJECT_NAME ?= tasktify-bench
 COMPOSE = docker compose -p $(COMPOSE_PROJECT_NAME) -f docker-compose.yml
+DEV_COMPOSE = docker compose -p $(COMPOSE_PROJECT_NAME)-dev -f docker-compose.yml -f docker-compose.dev.yml
 BENCH_COMPOSE = docker compose -p $(BENCH_COMPOSE_PROJECT_NAME) -f docker-compose.benchmark.yml
 FRONTEND_DIR ?= ../frontend
 NPM ?= npm
+GOCACHE ?= /tmp/go-build-cache
 ATTACK_BASE_URL ?= http://localhost:5001
 ATTACK_ITERATIONS ?= 10
 ATTACK_ALGORITHM ?= Falcon-Precomputed-512
+LOCAL_GO_ENV = env APP_MODE=dev GOCACHE=$(GOCACHE) CGO_ENABLED=0
 
 help:
 	@echo "Tasktify backend targets"
 	@echo ""
 	@echo "Local services:"
+	@echo "  make dev              Run DB, auth, todo, gateway, frontend"
+	@echo "  make dev-api          Run DB, auth, todo, gateway"
+	@echo "  make dev-db           Start local PostgreSQL only"
+	@echo "  make dev-down         Stop local PostgreSQL"
 	@echo "  make gateway          Run gateway locally"
 	@echo "  make auth             Run auth-service locally"
 	@echo "  make todo             Run todo-service locally"
@@ -118,18 +125,38 @@ deploy: env ensure-keys ensure-vendor build-frontend
 	$(COMPOSE) up -d --build
 
 # --- Local Development ---
+dev-db: env
+	$(DEV_COMPOSE) up -d postgres
+
+dev-down:
+	$(DEV_COMPOSE) down
+
+dev: env ensure-keys dev-db frontend-install
+	@echo "Local dev running:"
+	@echo "  frontend http://localhost:5173"
+	@echo "  gateway  http://localhost:3000"
+	@echo "Stop with Ctrl+C. Stop DB with: make dev-down"
+	$(MAKE) -j4 run-auth run-todo run-gateway run-frontend
+
+dev-api: env ensure-keys dev-db
+	@echo "Local API running:"
+	@echo "  gateway http://localhost:3000"
+	@echo "Keep frontend in another terminal: cd ../frontend && npm run dev"
+	@echo "Stop with Ctrl+C. Stop DB with: make dev-down"
+	$(MAKE) -j3 run-auth run-todo run-gateway
+
 run-gateway:
-	cd gateway && APP_MODE=dev go run ./cmd/app/main.go
+	cd gateway && $(LOCAL_GO_ENV) go run ./cmd/app/main.go
 
 gateway: run-gateway
 
 run-auth:
-	cd auth-service && APP_MODE=dev go run ./cmd/app/main.go
+	cd auth-service && $(LOCAL_GO_ENV) GRPC_PORT=3001 go run ./cmd/app/main.go
 
 auth: run-auth
 
 run-todo:
-	cd todo-service && APP_MODE=dev go run ./cmd/app/main.go
+	cd todo-service && $(LOCAL_GO_ENV) GRPC_PORT=3002 go run ./cmd/app/main.go
 
 todo: run-todo
 
@@ -181,6 +208,7 @@ test:
 check:
 	cd $(FRONTEND_DIR) && $(NPM) run check
 	$(COMPOSE) config >/dev/null
+	$(DEV_COMPOSE) config >/dev/null
 	$(BENCH_COMPOSE) config >/dev/null
 
 # --- Benchmark ---
@@ -246,4 +274,4 @@ attack-adversarial-remote:
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote

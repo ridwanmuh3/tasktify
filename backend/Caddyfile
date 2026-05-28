@@ -12,26 +12,29 @@
 	encode zstd gzip
 
 	@api path /api/* /health
-	reverse_proxy @api gateway:3000 {
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
+	handle @api {
+		reverse_proxy gateway:3000 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
 
-		# Keep benchmark endpoints streaming during long signing runs.
-		flush_interval -1
+			# Keep benchmark endpoints streaming during long signing runs.
+			flush_interval -1
 
-		transport http {
-			keepalive 30s
-			keepalive_idle_conns 100
+			transport http {
+				keepalive 30s
+				keepalive_idle_conns 100
+			}
 		}
 	}
 
-	@assets path *.js *.css *.woff *.woff2 *.png *.jpg *.jpeg *.gif *.webp *.svg *.ico
-	header @assets Cache-Control "public, max-age=31536000, immutable"
+	handle {
+		@assets path *.js *.css *.woff *.woff2 *.png *.jpg *.jpeg *.gif *.webp *.svg *.ico
+		header @assets Cache-Control "public, max-age=31536000, immutable"
 
-	@frontend not path /api/* /health
-	try_files @frontend {path} /index.html
+		try_files {path} /index.html
 
-	file_server
+		file_server
+	}
 
 	log {
 		output file /data/logs/access.log {

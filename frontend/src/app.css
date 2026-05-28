@@ -393,6 +393,12 @@ label span {
   gap: 10px;
 }
 
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .icon-text-button {
   min-height: 36px;
   border: 1px solid var(--hairline);
@@ -401,6 +407,13 @@ label span {
   padding: 8px 12px;
   font-size: 14px;
   box-shadow: var(--shadow-sm);
+}
+
+.icon-text-button.active,
+.icon-text-button.active:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .icon-button,
@@ -465,6 +478,11 @@ label span {
   gap: 24px;
   margin: 0 auto;
   padding: 28px 24px 64px;
+}
+
+.profile-workspace {
+  display: block;
+  max-width: 980px;
 }
 
 .task-column,
@@ -710,6 +728,77 @@ button:focus-visible {
   box-shadow: var(--shadow-sm);
 }
 
+.profile-page {
+  min-width: 0;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+.jwt-panel {
+  min-width: 0;
+}
+
+.claim-list {
+  display: grid;
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+
+.claim-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  border-top: 1px solid var(--hairline);
+}
+
+.claim-row:first-child {
+  border-top: 0;
+}
+
+.claim-key,
+.claim-value {
+  min-width: 0;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.claim-key {
+  background: var(--soft);
+  color: var(--mute);
+  font-weight: 750;
+}
+
+.claim-value {
+  display: block;
+  margin: 0;
+  background: var(--surface);
+  color: var(--body);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  white-space: pre-wrap;
+}
+
+.jwt-json {
+  max-height: 420px;
+  margin: 16px 0 0;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--dark);
+  color: #fafafa;
+  padding: 16px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -781,6 +870,10 @@ button:focus-visible {
     flex-wrap: wrap;
   }
 
+  .topbar-nav {
+    flex-wrap: wrap;
+  }
+
   .toolbar {
     grid-template-columns: 1fr;
   }
@@ -830,6 +923,11 @@ button:focus-visible {
   }
 
   .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-grid,
+  .claim-row {
     grid-template-columns: 1fr;
   }
 

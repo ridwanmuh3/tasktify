@@ -4,12 +4,26 @@ Svelte client for Tasktify gateway.
 
 ## Run
 
+Run full local stack from repo root:
+
+```bash
+make dev
+```
+
+Or run API services in one terminal:
+
+```bash
+make dev-api
+```
+
+Then run client in this folder:
+
 ```bash
 npm install
 npm run dev
 ```
 
-Default dev server proxies `/api` and `/health` to `http://localhost:3000`.
+Default dev server proxies `/api` and `/health` to `http://localhost:3000`. If Vite prints `ECONNREFUSED`, gateway is not running.
 
 Override gateway target:
 

@@ -1,14 +1,6 @@
 # Article Graphics Captions
 
-Benchmark source: `benchmark_sign_result.json`, generated at `2026-05-21T03:34:25.259Z`.
-Security source: `adversarial_result.json`, script `k6/adversarial_jwt.js`.
-
-Graphics standard: light mode, white background, vector SVG source, 300 DPI PNG export, consistent algorithm palette, concise legend per figure.
-
-Methodology: isolated phase uses gateway-local pure signing path; stress phase uses `/api/benchmark/token`; refresh phase uses `/api/auth/refresh`.
-Isolated iterations: 100; warm-up iterations: 20; stress duration: 30 s.
-
-Palette:
+Legend:
 - `Falcon-Precomp. 512`: `#0072B2`
 - `Falcon-512`: `#E69F00`
 - `ML-DSA-44`: `#009E73`
