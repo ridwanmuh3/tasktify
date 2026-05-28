@@ -24,12 +24,44 @@ type TaskService struct {
 	taskRepository *repository.TaskRepository
 }
 
+const unixMilliThreshold = int64(1_000_000_000_000)
+
 func NewTaskService(db *gorm.DB, validate *validator.Validate, logger *zap.SugaredLogger, taskRepository *repository.TaskRepository) *TaskService {
 	return &TaskService{
 		db:             db,
 		validate:       validate,
 		log:            logger,
 		taskRepository: taskRepository,
+	}
+}
+
+func taskTimestamp(value int64) *timestamppb.Timestamp {
+	if value <= 0 {
+		return nil
+	}
+	if value < unixMilliThreshold {
+		return timestamppb.New(time.Unix(value, 0))
+	}
+	return timestamppb.New(time.UnixMilli(value))
+}
+
+func dueDateTimestamp(value int64) *timestamppb.Timestamp {
+	if value <= 0 {
+		return nil
+	}
+	return timestamppb.New(time.UnixMilli(value))
+}
+
+func toTaskModel(task entity.Task, userId string) *model.Task {
+	return &model.Task{
+		Id:          task.Id.String(),
+		Title:       task.Title,
+		Description: task.Description,
+		Status:      task.Status,
+		DueDate:     dueDateTimestamp(task.DueDate),
+		UserId:      userId,
+		CreatedAt:   taskTimestamp(task.CreatedAt),
+		UpdatedAt:   taskTimestamp(task.UpdatedAt),
 	}
 }
 
@@ -166,16 +198,7 @@ func (s *TaskService) GetById(ctx context.Context, taskId, userId string) (*mode
 		return nil, status.Error(codes.NotFound, "task not found")
 	}
 
-	return &model.Task{
-		Id:          task.Id.String(),
-		Title:       task.Title,
-		Description: task.Description,
-		Status:      task.Status,
-		DueDate:     timestamppb.New(time.UnixMilli(task.DueDate)),
-		UserId:      userId,
-		CreatedAt:   timestamppb.New(time.UnixMilli(task.CreatedAt)),
-		UpdatedAt:   timestamppb.New(time.UnixMilli(task.UpdatedAt)),
-	}, nil
+	return toTaskModel(*task, userId), nil
 }
 
 func (s *TaskService) GetAll(ctx context.Context, userId string) (*model.ListTaskResponse, error) {
@@ -195,16 +218,7 @@ func (s *TaskService) GetAll(ctx context.Context, userId string) (*model.ListTas
 
 	var tasksResponse []*model.Task
 	for _, task := range tasks {
-		tasksResponse = append(tasksResponse, &model.Task{
-			Id:          task.Id.String(),
-			Title:       task.Title,
-			Description: task.Description,
-			Status:      task.Status,
-			DueDate:     timestamppb.New(time.UnixMilli(task.DueDate)),
-			UserId:      userId,
-			CreatedAt:   timestamppb.New(time.UnixMilli(task.CreatedAt)),
-			UpdatedAt:   timestamppb.New(time.UnixMilli(task.UpdatedAt)),
-		})
+		tasksResponse = append(tasksResponse, toTaskModel(task, userId))
 	}
 
 	return &model.ListTaskResponse{

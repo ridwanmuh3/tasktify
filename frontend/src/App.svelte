@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { ListChecks, LoaderCircle, LogOut, User } from "lucide-svelte";
   import AuthView from "./lib/components/AuthView.svelte";
   import ProfilePage from "./lib/components/ProfilePage.svelte";
@@ -7,7 +7,14 @@
   import TaskDetail from "./lib/components/TaskDetail.svelte";
   import TaskEditor from "./lib/components/TaskEditor.svelte";
   import { ApiError, request } from "./lib/api.js";
-  import { emptySession, normalizeSession, persistSession, readStoredSession } from "./lib/domain/session.js";
+  import {
+    canUseSession,
+    emptySession,
+    normalizeSession,
+    persistSession,
+    readStoredSession,
+    shouldRefreshAccessToken
+  } from "./lib/domain/session.js";
   import {
     buildTaskCounts,
     emptyTaskForm,
@@ -39,6 +46,7 @@
   let tasks = [];
   let selectedTask = null;
   let taskMode = "create";
+  let taskEditorOpen = false;
   let taskForm = emptyTaskForm();
   let searchTerm = "";
   let statusFilter = "ALL";
@@ -49,8 +57,11 @@
   let errorMessage = "";
   let noticeMessage = "";
   let noticeTimer;
+  let refreshPromise = null;
 
-  $: authenticated = Boolean(session.access_token);
+  const SESSION_EXPIRED_MESSAGE = "Session expired. Sign in again.";
+
+  $: authenticated = Boolean(session.access_token && session.refresh_token);
   $: accessJwt = decodeJwt(session.access_token);
   $: filteredTasks = tasks.filter((task) => matchesTask(task, searchTerm, statusFilter));
   $: taskCounts = buildTaskCounts(tasks);
@@ -65,9 +76,12 @@
     window.addEventListener("hashchange", syncPage);
 
     const bootstrap = async () => {
-      session = readStoredSession();
-      if (session.access_token) {
+      const storedSession = readStoredSession();
+      if (canUseSession(storedSession)) {
+        session = storedSession;
         await bootstrapSession();
+      } else {
+        clearSession();
       }
       bootstrapping = false;
     };
@@ -88,14 +102,25 @@
     profile = null;
     tasks = [];
     selectedTask = null;
+    taskEditorOpen = false;
     taskForm = emptyTaskForm();
   }
 
   async function bootstrapSession() {
     try {
-      await Promise.all([loadProfile(), loadTasks()]);
+      if (shouldRefreshAccessToken(session)) {
+        await refreshSession();
+      }
+      await loadProfile();
+      await loadTasks();
+      return true;
     } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        clearSession();
+        error = sessionExpiredError(error);
+      }
       handleError(error);
+      return false;
     }
   }
 
@@ -113,8 +138,11 @@
         saved_at: new Date().toISOString()
       });
 
-      await bootstrapSession();
+      if (!(await bootstrapSession())) {
+        return;
+      }
       taskMode = "create";
+      taskEditorOpen = false;
       taskForm = emptyTaskForm();
       showNotice(authMode === "register" ? "Account created" : "Signed in");
     } catch (error) {
@@ -131,25 +159,52 @@
         token: session.access_token
       });
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401 && retry && session.refresh_token) {
+      if (error instanceof ApiError && error.status === 401 && retry && canUseSession(session)) {
         await refreshSession();
         return authedRequest(path, options, false);
+      }
+      if (error instanceof ApiError && error.status === 401) {
+        clearSession();
+        throw sessionExpiredError(error);
       }
       throw error;
     }
   }
 
   async function refreshSession() {
-    try {
-      setSession({
-        ...session,
-        ...(await refresh(session)),
-        saved_at: new Date().toISOString()
-      });
-    } catch (error) {
-      clearSession();
-      throw error;
+    if (!refreshPromise) {
+      refreshPromise = refresh(session)
+        .then((nextSession) => {
+          setSession({
+            ...session,
+            ...nextSession,
+            saved_at: new Date().toISOString()
+          });
+        })
+        .catch((error) => {
+          if (isSessionAuthError(error)) {
+            clearSession();
+            throw sessionExpiredError(error);
+          }
+          throw error;
+        })
+        .finally(() => {
+          refreshPromise = null;
+        });
     }
+    return refreshPromise;
+  }
+
+  function sessionExpiredError(error) {
+    return new ApiError(
+      SESSION_EXPIRED_MESSAGE,
+      401,
+      error instanceof ApiError ? error.payload : null
+    );
+  }
+
+  function isSessionAuthError(error) {
+    return error instanceof ApiError && [400, 401, 404].includes(error.status);
   }
 
   function logout() {
@@ -195,13 +250,16 @@
   function startCreateTask() {
     clearMessages();
     taskMode = "create";
+    taskEditorOpen = true;
     selectedTask = null;
     taskForm = emptyTaskForm();
+    focusTaskTitle();
   }
 
   function startEditTask(task) {
     clearMessages();
     taskMode = "edit";
+    taskEditorOpen = true;
     selectedTask = task;
     taskForm = {
       id: task.id,
@@ -210,12 +268,24 @@
       status: task.status || "PENDING",
       due_date: toDateInput(task.due_date)
     };
+    focusTaskTitle();
+  }
+
+  function closeTaskEditor() {
+    clearMessages();
+    taskEditorOpen = false;
+    taskMode = "create";
+    taskForm = emptyTaskForm();
   }
 
   async function saveTask() {
     clearMessages();
+    if (savingTask) {
+      return;
+    }
     if (!taskForm.title.trim()) {
       errorMessage = "Task title required";
+      focusTaskTitle();
       return;
     }
 
@@ -231,6 +301,7 @@
 
       await loadTasks();
       taskMode = "create";
+      taskEditorOpen = false;
       selectedTask = null;
       taskForm = emptyTaskForm();
       showNotice(successMessage);
@@ -307,6 +378,16 @@
       noticeMessage = "";
     }, 3500);
   }
+
+  async function focusTaskTitle() {
+    await tick();
+    const titleInput = document.getElementById("task-title-input");
+    if (!titleInput) {
+      return;
+    }
+    titleInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    titleInput.focus();
+  }
 </script>
 
 {#if bootstrapping}
@@ -380,6 +461,7 @@
           {statusFilter}
           {loadingTasks}
           {visibleIncompleteCount}
+          showAddButton={!taskEditorOpen}
           onSearchChange={(value) => (searchTerm = value)}
           onStatusFilterChange={(status) => (statusFilter = status)}
           onCreate={startCreateTask}
@@ -391,15 +473,18 @@
         />
 
         <aside class="side-column">
-          <TaskEditor
-            {taskMode}
-            {taskForm}
-            {savingTask}
-            onCancel={startCreateTask}
-            onFormChange={(form) => (taskForm = form)}
-            onSubmit={saveTask}
-          />
-          <TaskDetail {selectedTask} />
+          {#if taskEditorOpen}
+            <TaskEditor
+              {taskMode}
+              {taskForm}
+              {savingTask}
+              onCancel={closeTaskEditor}
+              onFormChange={(form) => (taskForm = form)}
+              onSubmit={saveTask}
+            />
+          {:else}
+            <TaskDetail {selectedTask} />
+          {/if}
         </aside>
       </main>
     {/if}

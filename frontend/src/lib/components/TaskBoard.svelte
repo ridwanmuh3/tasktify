@@ -24,6 +24,7 @@
   export let statusFilter = "ALL";
   export let loadingTasks = false;
   export let visibleIncompleteCount = 0;
+  export let showAddButton = true;
   export let onSearchChange = (_value) => {};
   export let onStatusFilterChange = (_status) => {};
   export let onCreate = () => {};
@@ -56,10 +57,12 @@
         <CheckSquare size={18} aria-hidden="true" />
         Complete all
       </button>
-      <button class="button-primary" type="button" on:click={onCreate}>
-        <Plus size={18} aria-hidden="true" />
-        Add task
-      </button>
+      {#if showAddButton}
+        <button class="button-primary" type="button" on:click={onCreate}>
+          <Plus size={18} aria-hidden="true" />
+          Add task
+        </button>
+      {/if}
     </div>
   </div>
 

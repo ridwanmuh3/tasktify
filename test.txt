@@ -4,4 +4,4 @@ Gateway signs tokens in-process, skips DB/bcrypt/auth-service path, returns per-
 POST /api/benchmark/token
 Gateway signs one token in-process, returns token plus X-Token-Generation-Time-Ms header.
 
-what differences between this routess
+what differences between this routes

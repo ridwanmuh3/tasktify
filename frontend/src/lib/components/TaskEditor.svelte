@@ -21,19 +21,23 @@
     <div>
       <h2>{taskMode === "edit" ? "Edit task" : "Add task"}</h2>
     </div>
-    {#if taskMode === "edit"}
-      <button class="icon-button" type="button" on:click={onCancel} title="Cancel edit" aria-label="Cancel edit">
-        <X size={18} aria-hidden="true" />
-      </button>
-    {/if}
+    <button
+      class="icon-button"
+      type="button"
+      on:click={onCancel}
+      title={taskMode === "edit" ? "Cancel edit" : "Close task form"}
+      aria-label={taskMode === "edit" ? "Cancel edit" : "Close task form"}
+    >
+      <X size={18} aria-hidden="true" />
+    </button>
   </div>
 
   <form class="task-form" on:submit|preventDefault={onSubmit}>
     <label>
       <span>Title</span>
       <input
+        id="task-title-input"
         value={taskForm.title}
-        required
         on:input={(event) => updateField("title", event.currentTarget.value)}
       />
     </label>

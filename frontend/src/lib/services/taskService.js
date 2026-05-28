@@ -2,7 +2,7 @@ import { normalizeTask, taskPayload } from "../domain/task.js";
 
 export async function listTasks(client) {
   const { payload } = await client("/api/tasks/");
-  return (payload?.data || []).map(normalizeTask);
+  return uniqueTasks((payload?.data || []).map(normalizeTask));
 }
 
 export async function getTask(client, task) {
@@ -32,4 +32,14 @@ export async function deleteTask(client, taskId) {
 
 export async function updateTaskStatus(client, task, status) {
   return updateTask(client, task.id, taskPayload({ ...task, status }));
+}
+
+function uniqueTasks(sourceTasks) {
+  const tasksById = new Map();
+  for (const task of sourceTasks) {
+    if (task.id && !tasksById.has(task.id)) {
+      tasksById.set(task.id, task);
+    }
+  }
+  return [...tasksById.values()];
 }

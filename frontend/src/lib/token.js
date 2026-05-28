@@ -11,7 +11,8 @@ export function decodeJwt(token) {
   try {
     return {
       header: decodePart(parts[0]),
-      payload: decodePart(parts[1])
+      payload: decodePart(parts[1]),
+      signature: parts[2] || ""
     };
   } catch {
     return null;

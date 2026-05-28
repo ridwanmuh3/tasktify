@@ -11,8 +11,8 @@ type Task struct {
 	Status      string    `gorm:"type:varchar;size:30;not null"`
 	DueDate     int64     `gorm:"default:null"`
 	UserId      uuid.UUID
-	CreatedAt   int64 `gorm:"autoCreateTime"`
-	UpdatedAt   int64 `gorm:"autoUpdateTime"`
+	CreatedAt   int64 `gorm:"autoCreateTime:milli"`
+	UpdatedAt   int64 `gorm:"autoUpdateTime:milli"`
 }
 
 func (Task) TableName() string {

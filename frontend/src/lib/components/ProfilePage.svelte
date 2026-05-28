@@ -3,25 +3,14 @@
 
   /** @type {Record<string, any> | null} */
   export let profile = null;
-  /** @type {{ payload?: Record<string, any> } | null} */
+  /** @type {{ header?: Record<string, any>, payload?: Record<string, any>, signature?: string } | null} */
   export let accessJwt = null;
 
+  $: header = accessJwt?.header || null;
   $: payload = accessJwt?.payload || null;
-  $: payloadEntries = payload ? Object.entries(payload) : [];
+  $: signature = accessJwt?.signature || "";
+  $: headerJson = header ? JSON.stringify(header, null, 2) : "";
   $: payloadJson = payload ? JSON.stringify(payload, null, 2) : "";
-
-  function claimValue(value) {
-    if (value === null) {
-      return "null";
-    }
-    if (value === undefined || value === "") {
-      return "-";
-    }
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-    return String(value);
-  }
 </script>
 
 <section class="profile-page">
@@ -55,23 +44,27 @@
     <section class="tool-panel jwt-panel">
       <div class="panel-head">
         <div>
-          <h2>JWT payload</h2>
+          <h2>JWT</h2>
         </div>
       </div>
 
-      {#if payload}
-        <div class="claim-list">
-          {#each payloadEntries as [key, value]}
-            <div class="claim-row">
-              <span class="claim-key">{key}</span>
-              <code class="claim-value">{claimValue(value)}</code>
-            </div>
-          {/each}
+      {#if header && payload}
+        <div class="jwt-stack">
+          <section>
+            <h3>Header</h3>
+            <pre class="jwt-json">{headerJson}</pre>
+          </section>
+          <section>
+            <h3>Payload</h3>
+            <pre class="jwt-json">{payloadJson}</pre>
+          </section>
+          <section>
+            <h3>Signature</h3>
+            <code class="jwt-signature">{signature || "-"}</code>
+          </section>
         </div>
-
-        <pre class="jwt-json">{payloadJson}</pre>
       {:else}
-        <p class="muted-text">No JWT payload found</p>
+        <p class="muted-text">No JWT found</p>
       {/if}
     </section>
   </div>
