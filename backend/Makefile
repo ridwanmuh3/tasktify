@@ -15,6 +15,7 @@ GOCACHE ?= /tmp/go-build-cache
 ATTACK_BASE_URL ?= http://localhost:5001
 ATTACK_ITERATIONS ?= 10
 ATTACK_ALGORITHM ?= Falcon-Precomputed-512
+BENCH_SAMPLE_OUT ?= benchmark_sign_samples.ndjson
 LOCAL_GO_ENV = env APP_MODE=dev GOCACHE=$(GOCACHE) CGO_ENABLED=0
 
 help:
@@ -22,6 +23,7 @@ help:
 	@echo ""
 	@echo "Local services:"
 	@echo "  make dev              Run DB, auth, todo, gateway, frontend"
+	@echo "  make backend          Run DB, auth, todo, gateway only"
 	@echo "  make dev-api          Run DB, auth, todo, gateway"
 	@echo "  make dev-db           Start local PostgreSQL only"
 	@echo "  make dev-down         Stop local PostgreSQL"
@@ -138,6 +140,8 @@ dev: env ensure-keys dev-db frontend-install
 	@echo "Stop with Ctrl+C. Stop DB with: make dev-down"
 	$(MAKE) -j4 run-auth run-todo run-gateway run-frontend
 
+backend: dev-api
+
 dev-api: env ensure-keys dev-db
 	@echo "Local API running:"
 	@echo "  gateway http://localhost:3000"
@@ -225,7 +229,7 @@ bench-config:
 	$(BENCH_COMPOSE) config
 
 bench-run:
-	k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
+	k6 run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 # keygen-all + vendor + bench-up + jalankan k6
 bench: bench-up
@@ -234,7 +238,7 @@ bench: bench-up
 		printf "."; sleep 3; \
 	done
 	@echo " ready!"
-	k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
+	k6 run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 bench-sign: bench-up
 	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
@@ -242,10 +246,10 @@ bench-sign: bench-up
 		printf "."; sleep 3; \
 	done
 	@echo " ready!"
-	k6 run --no-color -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee result.txt
+	k6 run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee result.txt
 
 bench-sign-remote:
-	k6 run --no-color -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
+	k6 run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
 
 # --- Adversarial Attack Test ---
 attack-adversarial:
@@ -274,4 +278,4 @@ attack-adversarial-remote:
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote

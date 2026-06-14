@@ -104,7 +104,9 @@ type BenchmarkSignResult struct {
 	PayloadNote              string    `json:"payload_note,omitempty"`
 	SignTimingsMs            []float64 `json:"sign_timings_ms"`
 	TokenGenerationTimingsMs []float64 `json:"token_generation_timings_ms"`
+	TokenGenerationGCFreeMs  []float64 `json:"token_generation_gc_free_timings_ms"`
 	RefreshTokenTimingsMs    []float64 `json:"refresh_token_generation_timings_ms"`
+	RefreshTokenGCFreeMs     []float64 `json:"refresh_token_generation_gc_free_timings_ms"`
 	TotalTimingsMs           []float64 `json:"total_timings_ms"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
 	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`

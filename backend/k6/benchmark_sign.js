@@ -16,6 +16,9 @@
  *     Thresholds fail the run if p95 or error rate exceeds per-algorithm budget.
  *
  * Usage:
+ *   # Save per-iteration samples for statistical tests:
+ *   k6 run --out json=benchmark_sign_samples.ndjson -e BENCH_HOST=localhost k6/benchmark_sign.js
+ *
  *   # Single-gateway (production / VPS):
  *   k6 run -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js
  *
@@ -231,6 +234,15 @@ const benchAuthMemorySysAvg = new Trend("bench_auth_memory_sys_avg", true);
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
+const benchSignSample = new Trend("bench_sign_sample", true);
+const benchTokenGenerationSample = new Trend("bench_token_generation_sample", true);
+const benchTokenGenerationGCFreeSample = new Trend("bench_token_generation_gc_free_sample", true);
+const benchRefreshTokenGenerationSample = new Trend("bench_refresh_token_generation_sample", true);
+const benchRefreshTokenGenerationGCFreeSample = new Trend(
+  "bench_refresh_token_generation_gc_free_sample",
+  true,
+);
+const benchTotalSample = new Trend("bench_total_sample", true);
 
 // ── Phase 2: Stress — per benchmark sign call, tagged {alg, vus} ──────
 // tokenGenerationClean = X-Token-Generation-Time-Ms / X-Sign-Time-Ms
@@ -467,6 +479,20 @@ export function runIsolated(data) {
     benchAuthMemoryAllocDeltaAvg.add(s.resource?.memory_alloc_delta_mb?.avg ?? 0, tags);
     benchAuthMemorySysAvg.add(s.resource?.memory_sys_mb?.avg ?? 0, tags);
     benchGCContaminatedCount.add(result.gc_contaminated_count ?? 0, tags);
+    addSamples(benchSignSample, result.sign_timings_ms, tags);
+    addSamples(benchTokenGenerationSample, result.token_generation_timings_ms, tags);
+    addSamples(
+      benchTokenGenerationGCFreeSample,
+      result.token_generation_gc_free_timings_ms,
+      tags,
+    );
+    addSamples(benchRefreshTokenGenerationSample, result.refresh_token_generation_timings_ms, tags);
+    addSamples(
+      benchRefreshTokenGenerationGCFreeSample,
+      result.refresh_token_generation_gc_free_timings_ms,
+      tags,
+    );
+    addSamples(benchTotalSample, result.total_timings_ms, tags);
 
     const gcFree = s.token_generation_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
@@ -503,6 +529,13 @@ function getHeaderNumber(res, names) {
 
 function warmupBenchmarkToken(base, body, headers) {
   http.post(`${base}/api/benchmark/token`, body, { headers });
+}
+
+function addSamples(metric, values, tags) {
+  if (!Array.isArray(values)) return;
+  for (const value of values) {
+    if (typeof value === "number") metric.add(value, tags);
+  }
 }
 
 function tamperToken(token) {

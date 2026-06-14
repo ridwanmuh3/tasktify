@@ -18,6 +18,7 @@ help:
 	@echo ""
 	@echo "Run local services:"
 	@echo "  make dev              Run DB, auth, todo, gateway, frontend"
+	@echo "  make backend          Run DB, auth, todo, gateway only"
 	@echo "  make dev-api          Run DB, auth, todo, gateway"
 	@echo "  make dev-db           Start local PostgreSQL only"
 	@echo "  make dev-down         Stop local PostgreSQL"
@@ -69,6 +70,9 @@ todo run-todo:
 
 frontend run-frontend:
 	$(MAKE) -C $(BACKEND_DIR) run-frontend
+
+backend:
+	$(MAKE) -C $(BACKEND_DIR) backend
 
 dev dev-api dev-db dev-down:
 	$(MAKE) -C $(BACKEND_DIR) $@
@@ -130,4 +134,4 @@ bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote:
 attack-adversarial attack-adversarial-bench attack-adversarial-remote:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote

@@ -296,7 +296,7 @@ cd backend
 make keygen-all
 make vendor
 make bench-up
-k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
+k6 run --out json=benchmark_sign_samples.ndjson -e BENCH_HOST=localhost k6/benchmark_sign.js
 ```
 
 Remote benchmark:
@@ -307,13 +307,14 @@ make bench-sign-remote
 
 ## Benchmark JSON Results
 
-Current result files:
+Current benchmark targets write these files under `backend/`:
 
-| File                         | Purpose                               |
-| ---------------------------- | ------------------------------------- |
-| `benchmark_sign_result.json` | Academic summary grouped by algorithm |
-| `benchmark_sign_raw.json`    | Full k6 raw metric dump               |
-| `result.txt`                 | Human-readable k6 stdout              |
+| File                            | Purpose                                           |
+| ------------------------------- | ------------------------------------------------- |
+| `benchmark_sign_result.json`    | Academic summary grouped by algorithm             |
+| `benchmark_sign_raw.json`       | Full k6 raw metric dump                           |
+| `benchmark_sign_samples.ndjson` | Per-iteration k6 samples for statistical tests    |
+| `result.txt`                    | Human-readable k6 stdout                          |
 
 Run metadata from `benchmark_sign_result.json`:
 
@@ -329,6 +330,42 @@ Run metadata from `benchmark_sign_result.json`:
 | `concurrency_levels`         | `10`, `30`, `50`                  |
 
 Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. GC-free metric removes iterations where Go GC ran during signing.
+
+### Statistical Testing
+
+`scripts/benchmark_stat_tests.py` calculates normality, pairwise significance, effect size, and percentage improvement from benchmark output.
+
+Run from repo root after benchmark:
+
+```bash
+python3 scripts/benchmark_stat_tests.py
+```
+
+Default comparison uses:
+
+| Field       | Value                                  |
+| ----------- | -------------------------------------- |
+| Metric      | `isolated.token_generation_gc_free_ms` |
+| Baseline    | `Falcon-512`                           |
+| Sample file | `backend/benchmark_sign_samples.ndjson` |
+
+Test selection:
+
+| Data condition | Test                              | Effect size   |
+| -------------- | --------------------------------- | ------------- |
+| Normal         | Welch independent t-test          | Cohen's d     |
+| Not normal     | Mann-Whitney U                    | rank-biserial |
+| Summary only   | Welch independent t-test fallback | Cohen's d     |
+
+`benchmark_sign_samples.ndjson` is required for real normality and Mann-Whitney U testing. Without that file, script falls back to mean/sd/n from `benchmark_sign_result.json` and reports normality as unavailable.
+
+Useful commands:
+
+```bash
+python3 scripts/benchmark_stat_tests.py --metric isolated.refresh_token_generation_gc_free_ms
+python3 scripts/benchmark_stat_tests.py --baseline Falcon-Precomputed-512
+python3 scripts/benchmark_stat_tests.py --format csv
+```
 
 ### Isolated Results
 

@@ -185,14 +185,14 @@ func (h *TaskHandler) GetAll(c fiber.Ctx) error {
 		return grpcToHTTPError(err)
 	}
 
-	var tasks []TaskResponse
+	tasks := make([]TaskResponse, 0, len(resp.Tasks))
 	for _, task := range resp.Tasks {
 		tasks = append(tasks, toTaskResponse(task))
 	}
 
-	return c.JSON(model.Response[[]TaskResponse]{
+	return c.JSON(model.Response[*[]TaskResponse]{
 		Status:  fiber.StatusOK,
 		Message: "success",
-		Data:    tasks,
+		Data:    &tasks,
 	})
 }
