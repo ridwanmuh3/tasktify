@@ -1,7 +1,7 @@
 /**
  * adversarial_jwt.js
  *
- * k6 adversarial JWT security test — 10 Attack Vectors
+ * k6 adversarial JWT security test — 8 Attack Vectors
  *
  * Tests that the gateway correctly blocks all JWT attack scenarios.
  * Each attack manipulates a valid token and asserts 401/403 response.
@@ -13,20 +13,12 @@
  *   #4  None Algorithm Attack     — alg=none (with and without signature)
  *   #5  Payload Manipulation      — change email claim without re-signing
  *   #6  Expired Token Abuse       — set exp to past (payload mod, sig fails)
- *   #7  Replay Attack             — reuse same valid token (stateless JWT)
- *   #8  Missing Sig Verification  — send token with empty signature
- *   #9  Cross-Algorithm Injection — RS256 header against Falcon verifier
- *   #10 Invalid Issuer Attack     — change iss to unknown value
+ *   #7  Missing Sig Verification  — send token with empty signature
+ *   #8  Cross-Algorithm Injection — classic header against Falcon verifier
  *
  * Usage:
- *   # Single gateway:
- *   k6 run -e BASE_URL=http://localhost:5001 k6/adversarial_jwt.js
- *
- *   # Custom iterations per attack:
- *   k6 run -e BASE_URL=http://localhost:5001 -e ITERATIONS=20 k6/adversarial_jwt.js
- *
- *   # Multi-gateway (docker-compose.benchmark.yml):
- *   k6 run -e BENCH_HOST=localhost k6/adversarial_jwt.js
+ *   k6 run k6/adversarial_jwt.js
+ *   k6 run -e ITERATIONS=20 k6/adversarial_jwt.js
  */
 
 import http from "k6/http";
@@ -40,23 +32,9 @@ import { randomString } from "./k6-utils.js";
 // Configuration
 // ═══════════════════════════════════════════════════════════════
 
-function normalizeBase(url) {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return "http://" + url;
-}
-
-const _HOST = __ENV.BENCH_HOST;
-const _BASE_URL = __ENV.BASE_URL;
-const HOST_BASE = normalizeBase(_HOST);
-const BASE_URL = _HOST
-  ? `${HOST_BASE}:5001`
-  : _BASE_URL
-    ? normalizeBase(_BASE_URL)
-    : "http://localhost:5001";
-
+const BASE_URL = "http://localhost:3000";
 const ITERATIONS = parseInt(__ENV.ITERATIONS || "10", 10);
-const ALGORITHM = __ENV.ALGORITHM || "Falcon-Precomputed-512";
+const ALGORITHM = "Falcon-Precomputed-512";
 
 // ═══════════════════════════════════════════════════════════════
 // JWT Manipulation Helpers
@@ -116,10 +94,8 @@ const blockRateAlgConfusion = new Rate("attack_block_rate_3_algorithm_confusion"
 const blockRateNoneAlg = new Rate("attack_block_rate_4_none_algorithm");
 const blockRatePayloadManip = new Rate("attack_block_rate_5_payload_manipulation");
 const blockRateExpiredToken = new Rate("attack_block_rate_6_expired_token");
-const blockRateReplay = new Rate("attack_block_rate_7_replay");
-const blockRateMissingSig = new Rate("attack_block_rate_8_missing_signature");
-const blockRateCrossAlg = new Rate("attack_block_rate_9_cross_algorithm_injection");
-const blockRateInvalidIssuer = new Rate("attack_block_rate_10_invalid_issuer");
+const blockRateMissingSig = new Rate("attack_block_rate_7_missing_signature");
+const blockRateCrossAlg = new Rate("attack_block_rate_8_cross_algorithm_injection");
 
 // ═══════════════════════════════════════════════════════════════
 // Scenarios & Thresholds
@@ -136,7 +112,7 @@ export const options = {
     },
   },
   thresholds: {
-    // All attack vectors except replay must be blocked 100%
+    // All attack vectors must be blocked 100%.
     attack_block_rate: ["rate>0.85"],
     attack_block_rate_1_signature_tampering: ["rate>0.99"],
     attack_block_rate_2_token_forgery: ["rate>0.99"],
@@ -144,10 +120,8 @@ export const options = {
     attack_block_rate_4_none_algorithm: ["rate>0.99"],
     attack_block_rate_5_payload_manipulation: ["rate>0.99"],
     attack_block_rate_6_expired_token: ["rate>0.99"],
-    // #7 replay: stateless JWT → expected rate=0 (not a threshold failure)
-    attack_block_rate_8_missing_signature: ["rate>0.99"],
-    attack_block_rate_9_cross_algorithm_injection: ["rate>0.99"],
-    attack_block_rate_10_invalid_issuer: ["rate>0.99"],
+    attack_block_rate_7_missing_signature: ["rate>0.99"],
+    attack_block_rate_8_cross_algorithm_injection: ["rate>0.99"],
   },
   setupTimeout: "120s",
 };
@@ -228,7 +202,6 @@ function recordAttack(label, res, perAttackMetric, tags) {
   perAttackMetric.add(blocked, tags);
   attackBlockRate.add(blocked, tags);
   blocked ? attackBlocked.add(1, tags) : attackAllowed.add(1, tags);
-  return blocked;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -268,10 +241,8 @@ export default function (data) {
       ["#2c Token Forgery (random garbage)", hdrPayload + ".AAAAAAAAAAAAAAAAAAAAAA"],
     ];
 
-    let allBlocked = true;
     for (const [label, forged] of cases) {
-      const blocked = recordAttack(label, hitProtected(forged), blockRateTokenForgery, tags);
-      if (!blocked) allBlocked = false;
+      recordAttack(label, hitProtected(forged), blockRateTokenForgery, tags);
     }
   });
 
@@ -340,40 +311,7 @@ export default function (data) {
     );
   });
 
-  // ── #7 Replay Attack ────────────────────────────────────────
-  // Stateless JWT: same token is accepted multiple times (by design).
-  // Mitigation requires JTI blacklist at the application layer.
-  // Expected result: both requests succeed (block rate ≈ 0).
-  // ── #7 Replay Attack (Stateful) ─────────────────────────────
-  // Stateful JWT: the system tracks the JTI (JWT ID).
-  // Mitigation active at the application layer via cache/denylist.
-  // Expected result: first request succeeds, replay is blocked.
-  // group("7_replay_attack", () => {
-  //   const tags = { attack: "7_replay_attack" };
-
-  //   const res1 = hitProtected(token);
-  //   const res2 = hitProtected(token); // replay
-
-  //   check(res1, {
-  //     "[#7 Replay] first request accepted (200)": (r) => r.status === 200,
-  //   });
-
-  //   check(res2, {
-  //     "[#7 Replay] replay blocked — stateful JTI consumed (401/403)": (r) =>
-  //       r.status === 401 || r.status === 403,
-  //   });
-
-  //   const replayBlocked = isBlocked(res2);
-  //   blockRateReplay.add(replayBlocked, tags);
-
-  //   if (replayBlocked) {
-  //     console.log("[#7 Replay] Replay successfully blocked — token state is consumed");
-  //   } else {
-  //     console.log("[#7 Replay] WARNING: Replay accepted — stateful validation failed");
-  //   }
-  // });
-
-  // ── #8 Missing Signature Verification ──────────────────────
+  // ── #7 Missing Signature Verification ──────────────────────
   group("7_missing_signature", () => {
     const tags = { attack: "7_missing_signature" };
     const parts = token.split(".");
@@ -386,34 +324,20 @@ export default function (data) {
     );
   });
 
-  // ── #9 Cross-Algorithm Injection (PQC vs Classic) ──────────
+  // ── #8 Cross-Algorithm Injection (PQC vs Classic) ──────────
   group("8_cross_algorithm_injection", () => {
     for (const alg of ["RS256", "HS256", "ES256"]) {
-      const tags = { attack: "9_cross_algorithm_injection", alg };
+      const tags = { attack: "8_cross_algorithm_injection", alg };
       // Classic alg header but Falcon signature → should be rejected
       const forged = withHeader(token, { alg });
       recordAttack(
-        `#9 Cross-Algorithm Injection (${alg}→Falcon)`,
+        `#8 Cross-Algorithm Injection (${alg}→Falcon)`,
         hitProtected(forged),
         blockRateCrossAlg,
         tags,
       );
     }
   });
-
-  // ── #10 Invalid Issuer Attack ───────────────────────────────
-  // group("9_invalid_issuer", () => {
-  //   for (const iss of ["example.com", "evil-service", "attacker.io", ""]) {
-  //     const tags = { attack: "9_invalid_issuer", iss };
-  //     const forged = withPayload(token, { iss });
-  //     recordAttack(
-  //       `#9 Invalid Issuer (iss=${iss || "empty"})`,
-  //       hitProtected(forged),
-  //       blockRateInvalidIssuer,
-  //       tags,
-  //     );
-  //   }
-  // });
 
   sleep(0.1);
 }
@@ -430,56 +354,48 @@ export function handleSummary(data) {
       name: "Signature Tampering",
       metric: "attack_block_rate_1_signature_tampering",
       expected: "401/403",
-      required: true,
     },
     {
       id: 2,
       name: "Token Forgery",
       metric: "attack_block_rate_2_token_forgery",
       expected: "401/403",
-      required: true,
     },
     {
       id: 3,
       name: "Algorithm Confusion",
       metric: "attack_block_rate_3_algorithm_confusion",
       expected: "401/403",
-      required: true,
     },
     {
       id: 4,
       name: "None Algorithm Attack",
       metric: "attack_block_rate_4_none_algorithm",
       expected: "401/403",
-      required: true,
     },
     {
       id: 5,
       name: "Payload Manipulation",
       metric: "attack_block_rate_5_payload_manipulation",
       expected: "401/403",
-      required: true,
     },
     {
       id: 6,
       name: "Expired Token Abuse",
       metric: "attack_block_rate_6_expired_token",
       expected: "401/403",
-      required: true,
     },
     {
       id: 7,
       name: "Missing Signature",
-      metric: "attack_block_rate_8_missing_signature",
+      metric: "attack_block_rate_7_missing_signature",
       expected: "401/403",
-      required: true,
     },
     {
       id: 8,
       name: "Cross-Algorithm Injection",
-      metric: "attack_block_rate_9_cross_algorithm_injection",
+      metric: "attack_block_rate_8_cross_algorithm_injection",
       expected: "401/403",
-      required: true,
     },
   ];
 
@@ -520,9 +436,7 @@ export function handleSummary(data) {
     const r = rate(attack.metric);
     const rVal = r === "N/A" ? 0 : parseFloat(r);
     let status;
-    if (!attack.required) {
-      status = "NOTE: stateless JWT — mitigation at app layer";
-    } else if (r === "N/A") {
+    if (r === "N/A") {
       status = "N/A";
     } else if (rVal >= 99.0) {
       status = "PROTECTED";
@@ -574,17 +488,14 @@ ${SEP}
   ${"Attack".padEnd(32)} ${"Block Rate".padEnd(12)} ${"Expected".padEnd(24)} Status
   ${LINE}
 ${rows}  ${LINE}
-  Overall block rate (excl. replay): ${overall}  (${blocked} blocked / ${total} total)
+  Overall block rate: ${overall}  (${blocked} blocked / ${total} total)
 ${SEP}
-  PROTECTED  : ${totalProtected} / 9 attack vectors
-  VULNERABLE : ${totalVulnerable} / 9 attack vectors
-  REPLAY     : stateless JWT — both requests accepted (expected)
-               Mitigation: track JTI in Redis/DB, reject duplicate JTI
+  PROTECTED  : ${totalProtected} / ${attacks.length} attack vectors
+  VULNERABLE : ${totalVulnerable} / ${attacks.length} attack vectors
 ${SEP}
   NOTES:
   #3 / #8  Algorithm confusion and cross-injection share same mechanism.
   #6       Expired token blocked via signature mismatch (payload modified w/o key).
-  Replay   not executed in this script. Add JTI blacklist at app layer if needed.
 ${SEP}
 `;
 
