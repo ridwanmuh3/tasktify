@@ -39,17 +39,17 @@ tasktify database             tasktify database
 
 Benchmark topology in `backend/docker-compose.benchmark.yml` starts one auth-service plus one gateway per algorithm. Shared `bench-todo` and `bench-postgres` keep task/database infrastructure constant while each algorithm gets isolated gateway/auth process pair.
 
-| Component      | Path                                           | Responsibility                                                                       |
-| -------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Frontend       | `frontend/`                                    | Svelte client, built to static assets and served by Caddy in production             |
-| Gateway        | `backend/gateway/`                                     | Public HTTP API, JWT verification, route dispatch, benchmark endpoints, gRPC clients |
-| Auth service   | `backend/auth-service/`                                | User CRUD, sign-in, refresh token, bcrypt password check, JWT signing                |
-| Todo service   | `backend/todo-service/`                                | Task CRUD, user scoping through `x-user-id` gRPC metadata                            |
-| Shared package | `backend/pkg/`                                         | JWT implementation, PQC signing methods, key loaders, Falcon precompute code         |
-| Key generator  | `backend/cmd/keygen/`                                  | Generate algorithm keys for production and benchmark runs                            |
-| k6 scripts     | `backend/k6/`                                          | Isolated signing, stress, refresh, and tampered-token benchmark scenarios            |
+| Component      | Path                                                               | Responsibility                                                                       |
+| -------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Frontend       | `frontend/`                                                        | Svelte client, built to static assets and served by Caddy in production              |
+| Gateway        | `backend/gateway/`                                                 | Public HTTP API, JWT verification, route dispatch, benchmark endpoints, gRPC clients |
+| Auth service   | `backend/auth-service/`                                            | User CRUD, sign-in, refresh token, bcrypt password check, JWT signing                |
+| Todo service   | `backend/todo-service/`                                            | Task CRUD, user scoping through `x-user-id` gRPC metadata                            |
+| Shared package | `backend/pkg/`                                                     | JWT implementation, PQC signing methods, key loaders, Falcon precompute code         |
+| Key generator  | `backend/cmd/keygen/`                                              | Generate algorithm keys for production and benchmark runs                            |
+| k6 scripts     | `backend/k6/`                                                      | Isolated signing, stress, refresh, and tampered-token benchmark scenarios            |
 | API specs      | `backend/api/`, `backend/gateway/api/`, and service `api/` folders | OpenAPI specifications                                                               |
-| Technical docs | `docs/`                                        | gRPC implementation notes and benchmark scenario methodology                         |
+| Technical docs | `docs/`                                                            | gRPC implementation notes and benchmark scenario methodology                         |
 
 ### Runtime Flow
 
@@ -95,13 +95,13 @@ Response includes X-Sign-Time-Ms and X-Token-Generation-Time-Ms headers.
 
 ### Data Ownership
 
-| Data             | Owner                             | Storage                                                           |
-| ---------------- | --------------------------------- | ----------------------------------------------------------------- |
-| Users            | `auth-service`                    | `users` table, `backend/auth-service/internal/entity/user_entity.go`      |
-| Tasks            | `todo-service`                    | `tasks` table, `backend/todo-service/internal/entity/task_entity.go`      |
-| JWT keys         | `backend/cmd/keygen` output               | `backend/auth-service/keys`, `backend/gateway/keys`, or `backend/keys` for benchmark |
-| JWT verification | `gateway`                         | Public keys loaded from `KEYS_DIR`                                |
-| JWT signing      | `auth-service`, benchmark handler | Private keys loaded from `KEYS_DIR`                               |
+| Data             | Owner                             | Storage                                                                              |
+| ---------------- | --------------------------------- | ------------------------------------------------------------------------------------ |
+| Users            | `auth-service`                    | `users` table, `backend/auth-service/internal/entity/user_entity.go`                 |
+| Tasks            | `todo-service`                    | `tasks` table, `backend/todo-service/internal/entity/task_entity.go`                 |
+| JWT keys         | `backend/cmd/keygen` output       | `backend/auth-service/keys`, `backend/gateway/keys`, or `backend/keys` for benchmark |
+| JWT verification | `gateway`                         | Public keys loaded from `KEYS_DIR`                                                   |
+| JWT signing      | `auth-service`, benchmark handler | Private keys loaded from `KEYS_DIR`                                                  |
 
 ## Routes
 
@@ -184,13 +184,13 @@ gRPC error mapping in gateway:
 
 ### Go Modules
 
-| Module         | Purpose                            |
-| -------------- | ---------------------------------- |
-| `gateway`      | Fiber HTTP server and gRPC clients |
-| `auth-service` | gRPC auth/user server              |
-| `todo-service` | gRPC task server                   |
-| `pkg`          | JWT/PQC shared library             |
-| `backend/cmd/keygen`   | Key generation CLI                 |
+| Module               | Purpose                            |
+| -------------------- | ---------------------------------- |
+| `gateway`            | Fiber HTTP server and gRPC clients |
+| `auth-service`       | gRPC auth/user server              |
+| `todo-service`       | gRPC task server                   |
+| `pkg`                | JWT/PQC shared library             |
+| `backend/cmd/keygen` | Key generation CLI                 |
 
 Core dependencies include `gofiber/fiber/v3`, `google.golang.org/grpc`, `gorm.io/gorm`, `gorm.io/driver/postgres`, `go-playground/validator/v10`, `spf13/viper`, `zap`, `bcrypt`, `cloudflare/circl`, and local `backend/pkg/jwt` plus `backend/pkg/fndsa`.
 
@@ -309,12 +309,12 @@ make bench-sign-remote
 
 Current benchmark targets write these files under `backend/`:
 
-| File                            | Purpose                                           |
-| ------------------------------- | ------------------------------------------------- |
-| `benchmark_sign_result.json`    | Academic summary grouped by algorithm             |
-| `benchmark_sign_raw.json`       | Full k6 raw metric dump                           |
-| `benchmark_sign_samples.ndjson` | Per-iteration k6 samples for statistical tests    |
-| `result.txt`                    | Human-readable k6 stdout                          |
+| File                            | Purpose                                        |
+| ------------------------------- | ---------------------------------------------- |
+| `benchmark_sign_result.json`    | Academic summary grouped by algorithm          |
+| `benchmark_sign_raw.json`       | Full k6 raw metric dump                        |
+| `benchmark_sign_samples.ndjson` | Per-iteration k6 samples for statistical tests |
+| `result.txt`                    | Human-readable k6 stdout                       |
 
 Run metadata from `benchmark_sign_result.json`:
 
@@ -343,10 +343,10 @@ python3 scripts/benchmark_stat_tests.py
 
 Default comparison uses:
 
-| Field       | Value                                  |
-| ----------- | -------------------------------------- |
-| Metric      | `isolated.token_generation_gc_free_ms` |
-| Baseline    | `Falcon-512`                           |
+| Field       | Value                                   |
+| ----------- | --------------------------------------- |
+| Metric      | `isolated.token_generation_gc_free_ms`  |
+| Baseline    | `Falcon-512`                            |
 | Sample file | `backend/benchmark_sign_samples.ndjson` |
 
 Test selection:
@@ -365,6 +365,39 @@ Useful commands:
 python3 scripts/benchmark_stat_tests.py --metric isolated.refresh_token_generation_gc_free_ms
 python3 scripts/benchmark_stat_tests.py --baseline Falcon-Precomputed-512
 python3 scripts/benchmark_stat_tests.py --format csv
+```
+
+### FN-DSA Precompute Ablation
+
+`backend/pkg/fndsa/precompute_ablation_test.go` measures Falcon-512 from original runtime signing to detached precomputed LDL tree. Each variant uses the same seeded signing path, so RNG cost is excluded.
+
+| Variant | Detached component                                                                                        |
+| ------- | --------------------------------------------------------------------------------------------------------- |
+| A0      | Original signer: decode private key, recompute `G`/hash, FFT basis, Gram matrix, and LDL tree during sign |
+| A1      | A0 + detach private-key decode, `G` recomputation, verifying-key hash                                     |
+| A2      | A1 + detach FFT basis `b00`, `b01`, `b10`, `b11`                                                          |
+| A3      | A2 + detach Gram matrix                                                                                   |
+| A4      | A3 + detach LDL tree                                                                                      |
+| A5      | A1-A4 combined through production `PrecomputedSigner` runtime path                                        |
+
+`Significance %` means relative runtime reduction from A0, not statistical significance:
+
+```text
+(A0 ns/op - Ai ns/op) / A0 ns/op * 100
+```
+
+Run:
+
+```bash
+python3 scripts/fndsa_precompute_ablation.py
+python3 scripts/fndsa_precompute_ablation.py --format csv
+```
+
+Direct Go benchmark:
+
+```bash
+cd backend/pkg
+go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem
 ```
 
 ### Isolated Results
@@ -442,13 +475,13 @@ From `benchmark_sign_raw.json`:
 
 Commands run with `GOCACHE=/tmp/go-build-cache` on current workspace:
 
-| Command                           | Result                                                                                                                           |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `go test ./...` in `pkg`          | Passed. `backend/pkg/fndsa` `99.369s`, `backend/pkg/jwt` `100.513s`, `backend/pkg/jwt/request` `0.027s`, `backend/pkg/utils/jwtutils` `0.007s [no tests to run]` |
-| `go test ./...` in `gateway`      | Passed. `backend/gateway/test` `0.005s`; other packages reported `[no test files]`                                                       |
-| `go test ./...` in `auth-service` | Passed. `backend/auth-service/test` `0.012s`; other packages reported `[no test files]`                                                  |
-| `go test ./...` in `todo-service` | Passed. `backend/todo-service/cmd/app` `0.035s`, `backend/todo-service/test` `0.015s`; other packages reported `[no test files]`                 |
-| `go test ./...` in `backend/cmd/keygen`   | Passed. Package reported `[no test files]`                                                                                       |
+| Command                                 | Result                                                                                                                                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `go test ./...` in `pkg`                | Passed. `backend/pkg/fndsa` `99.369s`, `backend/pkg/jwt` `100.513s`, `backend/pkg/jwt/request` `0.027s`, `backend/pkg/utils/jwtutils` `0.007s [no tests to run]` |
+| `go test ./...` in `gateway`            | Passed. `backend/gateway/test` `0.005s`; other packages reported `[no test files]`                                                                               |
+| `go test ./...` in `auth-service`       | Passed. `backend/auth-service/test` `0.012s`; other packages reported `[no test files]`                                                                          |
+| `go test ./...` in `todo-service`       | Passed. `backend/todo-service/cmd/app` `0.035s`, `backend/todo-service/test` `0.015s`; other packages reported `[no test files]`                                 |
+| `go test ./...` in `backend/cmd/keygen` | Passed. Package reported `[no test files]`                                                                                                                       |
 
 No failing Go tests were observed in this run.
 
@@ -459,7 +492,7 @@ Run these from `backend/`.
 | Target                    | Action                                                                    |
 | ------------------------- | ------------------------------------------------------------------------- |
 | `make keygen`             | Generate production keys into `auth-service/keys`, copy to `gateway/keys` |
-| `make keygen-all`         | Generate benchmark keys into `keys/`                                 |
+| `make keygen-all`         | Generate benchmark keys into `keys/`                                      |
 | `make compile-proto`      | Regenerate service and gateway Go protobuf files                          |
 | `make up`                 | Start production Compose stack                                            |
 | `make up-build`           | Build and start production Compose stack                                  |

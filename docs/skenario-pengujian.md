@@ -392,6 +392,39 @@ Gunakan `token_generation_gc_free_ms` dari isolated benchmark sebagai **angka ut
 
 Falcon-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisialisasi dan disimpan di memori. Perbandingan `avg_ms` keduanya pada Fase 1 menunjukkan **tradeoff waktu-memori** (*time-memory tradeoff*): penggunaan memori lebih tinggi pada Precomputed sebagai imbalan latensi penandatanganan yang lebih rendah.
 
+### 11.5 Studi Ablasi FN-DSA Falcon Precomputed
+
+Studi ablasi berada di `backend/pkg/fndsa/precompute_ablation_test.go` dan memakai seeded signing path, sehingga biaya RNG tidak masuk pengukuran. Varian bergerak dari original menuju komponen detached:
+
+| Varian | Komponen detached |
+| ------ | ----------------- |
+| A0 | Original signer: decode private key, hitung `G`/hash, FFT basis, Gram matrix, dan LDL tree saat signing |
+| A1 | A0 + private-key decode, rekalkulasi `G`, dan verifying-key hash detached |
+| A2 | A1 + FFT basis `b00`, `b01`, `b10`, `b11` detached |
+| A3 | A2 + Gram matrix detached |
+| A4 | A3 + LDL tree detached |
+| A5 | A1-A4 digabung lewat runtime production `PrecomputedSigner` |
+
+Persentase signifikansi di sini berarti reduksi runtime relatif dari A0, bukan p-value dan bukan effect size:
+
+```text
+(A0 ns/op - Ai ns/op) / A0 ns/op * 100
+```
+
+Jalankan dari root repositori:
+
+```bash
+python3 scripts/fndsa_precompute_ablation.py
+python3 scripts/fndsa_precompute_ablation.py --format csv
+```
+
+Benchmark Go langsung:
+
+```bash
+cd backend/pkg
+go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem
+```
+
 ---
 
 ## 12. Perintah Eksekusi
