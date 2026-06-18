@@ -586,7 +586,7 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
                 ("isolated", alg, "", "refresh_token_generation_p95", iso["refresh_token_generation_ms"]["p95"], "ms"),
                 ("isolated", alg, "", "total_generation_avg", iso["total_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "cpu_utilization_avg", iso["cpu_pct"]["avg"], "%"),
-                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_mb"]["avg"], "MB"),
+                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"], "KB"),
             ]
             for row in rows:
                 writer.writerow(row)
@@ -716,13 +716,13 @@ def main() -> None:
             "cpu_utilization_avg_pct",
         ),
         (
-            "fig_06_isolated_memory_alloc_avg_mb",
+            "fig_06_isolated_memory_alloc_avg_kb",
             "Fig. 6",
             "Isolated memory allocation",
-            "Average allocation (MB)",
-            lambda item: item["isolated"]["memory_alloc_mb"]["avg"],
+            "Average allocation (KB)",
+            lambda item: item["isolated"]["memory_alloc_kb"]["avg"],
             False,
-            "memory_alloc_avg_mb",
+            "memory_alloc_avg_kb",
         ),
     ]
 

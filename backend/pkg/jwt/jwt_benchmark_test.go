@@ -32,8 +32,8 @@ type benchResult struct {
 	AlgName       string
 	AvgGenTime    float64 // milliseconds
 	AvgVerifyTime float64 // milliseconds
-	AvgHeaderSize float64 // bytes
-	AvgBodySize   float64 // bytes
+	AvgHeaderKB   float64 // kilobytes
+	AvgBodyKB     float64 // kilobytes
 	AvgRespTime   float64 // milliseconds (gen + verify)
 	Throughput    float64 // operations per second
 	ConfusionPass bool
@@ -148,11 +148,12 @@ func buildResponseBody(accessToken, refreshToken string) []byte {
 // Metrics (average over 100 iterations):
 //   - Token Generation Time
 //   - Token Verification Time
-//   - Request Header Size (Authorization: Bearer <token>)
-//   - Response Body Size (JSON sign-in response)
+//   - Request Header Size (Authorization: Bearer <token>) in KB
+//   - Response Body Size (JSON sign-in response) in KB
 //   - Response Time (generation + verification)
 //   - Throughput (ops/sec)
 //   - JWT Confusion Test (cross-algorithm verification must fail)
+//
 // ══════════════════════════════════════════════════════════════════
 func TestBenchmarkPQCAlgorithms(t *testing.T) {
 	algs := setupBenchmarkAlgorithms(t)
@@ -203,8 +204,8 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 				totalBodySize += len(respBody)
 			}
 
-			avgGenMs := float64(totalGenTime.Microseconds()) / float64(benchmarkIterations) / 1000.0
-			avgVerifyMs := float64(totalVerifyTime.Microseconds()) / float64(benchmarkIterations) / 1000.0
+			avgGenMs := durationToMs(totalGenTime) / float64(benchmarkIterations)
+			avgVerifyMs := durationToMs(totalVerifyTime) / float64(benchmarkIterations)
 			avgRespMs := avgGenMs + avgVerifyMs
 			throughput := 0.0
 			if avgRespMs > 0 {
@@ -215,15 +216,15 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 				AlgName:       alg.Name,
 				AvgGenTime:    avgGenMs,
 				AvgVerifyTime: avgVerifyMs,
-				AvgHeaderSize: float64(totalHeaderSize) / float64(benchmarkIterations),
-				AvgBodySize:   float64(totalBodySize) / float64(benchmarkIterations),
+				AvgHeaderKB:   bytesToKB(totalHeaderSize) / float64(benchmarkIterations),
+				AvgBodyKB:     bytesToKB(totalBodySize) / float64(benchmarkIterations),
 				AvgRespTime:   avgRespMs,
 				Throughput:    throughput,
 			}
 
-			t.Logf("%s: gen=%.4fms verify=%.4fms header=%.0fB body=%.0fB resp=%.4fms throughput=%.2f ops/s",
+			t.Logf("%s: gen=%.4fms verify=%.4fms header=%.3fKB body=%.3fKB resp=%.4fms throughput=%.2f ops/s",
 				alg.Name, avgGenMs, avgVerifyMs,
-				results[idx].AvgHeaderSize, results[idx].AvgBodySize,
+				results[idx].AvgHeaderKB, results[idx].AvgBodyKB,
 				avgRespMs, throughput)
 		})
 	}
@@ -269,7 +270,7 @@ func printBenchmarkSummary(results []benchResult) {
 	fmt.Printf("  %-26s │ %12s │ %12s │ %14s │ %14s │ %12s │ %12s │ %9s\n",
 		"Algorithm", "Gen Time", "Verify Time", "Header Size", "Body Size", "Resp Time", "Throughput", "Confusion")
 	fmt.Printf("  %-26s │ %12s │ %12s │ %14s │ %14s │ %12s │ %12s │ %9s\n",
-		"", "(ms)", "(ms)", "(bytes)", "(bytes)", "(ms)", "(ops/s)", "Test")
+		"", "(ms)", "(ms)", "(KB)", "(KB)", "(ms)", "(ops/s)", "Test")
 	fmt.Println(rowDiv)
 
 	for _, r := range results {
@@ -277,10 +278,18 @@ func printBenchmarkSummary(results []benchResult) {
 		if !r.ConfusionPass {
 			confusionStr = "FAIL"
 		}
-		fmt.Printf("  %-26s │ %12.4f │ %12.4f │ %14.0f │ %14.0f │ %12.4f │ %12.2f │ %9s\n",
+		fmt.Printf("  %-26s │ %12.4f │ %12.4f │ %14.3f │ %14.3f │ %12.4f │ %12.2f │ %9s\n",
 			r.AlgName, r.AvgGenTime, r.AvgVerifyTime,
-			r.AvgHeaderSize, r.AvgBodySize,
+			r.AvgHeaderKB, r.AvgBodyKB,
 			r.AvgRespTime, r.Throughput, confusionStr)
 	}
 	fmt.Println(divider)
+}
+
+func durationToMs(d time.Duration) float64 {
+	return float64(d.Nanoseconds()) / float64(time.Millisecond)
+}
+
+func bytesToKB(v int) float64 {
+	return float64(v) / 1024.0
 }

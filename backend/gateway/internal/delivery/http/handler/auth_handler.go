@@ -103,8 +103,8 @@ func forwardAuthTrailers(c fiber.Ctx, trailer metadata.MD) {
 		{"x-refresh-token-generation-time-ms", "X-Refresh-Token-Generation-Time-Ms"},
 		{"x-token-generation-time-ms", "X-Token-Generation-Time-Ms"},
 		{"x-auth-cpu-pct", "X-Auth-CPU-Pct"},
-		{"x-auth-mem-alloc-mb", "X-Auth-Mem-Alloc-MB"},
-		{"x-auth-mem-sys-mb", "X-Auth-Mem-Sys-MB"},
+		{"x-auth-mem-alloc-kb", "X-Auth-Mem-Alloc-KB"},
+		{"x-auth-mem-sys-kb", "X-Auth-Mem-Sys-KB"},
 	} {
 		if vals := trailer.Get(h.trailer); len(vals) > 0 {
 			c.Set(h.header, vals[0])

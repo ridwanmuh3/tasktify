@@ -51,9 +51,9 @@ type TaskResponse struct {
 // Benchmark
 
 type BenchmarkRuntimeStats struct {
-	MemoryAllocMB      float64
-	MemoryAllocDeltaMB float64
-	MemorySysMB        float64
+	MemoryAllocKB      float64
+	MemoryAllocDeltaKB float64
+	MemorySysKB        float64
 	CPUPct             float64
 	GCOccurred         bool
 }
@@ -109,9 +109,9 @@ type BenchmarkSignResult struct {
 	RefreshTokenGCFreeMs     []float64 `json:"refresh_token_generation_gc_free_timings_ms"`
 	TotalTimingsMs           []float64 `json:"total_timings_ms"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
-	AuthMemoryAllocMB        []float64 `json:"auth_memory_alloc_mb"`
-	AuthMemoryAllocDeltaMB   []float64 `json:"auth_memory_alloc_delta_mb"`
-	AuthMemorySysMB          []float64 `json:"auth_memory_sys_mb"`
+	AuthMemoryAllocKB        []float64 `json:"auth_memory_alloc_kb"`
+	AuthMemoryAllocDeltaKB   []float64 `json:"auth_memory_alloc_delta_kb"`
+	AuthMemorySysKB          []float64 `json:"auth_memory_sys_kb"`
 	Stats                    struct {
 		Sign                  TimingStats `json:"sign"`
 		TokenGeneration       TimingStats `json:"token_generation"`
@@ -121,9 +121,9 @@ type BenchmarkSignResult struct {
 		Total                 TimingStats `json:"total"`
 		Resource              struct {
 			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
-			MemoryAllocMB      NumericStats `json:"memory_alloc_mb"`
-			MemoryAllocDeltaMB NumericStats `json:"memory_alloc_delta_mb"`
-			MemorySysMB        NumericStats `json:"memory_sys_mb"`
+			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
+			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
+			MemorySysKB        NumericStats `json:"memory_sys_kb"`
 		} `json:"resource"`
 	} `json:"stats"`
 }

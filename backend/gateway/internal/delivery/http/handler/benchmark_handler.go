@@ -24,6 +24,8 @@ type BenchmarkHandler struct {
 	benchmarkJWT jwtutils.JwtUtil
 }
 
+const bytesPerKB = 1024.0
+
 // cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
 // /proc/self/stat utime+stime always sums all threads — reliable in containers.
 // USER_HZ=100 so 1 tick = 10ms; formula: ticks*1e6/wallµs/GOMAXPROCS = %.
@@ -137,9 +139,9 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		refreshTokenTimings = append(refreshTokenTimings, refreshMs)
 		totalTimings = append(totalTimings, totalMs)
 		cpuSamples = append(cpuSamples, stats.CPUPct)
-		memAllocSamples = append(memAllocSamples, stats.MemoryAllocMB)
-		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaMB)
-		memSysSamples = append(memSysSamples, stats.MemorySysMB)
+		memAllocSamples = append(memAllocSamples, stats.MemoryAllocKB)
+		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaKB)
+		memSysSamples = append(memSysSamples, stats.MemorySysKB)
 
 		if stats.GCOccurred {
 			gcContaminatedCount++
@@ -163,9 +165,9 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		RefreshTokenGCFreeMs:     gcFreeRefreshTokenTimings,
 		TotalTimingsMs:           totalTimings,
 		AuthCPUPct:               cpuSamples,
-		AuthMemoryAllocMB:        memAllocSamples,
-		AuthMemoryAllocDeltaMB:   memAllocDeltaSamples,
-		AuthMemorySysMB:          memSysSamples,
+		AuthMemoryAllocKB:        memAllocSamples,
+		AuthMemoryAllocDeltaKB:   memAllocDeltaSamples,
+		AuthMemorySysKB:          memSysSamples,
 	}
 	result.Stats.Sign = computeTimingStats(signTimings)
 	result.Stats.TokenGeneration = result.Stats.Sign
@@ -174,9 +176,9 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	result.Stats.RefreshTokenGCFree = computeTimingStats(gcFreeRefreshTokenTimings)
 	result.Stats.Total = computeTimingStats(totalTimings)
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
-	result.Stats.Resource.MemoryAllocMB = computeNumericStats(memAllocSamples)
-	result.Stats.Resource.MemoryAllocDeltaMB = computeNumericStats(memAllocDeltaSamples)
-	result.Stats.Resource.MemorySysMB = computeNumericStats(memSysSamples)
+	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
+	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
+	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)
 
 	c.Set("X-Bench-Sign-P95-Ms", fmt.Sprintf("%.3f", result.Stats.Sign.P95Ms))
 	c.Set("X-Bench-Token-Generation-P95-Ms", fmt.Sprintf("%.3f", result.Stats.TokenGeneration.P95Ms))
@@ -245,7 +247,8 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 	cpuOpBefore := readCPUTicks()
 	t0 := time.Now()
 	token, err := h.benchmarkJWT.Sign(payload)
-	signMs := float64(time.Since(t0).Microseconds()) / 1000.0
+	elapsed := time.Since(t0)
+	signMs := durationToMs(elapsed)
 	cpuOpAfter := readCPUTicks()
 
 	if err != nil {
@@ -255,13 +258,13 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 	runtime.ReadMemStats(&memAfter)
 
 	var cpuPct float64
-	wallUs := int64(signMs * 1000)
+	wallNs := elapsed.Nanoseconds()
 	cpuDelta := cpuOpAfter - cpuOpBefore
 	if usePerOpCPU {
 		// Per-op tick delta: accurate for sub-millisecond isolated iterations where
 		// the 100ms background window would average in unrelated workload.
-		if wallUs > 0 && cpuDelta >= 0 {
-			cpuPct = float64(cpuDelta) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
+		if wallNs > 0 && cpuDelta >= 0 {
+			cpuPct = float64(cpuDelta) * 1_000_000_000.0 / float64(wallNs) / float64(runtime.GOMAXPROCS(0))
 		}
 	} else {
 		// Background monitor: stable 100ms window — better under steady stress load.
@@ -269,15 +272,15 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 		cpuMonitor.mu.RLock()
 		cpuPct = cpuMonitor.pct
 		cpuMonitor.mu.RUnlock()
-		if cpuPct == 0 && wallUs > 0 && cpuDelta > 0 {
-			cpuPct = float64(cpuDelta) * 1_000_000.0 / float64(wallUs) / float64(runtime.GOMAXPROCS(0))
+		if cpuPct == 0 && wallNs > 0 && cpuDelta > 0 {
+			cpuPct = float64(cpuDelta) * 1_000_000_000.0 / float64(wallNs) / float64(runtime.GOMAXPROCS(0))
 		}
 	}
 
 	stats := BenchmarkRuntimeStats{
-		MemoryAllocMB:      float64(memAfter.HeapAlloc) / 1024 / 1024,
-		MemoryAllocDeltaMB: float64(memAfter.TotalAlloc-memBefore.TotalAlloc) / 1024 / 1024,
-		MemorySysMB:        float64(memAfter.Sys) / 1024 / 1024,
+		MemoryAllocKB:      bytesToKB(memAfter.HeapAlloc),
+		MemoryAllocDeltaKB: bytesToKB(memAfter.TotalAlloc - memBefore.TotalAlloc),
+		MemorySysKB:        bytesToKB(memAfter.Sys),
 		CPUPct:             cpuPct,
 		GCOccurred:         memAfter.NumGC > memBefore.NumGC,
 	}
@@ -292,12 +295,20 @@ func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) Benc
 	}
 
 	return BenchmarkRuntimeStats{
-		MemoryAllocMB:      refreshStats.MemoryAllocMB,
-		MemoryAllocDeltaMB: accessStats.MemoryAllocDeltaMB + refreshStats.MemoryAllocDeltaMB,
-		MemorySysMB:        refreshStats.MemorySysMB,
+		MemoryAllocKB:      refreshStats.MemoryAllocKB,
+		MemoryAllocDeltaKB: accessStats.MemoryAllocDeltaKB + refreshStats.MemoryAllocDeltaKB,
+		MemorySysKB:        refreshStats.MemorySysKB,
 		CPUPct:             cpuPct,
 		GCOccurred:         accessStats.GCOccurred || refreshStats.GCOccurred,
 	}
+}
+
+func durationToMs(d time.Duration) float64 {
+	return float64(d.Nanoseconds()) / float64(time.Millisecond)
+}
+
+func bytesToKB(v uint64) float64 {
+	return float64(v) / bytesPerKB
 }
 
 func computeTimingStats(timings []float64) TimingStats {

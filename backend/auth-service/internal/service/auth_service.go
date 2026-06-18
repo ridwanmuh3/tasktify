@@ -22,8 +22,8 @@ import (
 )
 
 type RuntimeStats struct {
-	MemoryAllocMB float64
-	MemorySysMB   float64
+	MemoryAllocKB float64
+	MemorySysKB   float64
 	CPUPct        float64
 }
 
@@ -38,6 +38,8 @@ var runtimeStatsState struct {
 	lastWall time.Time
 	lastCPU  float64
 }
+
+const bytesPerKB = 1024.0
 
 type AuthService struct {
 	db             *gorm.DB
@@ -141,7 +143,7 @@ func (s *AuthService) signTokenPair(user *entity.User, algorithm string) (string
 		Algorithm: algorithm,
 		TokenUse:  jwtutils.TokenUseAccess,
 	})
-	timings.AccessTokenMs = float64(time.Since(accessStart).Microseconds()) / 1000.0
+	timings.AccessTokenMs = durationToMs(time.Since(accessStart))
 	if err != nil {
 		return "", "", timings, fmt.Errorf("sign access token: %w", err)
 	}
@@ -153,7 +155,7 @@ func (s *AuthService) signTokenPair(user *entity.User, algorithm string) (string
 		Algorithm: algorithm,
 		TokenUse:  jwtutils.TokenUseRefresh,
 	})
-	timings.RefreshTokenMs = float64(time.Since(refreshStart).Microseconds()) / 1000.0
+	timings.RefreshTokenMs = durationToMs(time.Since(refreshStart))
 	timings.TotalMs = timings.AccessTokenMs + timings.RefreshTokenMs
 	if err != nil {
 		return "", "", timings, fmt.Errorf("sign refresh token: %w", err)
@@ -175,8 +177,8 @@ func collectRuntimeStats() RuntimeStats {
 	runtime.ReadMemStats(&mem)
 
 	stats := RuntimeStats{
-		MemoryAllocMB: bytesToMB(mem.Alloc),
-		MemorySysMB:   bytesToMB(mem.Sys),
+		MemoryAllocKB: bytesToKB(mem.Alloc),
+		MemorySysKB:   bytesToKB(mem.Sys),
 	}
 
 	now := time.Now()
@@ -207,6 +209,10 @@ func readGoCPUSeconds() float64 {
 	return samples[0].Value.Float64()
 }
 
-func bytesToMB(v uint64) float64 {
-	return float64(v) / 1024.0 / 1024.0
+func durationToMs(d time.Duration) float64 {
+	return float64(d.Nanoseconds()) / float64(time.Millisecond)
+}
+
+func bytesToKB(v uint64) float64 {
+	return float64(v) / bytesPerKB
 }

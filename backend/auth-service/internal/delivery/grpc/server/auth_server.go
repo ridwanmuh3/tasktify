@@ -76,7 +76,7 @@ func setAuthTrailers(ctx context.Context, timings service.TokenGenerationTimings
 		"x-refresh-token-generation-time-ms", fmt.Sprintf("%.3f", timings.RefreshTokenMs),
 		"x-token-generation-time-ms", fmt.Sprintf("%.3f", timings.TotalMs),
 		"x-auth-cpu-pct", fmt.Sprintf("%.3f", runtimeStats.CPUPct),
-		"x-auth-mem-alloc-mb", fmt.Sprintf("%.3f", runtimeStats.MemoryAllocMB),
-		"x-auth-mem-sys-mb", fmt.Sprintf("%.3f", runtimeStats.MemorySysMB),
+		"x-auth-mem-alloc-kb", fmt.Sprintf("%.3f", runtimeStats.MemoryAllocKB),
+		"x-auth-mem-sys-kb", fmt.Sprintf("%.3f", runtimeStats.MemorySysKB),
 	))
 }

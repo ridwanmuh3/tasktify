@@ -42,8 +42,10 @@ class BenchRow:
     ms_per_op: float
     kb_per_op: float
     allocs_per_op: float
-    significance_pct: float
-    step_pct: float
+    vs_a0_percent: float
+    vs_a0_direction: str
+    step_percent: float
+    step_direction: str
     note: str
 
 
@@ -148,8 +150,11 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
         if variant not in by_variant:
             continue
         iters, ms_per_op, kb_per_op, allocs_per_op = by_variant[variant]
-        significance_pct = pct_gain(baseline_ms, ms_per_op)
-        step_pct = 0.0 if not rows else pct_gain(previous_ms, ms_per_op)
+        vs_a0_percent, vs_a0_direction = latency_change(baseline_ms, ms_per_op)
+        if not rows:
+            step_percent, step_direction = 0.0, "baseline"
+        else:
+            step_percent, step_direction = latency_change(previous_ms, ms_per_op)
         previous_ms = ms_per_op
         rows.append(
             BenchRow(
@@ -158,8 +163,10 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
                 ms_per_op=ms_per_op,
                 kb_per_op=kb_per_op,
                 allocs_per_op=allocs_per_op,
-                significance_pct=significance_pct,
-                step_pct=step_pct,
+                vs_a0_percent=vs_a0_percent,
+                vs_a0_direction=vs_a0_direction,
+                step_percent=step_percent,
+                step_direction=step_direction,
                 note=VARIANT_NOTES[variant],
             )
         )
@@ -184,10 +191,14 @@ def bytes_to_kb(value: float) -> float:
     return value / BYTES_PER_KB
 
 
-def pct_gain(baseline: float, target: float) -> float:
+def latency_change(baseline: float, target: float) -> tuple[float, str]:
     if baseline == 0:
-        return float("nan")
-    return (baseline - target) / baseline * 100
+        return float("nan"), "n/a"
+    if target == baseline:
+        return 0.0, "same"
+    if target < baseline:
+        return (baseline - target) / baseline * 100, "faster"
+    return (target - baseline) / baseline * 100, "slower"
 
 
 def fmt_num(value: float, digits: int = 4) -> str:
@@ -202,11 +213,12 @@ def print_markdown(rows: list[BenchRow], source: str) -> None:
     print(f"- Source: {source}")
     print("- Benchmark: `BenchmarkFalconPrecomputeAblation512`")
     print("- Sign input: valid JWT compact signing input, `base64url(header).base64url(payload)`.")
-    print("- Significance %: `(A0 ms/op - Ai ms/op) / A0 ms/op * 100`.")
-    print("- Step %: `(previous Ai ms/op - current Ai ms/op) / previous Ai ms/op * 100`.")
+    print("- Percent: latency change magnitude. Lower `ms/op` is better.")
+    print("- vs A0 percent: `abs(Ai ms/op - A0 ms/op) / A0 ms/op * 100`; direction says faster/slower.")
+    print("- Step percent: `abs(current ms/op - previous ms/op) / previous ms/op * 100`; direction says faster/slower.")
     print("- No p-values. No effect sizes.")
     print()
-    print("| Variant | ms/op | KB/op | allocs/op | Significance % | Step % | Detached component |")
+    print("| Variant | ms/op | KB/op | allocs/op | vs A0 | Step | Detached component |")
     print("| --- | ---: | ---: | ---: | ---: | ---: | --- |")
     for row in rows:
         print(
@@ -217,13 +229,21 @@ def print_markdown(rows: list[BenchRow], source: str) -> None:
                     fmt_num(row.ms_per_op),
                     fmt_num(row.kb_per_op),
                     fmt_num(row.allocs_per_op),
-                    f"{fmt_num(row.significance_pct)}%",
-                    f"{fmt_num(row.step_pct)}%",
+                    format_change(row.vs_a0_percent, row.vs_a0_direction),
+                    format_change(row.step_percent, row.step_direction),
                     row.note,
                 ]
             )
             + " |"
         )
+
+
+def format_change(percent: float, direction: str) -> str:
+    if direction in {"baseline", "same"}:
+        return direction
+    if direction == "n/a":
+        return "n/a"
+    return f"{fmt_num(percent)}% {direction}"
 
 
 def print_csv(rows: list[BenchRow]) -> None:
@@ -233,8 +253,10 @@ def print_csv(rows: list[BenchRow]) -> None:
         "ms_per_op",
         "kb_per_op",
         "allocs_per_op",
-        "significance_pct",
-        "step_pct",
+        "vs_a0_percent",
+        "vs_a0_direction",
+        "step_percent",
+        "step_direction",
         "note",
     ]
     writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
@@ -247,8 +269,10 @@ def print_csv(rows: list[BenchRow]) -> None:
                 "ms_per_op": row.ms_per_op,
                 "kb_per_op": row.kb_per_op,
                 "allocs_per_op": row.allocs_per_op,
-                "significance_pct": row.significance_pct,
-                "step_pct": row.step_pct,
+                "vs_a0_percent": row.vs_a0_percent,
+                "vs_a0_direction": row.vs_a0_direction,
+                "step_percent": row.step_percent,
+                "step_direction": row.step_direction,
                 "note": row.note,
             }
         )
