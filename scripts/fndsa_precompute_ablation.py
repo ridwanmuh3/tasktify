@@ -22,6 +22,8 @@ BENCH_RE = re.compile(
     r"(?P<bytes>[0-9.]+)\s+B/op\s+"
     r"(?P<allocs>[0-9.]+)\s+allocs/op"
 )
+NS_PER_MS = 1_000_000.0
+BYTES_PER_KB = 1024.0
 
 VARIANT_NOTES = {
     "A0_Original": "Original: decode key, recompute G/hash, FFT basis, Gram, LDL tree during sign.",
@@ -37,8 +39,8 @@ VARIANT_NOTES = {
 class BenchRow:
     variant: str
     iters: int
-    ns_per_op: float
-    bytes_per_op: float
+    ms_per_op: float
+    kb_per_op: float
     allocs_per_op: float
     significance_pct: float
     step_pct: float
@@ -49,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Measure FN-DSA Falcon-512 ablation from original signer to detached "
-            "precomputed LDL-tree signer. Reports percentages only."
+            "precomputed LDL-tree signer. Reports ms/op, KB/op, and percentages."
         )
     )
     parser.add_argument(
@@ -118,8 +120,8 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
             (
                 match.group("variant"),
                 int(match.group("iters")),
-                float(match.group("ns")),
-                float(match.group("bytes")),
+                ns_to_ms(float(match.group("ns"))),
+                bytes_to_kb(float(match.group("bytes"))),
                 float(match.group("allocs")),
             )
         )
@@ -128,8 +130,8 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
         raise ValueError("no BenchmarkFalconPrecomputeAblation512 rows found")
 
     grouped: dict[str, list[tuple[int, float, float, float]]] = {}
-    for variant, iters, ns_per_op, bytes_per_op, allocs_per_op in raw:
-        grouped.setdefault(variant, []).append((iters, ns_per_op, bytes_per_op, allocs_per_op))
+    for variant, iters, ms_per_op, kb_per_op, allocs_per_op in raw:
+        grouped.setdefault(variant, []).append((iters, ms_per_op, kb_per_op, allocs_per_op))
 
     if "A0_Original" not in grouped:
         raise ValueError("A0_Original benchmark row missing")
@@ -139,22 +141,22 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
         for variant, values in grouped.items()
     }
 
-    baseline_ns = by_variant["A0_Original"][1]
-    previous_ns = baseline_ns
+    baseline_ms = by_variant["A0_Original"][1]
+    previous_ms = baseline_ms
     rows: list[BenchRow] = []
     for variant in VARIANT_NOTES:
         if variant not in by_variant:
             continue
-        iters, ns_per_op, bytes_per_op, allocs_per_op = by_variant[variant]
-        significance_pct = pct_gain(baseline_ns, ns_per_op)
-        step_pct = 0.0 if not rows else pct_gain(previous_ns, ns_per_op)
-        previous_ns = ns_per_op
+        iters, ms_per_op, kb_per_op, allocs_per_op = by_variant[variant]
+        significance_pct = pct_gain(baseline_ms, ms_per_op)
+        step_pct = 0.0 if not rows else pct_gain(previous_ms, ms_per_op)
+        previous_ms = ms_per_op
         rows.append(
             BenchRow(
                 variant=variant,
                 iters=iters,
-                ns_per_op=ns_per_op,
-                bytes_per_op=bytes_per_op,
+                ms_per_op=ms_per_op,
+                kb_per_op=kb_per_op,
                 allocs_per_op=allocs_per_op,
                 significance_pct=significance_pct,
                 step_pct=step_pct,
@@ -174,6 +176,14 @@ def average_benches(values: list[tuple[int, float, float, float]]) -> tuple[int,
     )
 
 
+def ns_to_ms(value: float) -> float:
+    return value / NS_PER_MS
+
+
+def bytes_to_kb(value: float) -> float:
+    return value / BYTES_PER_KB
+
+
 def pct_gain(baseline: float, target: float) -> float:
     if baseline == 0:
         return float("nan")
@@ -191,11 +201,12 @@ def print_markdown(rows: list[BenchRow], source: str) -> None:
     print()
     print(f"- Source: {source}")
     print("- Benchmark: `BenchmarkFalconPrecomputeAblation512`")
-    print("- Significance %: `(A0 ns/op - Ai ns/op) / A0 ns/op * 100`.")
-    print("- Step %: `(previous Ai ns/op - current Ai ns/op) / previous Ai ns/op * 100`.")
+    print("- Sign input: valid JWT compact signing input, `base64url(header).base64url(payload)`.")
+    print("- Significance %: `(A0 ms/op - Ai ms/op) / A0 ms/op * 100`.")
+    print("- Step %: `(previous Ai ms/op - current Ai ms/op) / previous Ai ms/op * 100`.")
     print("- No p-values. No effect sizes.")
     print()
-    print("| Variant | ns/op | B/op | allocs/op | Significance % | Step % | Detached component |")
+    print("| Variant | ms/op | KB/op | allocs/op | Significance % | Step % | Detached component |")
     print("| --- | ---: | ---: | ---: | ---: | ---: | --- |")
     for row in rows:
         print(
@@ -203,8 +214,8 @@ def print_markdown(rows: list[BenchRow], source: str) -> None:
             + " | ".join(
                 [
                     row.variant,
-                    fmt_num(row.ns_per_op),
-                    fmt_num(row.bytes_per_op),
+                    fmt_num(row.ms_per_op),
+                    fmt_num(row.kb_per_op),
                     fmt_num(row.allocs_per_op),
                     f"{fmt_num(row.significance_pct)}%",
                     f"{fmt_num(row.step_pct)}%",
@@ -219,8 +230,8 @@ def print_csv(rows: list[BenchRow]) -> None:
     fieldnames = [
         "variant",
         "iters",
-        "ns_per_op",
-        "bytes_per_op",
+        "ms_per_op",
+        "kb_per_op",
         "allocs_per_op",
         "significance_pct",
         "step_pct",
@@ -233,8 +244,8 @@ def print_csv(rows: list[BenchRow]) -> None:
             {
                 "variant": row.variant,
                 "iters": row.iters,
-                "ns_per_op": row.ns_per_op,
-                "bytes_per_op": row.bytes_per_op,
+                "ms_per_op": row.ms_per_op,
+                "kb_per_op": row.kb_per_op,
                 "allocs_per_op": row.allocs_per_op,
                 "significance_pct": row.significance_pct,
                 "step_pct": row.step_pct,

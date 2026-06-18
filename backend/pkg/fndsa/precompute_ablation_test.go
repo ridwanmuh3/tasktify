@@ -3,12 +3,32 @@ package fndsa
 import (
 	"bytes"
 	"crypto"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	sha3 "golang.org/x/crypto/sha3"
 )
+
+const ablationJWTBaseUnix = int64(1715648400)
+
+type ablationJWTHeader struct {
+	Alg string `json:"alg"`
+	Typ string `json:"typ"`
+}
+
+type ablationJWTClaims struct {
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	TokenUse  string `json:"token_use"`
+	JWTID     string `json:"jti"`
+	IssuedAt  int64  `json:"iat"`
+	ExpiresAt int64  `json:"exp"`
+	Issuer    string `json:"iss"`
+}
 
 type precomputeAblationSigner struct {
 	logn     uint
@@ -321,9 +341,9 @@ func TestPrecomputeAblationVariantsMatchOriginal(t *testing.T) {
 		}
 
 		for msgID := 0; msgID < 3; msgID++ {
-			data := []byte(fmt.Sprintf("ablation-message-%d-%d", logn, msgID))
+			data := ablationJWTSigningInput(logn, msgID)
 			seed := ablationSeed(logn, msgID)
-			want, err := sign_inner_seeded(logn, logn, seed[:], skey, DOMAIN_NONE, 0, data)
+			want, err := sign_inner_seeded(logn, logn, seed[:], skey, DOMAIN_NONE, crypto.SHA3_256, data)
 			if err != nil {
 				t.Fatalf("A0 failed (logn=%d, msg=%d): %v", logn, msgID, err)
 			}
@@ -339,7 +359,7 @@ func TestPrecomputeAblationVariantsMatchOriginal(t *testing.T) {
 				{"A5", signer.signA5},
 			}
 			for _, variant := range variants {
-				got, err := variant.sign(seed[:], DOMAIN_NONE, 0, data)
+				got, err := variant.sign(seed[:], DOMAIN_NONE, crypto.SHA3_256, data)
 				if err != nil {
 					t.Fatalf("%s failed (logn=%d, msg=%d): %v", variant.name, logn, msgID, err)
 				}
@@ -349,13 +369,10 @@ func TestPrecomputeAblationVariantsMatchOriginal(t *testing.T) {
 				}
 			}
 
-			ok := Verify(vkey, DOMAIN_NONE, 0, data, want)
-			if logn < 9 {
-				ok = VerifyWeak(vkey, DOMAIN_NONE, 0, data, want)
-			}
-			if !ok {
+			if !verifyAblationSignature(vkey, logn, data, want) {
 				t.Fatalf("signature verification failed (logn=%d, msg=%d)", logn, msgID)
 			}
+			assertAblationJWTBoundSignature(t, vkey, logn, data, want)
 		}
 	}
 }
@@ -395,17 +412,23 @@ func benchmarkAblationVariant(
 	b *testing.B,
 	sign func([]byte, DomainContext, crypto.Hash, []byte) ([]byte, error)) {
 
-	data := []byte("test")
+	inputs := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		inputs[i] = ablationJWTSigningInput(9, i)
+	}
+
 	b.ReportAllocs()
 	b.ResetTimer()
+	var lastSig []byte
 	for i := 0; i < b.N; i++ {
 		seed := ablationSeed(9, i)
-		sig, err := sign(seed[:], DOMAIN_NONE, 0, data)
+		sig, err := sign(seed[:], DOMAIN_NONE, crypto.SHA3_256, inputs[i])
 		if err != nil {
 			b.Fatal(err)
 		}
-		data = sig[len(sig)-32:]
+		lastSig = sig
 	}
+	ablationSignatureSink = lastSig
 }
 
 func ablationSeed(logn uint, iteration int) [40]byte {
@@ -414,4 +437,83 @@ func ablationSeed(logn uint, iteration int) [40]byte {
 		seed[i] = byte(i*31 + iteration*17 + int(logn)*13)
 	}
 	return seed
+}
+
+var ablationSignatureSink []byte
+
+func ablationJWTSigningInput(logn uint, iteration int) []byte {
+	issuedAt := ablationJWTBaseUnix + int64(iteration)
+	header := ablationJWTHeader{
+		Alg: "Falcon-512",
+		Typ: "JWT",
+	}
+	claims := ablationJWTClaims{
+		UserID:    ablationUUID(logn, iteration),
+		Email:     fmt.Sprintf("ablation-%d-%d@example.test", logn, iteration),
+		TokenUse:  "access",
+		JWTID:     fmt.Sprintf("ablation-%d-%d", logn, iteration),
+		IssuedAt:  issuedAt,
+		ExpiresAt: issuedAt + 3600,
+		Issuer:    "tasktify",
+	}
+
+	return []byte(ablationBase64URL(mustAblationJSON(header)) + "." +
+		ablationBase64URL(mustAblationJSON(claims)))
+}
+
+func mustAblationJSON(value any) []byte {
+	data, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func ablationBase64URL(data []byte) string {
+	return base64.RawURLEncoding.EncodeToString(data)
+}
+
+func ablationUUID(logn uint, iteration int) string {
+	tail := (uint64(logn)<<32 | uint64(iteration)) & 0xffffffffffff
+	return fmt.Sprintf("00000000-0000-0000-0000-%012x", tail)
+}
+
+func ablationCompactJWT(signingInput []byte, sig []byte) string {
+	return string(signingInput) + "." + ablationBase64URL(sig)
+}
+
+func verifyAblationSignature(vkey []byte, logn uint, data []byte, sig []byte) bool {
+	if logn < 9 {
+		return VerifyWeak(vkey, DOMAIN_NONE, crypto.SHA3_256, data, sig)
+	}
+	return Verify(vkey, DOMAIN_NONE, crypto.SHA3_256, data, sig)
+}
+
+func assertAblationJWTBoundSignature(t *testing.T, vkey []byte, logn uint, signingInput []byte, sig []byte) {
+	t.Helper()
+
+	token := ablationCompactJWT(signingInput, sig)
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		t.Fatalf("JWT compact token must have 3 segments, got %d", len(parts))
+	}
+
+	decodedSig, err := base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		t.Fatalf("JWT signature segment decode failed: %v", err)
+	}
+	if !bytes.Equal(decodedSig, sig) {
+		t.Fatal("JWT signature segment differs from generated signature")
+	}
+
+	tokenSigningInput := []byte(parts[0] + "." + parts[1])
+	if !bytes.Equal(tokenSigningInput, signingInput) {
+		t.Fatal("JWT signing input changed during compact token assembly")
+	}
+	if !verifyAblationSignature(vkey, logn, tokenSigningInput, decodedSig) {
+		t.Fatal("JWT compact token signature did not verify")
+	}
+	if verifyAblationSignature(vkey, logn, ablationJWTSigningInput(logn, 10000+int(logn)), decodedSig) {
+		t.Fatal("signature verified against different JWT header/payload")
+	}
 }
