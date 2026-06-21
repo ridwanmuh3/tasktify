@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate publication graphics from current benchmark result JSON files."""
+"""Generate Falcon-only publication graphics from current benchmark result JSON files."""
 
 from __future__ import annotations
 
@@ -43,34 +43,23 @@ WHITE = "#FFFFFF"
 ALGORITHM_ORDER = [
     "Falcon-Precomputed-512",
     "Falcon-512",
-    "ML-DSA-44",
-    "SLH-DSA-SHA2-128f",
-    "SLH-DSA-SHA2-128s",
 ]
+ALGORITHM_SET = set(ALGORITHM_ORDER)
 
 ALGORITHM_SHORT = {
     "Falcon-Precomputed-512": "Falcon-Precomp. 512",
     "Falcon-512": "Falcon-512",
-    "ML-DSA-44": "ML-DSA-44",
-    "SLH-DSA-SHA2-128f": "SLH-DSA-128f",
-    "SLH-DSA-SHA2-128s": "SLH-DSA-128s",
 }
 
 ALGORITHM_WRAP = {
     "Falcon-Precomputed-512": ["Falcon-Precomp.", "512"],
     "Falcon-512": ["Falcon", "512"],
-    "ML-DSA-44": ["ML-DSA", "44"],
-    "SLH-DSA-SHA2-128f": ["SLH-DSA", "128f"],
-    "SLH-DSA-SHA2-128s": ["SLH-DSA", "128s"],
 }
 
 # Colorblind-safe palette. Keep mapping stable across every figure.
 COLORS = {
     "Falcon-Precomputed-512": "#0072B2",
     "Falcon-512": "#E69F00",
-    "ML-DSA-44": "#009E73",
-    "SLH-DSA-SHA2-128f": "#CC79A7",
-    "SLH-DSA-SHA2-128s": "#D55E00",
 }
 
 ATTACK_COLOR = "#009E73"
@@ -578,6 +567,8 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
         writer.writerow(["scope", "algorithm", "vus", "metric", "value", "unit"])
         for item in benchmark["algorithms"]:
             alg = item["algorithm"]
+            if alg not in ALGORITHM_SET:
+                continue
             iso = item["isolated"]
             rows = [
                 ("isolated", alg, "", "access_token_generation_avg", iso["token_generation_ms"]["avg"], "ms"),
@@ -586,7 +577,7 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
                 ("isolated", alg, "", "refresh_token_generation_p95", iso["refresh_token_generation_ms"]["p95"], "ms"),
                 ("isolated", alg, "", "total_generation_avg", iso["total_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "cpu_utilization_avg", iso["cpu_pct"]["avg"], "%"),
-                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"], "KB"),
+                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"] / 1024, "MB"),
             ]
             for row in rows:
                 writer.writerow(row)
@@ -716,13 +707,13 @@ def main() -> None:
             "cpu_utilization_avg_pct",
         ),
         (
-            "fig_06_isolated_memory_alloc_avg_kb",
+            "fig_06_isolated_memory_alloc_avg_mb",
             "Fig. 6",
             "Isolated memory allocation",
-            "Average allocation (KB)",
-            lambda item: item["isolated"]["memory_alloc_kb"]["avg"],
+            "Average allocation (MB)",
+            lambda item: item["isolated"]["memory_alloc_kb"]["avg"] / 1024,
             False,
-            "memory_alloc_avg_kb",
+            "memory_alloc_avg_mb",
         ),
     ]
 

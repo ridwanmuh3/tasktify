@@ -24,7 +24,7 @@ Client (Browser/k6)
                                     (TaskService)
 ```
 
-Gateway adalah satu-satunya titik masuk (*single entry point*) yang menerima HTTP dari klien, lalu meneruskan ke service backend menggunakan gRPC. Klien tidak pernah berbicara langsung ke service backend.
+Gateway adalah satu-satunya titik masuk (_single entry point_) yang menerima HTTP dari klien, lalu meneruskan ke service backend menggunakan gRPC. Klien tidak pernah berbicara langsung ke service backend.
 
 ---
 
@@ -32,7 +32,8 @@ Gateway adalah satu-satunya titik masuk (*single entry point*) yang menerima HTT
 
 ### Apa itu Protocol Buffers?
 
-Protocol Buffers (Protobuf) adalah bahasa definisi antarmuka (*Interface Definition Language*/IDL) milik Google. File `.proto` mendefinisikan:
+Protocol Buffers (Protobuf) adalah bahasa definisi antarmuka (_Interface Definition Language_/IDL) milik Google. File `.proto` mendefinisikan:
+
 - **Struktur data** (messages) yang dikirim dan diterima
 - **Layanan** (services) berisi daftar fungsi RPC yang tersedia
 
@@ -41,6 +42,7 @@ Dari satu file `.proto`, `protoc` menghasilkan kode Go secara otomatis — terma
 ### File Proto yang Digunakan
 
 **`backend/auth-service/proto/auth.proto`** — Layanan autentikasi:
+
 ```protobuf
 service AuthService {
     rpc SignIn(SignInRequest) returns (AuthResponse);
@@ -50,6 +52,7 @@ service AuthService {
 ```
 
 **`backend/auth-service/proto/user.proto`** — Manajemen pengguna:
+
 ```protobuf
 service UserService {
     rpc Create(CreateUserRequest) returns (google.protobuf.Empty);
@@ -61,6 +64,7 @@ service UserService {
 ```
 
 **`backend/todo-service/proto/task.proto`** — Manajemen tugas:
+
 ```protobuf
 service TaskService {
     rpc Create(CreateTaskRequest) returns (google.protobuf.Empty);
@@ -73,13 +77,13 @@ service TaskService {
 
 ### Teknik Proto yang Digunakan
 
-| Teknik | Contoh | Keterangan |
-|--------|--------|------------|
-| `google.protobuf.Empty` | `returns (google.protobuf.Empty)` | Pengganti `void` — RPC tidak perlu mengembalikan data |
-| `google.protobuf.Timestamp` | field `created_at`, `due_date` | Format waktu standar cross-language |
-| `repeated` | `repeated Task tasks = 1` | Setara array/slice untuk respons list |
-| `enum` | `enum TaskStatus { PENDING=0; ... }` | Tipe data terbatas dengan nilai yang pasti |
-| `option go_package` | `option go_package = "./internal/model"` | Menentukan path package Go hasil generate |
+| Teknik                      | Contoh                                   | Keterangan                                            |
+| --------------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `google.protobuf.Empty`     | `returns (google.protobuf.Empty)`        | Pengganti `void` — RPC tidak perlu mengembalikan data |
+| `google.protobuf.Timestamp` | field `created_at`, `due_date`           | Format waktu standar cross-language                   |
+| `repeated`                  | `repeated Task tasks = 1`                | Setara array/slice untuk respons list                 |
+| `enum`                      | `enum TaskStatus { PENDING=0; ... }`     | Tipe data terbatas dengan nilai yang pasti            |
+| `option go_package`         | `option go_package = "./internal/model"` | Menentukan path package Go hasil generate             |
 
 ---
 
@@ -101,6 +105,7 @@ Client ◀─── Response ─── Server
 ### 4.1 Mendaftarkan Server
 
 **Auth Service** (`backend/auth-service/cmd/app/main.go`):
+
 ```go
 srv := grpc.NewServer(
     grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -115,6 +120,7 @@ srv := grpc.NewServer(
 ```
 
 **Todo Service** (`backend/todo-service/cmd/app/main.go`):
+
 ```go
 srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor.AuthInterceptor))
 ```
@@ -134,7 +140,7 @@ type AuthServer struct {
 ```
 
 **Mengapa dibutuhkan?**  
-Ini adalah pola *forward compatibility* dari gRPC-Go. Jika di masa depan proto menambahkan method RPC baru, server yang belum mengimplementasikan method tersebut tidak akan langsung compile error — melainkan method tersebut akan mengembalikan `codes.Unimplemented` secara default dari embed.
+Ini adalah pola _forward compatibility_ dari gRPC-Go. Jika di masa depan proto menambahkan method RPC baru, server yang belum mengimplementasikan method tersebut tidak akan langsung compile error — melainkan method tersebut akan mengembalikan `codes.Unimplemented` secara default dari embed.
 
 ### 4.3 Implementasi Method RPC
 
@@ -198,13 +204,13 @@ func grpcToHTTPError(err error) *fiber.Error {
 
 Tabel pemetaan kode error yang digunakan:
 
-| gRPC Code | Nilai | HTTP Equivalent | Kapan Digunakan |
-|-----------|-------|-----------------|-----------------|
-| `codes.Unauthenticated` | 16 | 401 | Login gagal, token tidak valid |
-| `codes.NotFound` | 5 | 404 | Data tidak ditemukan |
-| `codes.InvalidArgument` | 3 | 400 | Input tidak valid |
-| `codes.Internal` | 13 | 500 | Error server internal |
-| `codes.Unimplemented` | 12 | — | Method belum diimplementasikan |
+| gRPC Code               | Nilai | HTTP Equivalent | Kapan Digunakan                |
+| ----------------------- | ----- | --------------- | ------------------------------ |
+| `codes.Unauthenticated` | 16    | 401             | Login gagal, token tidak valid |
+| `codes.NotFound`        | 5     | 404             | Data tidak ditemukan           |
+| `codes.InvalidArgument` | 3     | 400             | Input tidak valid              |
+| `codes.Internal`        | 13    | 500             | Error server internal          |
+| `codes.Unimplemented`   | 12    | —               | Method belum diimplementasikan |
 
 ---
 
@@ -226,6 +232,7 @@ func forwardContext(c fiber.Ctx) context.Context {
 ```
 
 Setiap RPC call ke Todo Service menggunakan context ini:
+
 ```go
 ctx := forwardContext(c)
 h.taskClient.Create(ctx, grpcReq)  // x-user-id terkirim dalam metadata
@@ -245,6 +252,7 @@ return handler(authCtx, req)  // teruskan ke handler dengan context baru
 ```
 
 Server kemudian membaca dari context:
+
 ```go
 // backend/todo-service/internal/delivery/grpc/server/task_server.go
 func getUserID(ctx context.Context) (string, error) {
@@ -270,6 +278,7 @@ grpc.SetTrailer(ctx, metadata.Pairs(
 ```
 
 Gateway menangkap trailer ini dan meneruskannya ke klien sebagai HTTP response header:
+
 ```go
 // backend/gateway/internal/delivery/http/handler/auth_handler.go
 var trailer metadata.MD
@@ -287,6 +296,7 @@ for trailerKey, headerKey := range map[string]string{
 ```
 
 Alur lengkap data latensi:
+
 ```
 Auth Service (ukur sign time)
     → kirim via gRPC Trailer
@@ -385,7 +395,7 @@ func NewAuthServiceConn(config *viper.Viper, log *zap.SugaredLogger) *grpc.Clien
 }
 ```
 
-Koneksi ini dibuat sekali saat startup dan digunakan bersama (*shared*) oleh semua goroutine yang menangani HTTP request secara konkuren. HTTP/2 multiplexing memungkinkan banyak RPC berjalan bersamaan di atas satu koneksi TCP ini tanpa blocking.
+Koneksi ini dibuat sekali saat startup dan digunakan bersama (_shared_) oleh semua goroutine yang menangani HTTP request secara konkuren. HTTP/2 multiplexing memungkinkan banyak RPC berjalan bersamaan di atas satu koneksi TCP ini tanpa blocking.
 
 ---
 
@@ -466,10 +476,10 @@ Seluruh overhead gRPC (marshal/unmarshal, network, bcrypt, DB query) terjadi di 
 
 **Solusi:** Dibuat dua endpoint benchmark khusus yang mem-bypass semua lapisan tersebut:
 
-| Endpoint | Jalur | Digunakan untuk |
-|----------|-------|-----------------|
-| `POST /api/benchmark/sign` | Gateway → langsung ke fungsi `Sign()` | Fase 1 Isolated |
-| `POST /api/benchmark/token` | Gateway → fungsi `Sign()` tanpa DB/bcrypt | Fase 2 Stress |
+| Endpoint                    | Jalur                                     | Digunakan untuk |
+| --------------------------- | ----------------------------------------- | --------------- |
+| `POST /api/benchmark/sign`  | Gateway → langsung ke fungsi `Sign()`     | Fase 1 Isolated |
+| `POST /api/benchmark/token` | Gateway → fungsi `Sign()` tanpa DB/bcrypt | Fase 2 Stress   |
 
 Endpoint ini tidak melalui auth-service, tidak ada DB query, tidak ada bcrypt. Payload JWT dibuat dari email yang disuplai dan UUID deterministik (`uuid.NewSHA1`).
 
@@ -480,6 +490,7 @@ Endpoint ini tidak melalui auth-service, tidak ada DB query, tidak ada bcrypt. P
 ### 11.3 Warmup Iterasi — Menghilangkan Bias Cold-Start
 
 **Masalah:** Iterasi pertama selalu lebih lambat karena:
+
 - **Cold path/branch prediction miss** — jalur kode dan prediktor cabang belum stabil
 - **CPU cache miss** — instruksi dan data kriptografi belum ada di cache L1/L2
 - **Heap belum terbentuk** — alokasi pertama lebih lambat karena Go harus meminta memori dari OS
@@ -540,6 +551,7 @@ if stats.GCOccurred {
 ```
 
 Hasil akhir melaporkan **dua set statistik**:
+
 - `token_generation_ms` — generasi JWT access token dari payload benchmark, semua iterasi (referensi)
 - `token_generation_gc_free_ms` — generasi JWT access token dari payload benchmark, hanya iterasi bersih ← gunakan ini di skripsi
 
@@ -553,7 +565,7 @@ Hasil akhir melaporkan **dua set statistik**:
 
 **Solusi:** `ReadMemStats` dipanggil **sebelum** dan **sesudah** Sign, namun **di luar** interval timer:
 
-```go
+```goS
 // ReadMemStats dipanggil di luar timer — STW-nya tidak masuk ke pengukuran latensi
 var memBefore, memAfter runtime.MemStats
 runtime.ReadMemStats(&memBefore)   // ← sebelum timer
@@ -575,10 +587,10 @@ runtime.ReadMemStats(&memAfter)    // ← sesudah timer
 
 **Solusi:** Dua mode pengukuran CPU dengan parameter `usePerOpCPU`:
 
-| Mode | `usePerOpCPU` | Cara ukur | Digunakan pada |
-|------|--------------|-----------|----------------|
-| Per-operasi | `true` | Delta tick CPU sebelum-sesudah Sign | Fase 1 Isolated |
-| Monitor latar | `false` | Nilai rata-rata dari background sampler | Fase 2 Stress (warmup) |
+| Mode          | `usePerOpCPU` | Cara ukur                               | Digunakan pada         |
+| ------------- | ------------- | --------------------------------------- | ---------------------- |
+| Per-operasi   | `true`        | Delta tick CPU sebelum-sesudah Sign     | Fase 1 Isolated        |
+| Monitor latar | `false`       | Nilai rata-rata dari background sampler | Fase 2 Stress (warmup) |
 
 ```go
 if usePerOpCPU {
@@ -598,37 +610,37 @@ if usePerOpCPU {
 
 ### Ringkasan Sumber Bias dan Mitigasinya
 
-| Sumber Bias | Dampak | Teknik Mitigasi |
-|-------------|--------|-----------------|
-| Latensi jaringan & gRPC | +0.5–5 ms per iterasi | Timer di sisi server, trailing metadata |
-| DB query + bcrypt | +100–300 ms | Endpoint benchmark khusus bypass auth pipeline |
-| Cold-start path/cache miss | Outlier iterasi awal | 20 iterasi warmup yang dibuang |
-| GC Stop-The-World | Spike latensi artifisial | GC paksa post-warmup + deteksi per-iterasi |
-| ReadMemStats STW | +overhead kecil ke timer | ReadMemStats di luar interval timer |
-| CPU coarse-grained sampling | Tidak akurat untuk < 1ms | Per-op tick delta untuk fase isolated |
+| Sumber Bias                 | Dampak                   | Teknik Mitigasi                                |
+| --------------------------- | ------------------------ | ---------------------------------------------- |
+| Latensi jaringan & gRPC     | +0.5–5 ms per iterasi    | Timer di sisi server, trailing metadata        |
+| DB query + bcrypt           | +100–300 ms              | Endpoint benchmark khusus bypass auth pipeline |
+| Cold-start path/cache miss  | Outlier iterasi awal     | 20 iterasi warmup yang dibuang                 |
+| GC Stop-The-World           | Spike latensi artifisial | GC paksa post-warmup + deteksi per-iterasi     |
+| ReadMemStats STW            | +overhead kecil ke timer | ReadMemStats di luar interval timer            |
+| CPU coarse-grained sampling | Tidak akurat untuk < 1ms | Per-op tick delta untuk fase isolated          |
 
 ---
 
 ## 12. Ringkasan Teknik yang Digunakan
 
-| Teknik | Lokasi | Tujuan |
-|--------|--------|--------|
-| **Protocol Buffers (proto3)** | `*/proto/*.proto` | Mendefinisikan kontrak data dan RPC |
-| **Unary RPC** | Semua service | Pola request-response sederhana |
-| **`UnimplementedXxxServer`** | Semua server | Forward compatibility |
-| **`google.protobuf.Empty`** | Semua CRUD | Return void tanpa payload |
-| **`google.protobuf.Timestamp`** | User, Task | Representasi waktu lintas bahasa |
-| **`repeated`** | GetAll responses | Slice/array dalam proto |
-| **gRPC Status + Error Codes** | Semua service | Error handling terstandarisasi |
-| **Outgoing Metadata** | Gateway → Todo Service | Propagasi user_id antar service |
-| **Incoming Metadata** | Todo Service interceptor | Membaca x-user-id dari gateway |
-| **Trailing Metadata** | Auth Service → Gateway | Kirim metrik latensi setelah respons |
-| **Unary Server Interceptor** | Todo Service | Autentikasi setiap RPC call |
-| **Keep-Alive (client)** | Gateway | Pertahankan koneksi HTTP/2 |
-| **Keep-Alive (server)** | Auth Service | Toleransi ping dari gateway |
-| **Shared gRPC Connection** | Gateway | Satu koneksi, banyak goroutine |
-| **`grpc.Trailer(&trailer)`** | Gateway auth handler | Tangkap trailing metadata dari server |
+| Teknik                          | Lokasi                   | Tujuan                                |
+| ------------------------------- | ------------------------ | ------------------------------------- |
+| **Protocol Buffers (proto3)**   | `*/proto/*.proto`        | Mendefinisikan kontrak data dan RPC   |
+| **Unary RPC**                   | Semua service            | Pola request-response sederhana       |
+| **`UnimplementedXxxServer`**    | Semua server             | Forward compatibility                 |
+| **`google.protobuf.Empty`**     | Semua CRUD               | Return void tanpa payload             |
+| **`google.protobuf.Timestamp`** | User, Task               | Representasi waktu lintas bahasa      |
+| **`repeated`**                  | GetAll responses         | Slice/array dalam proto               |
+| **gRPC Status + Error Codes**   | Semua service            | Error handling terstandarisasi        |
+| **Outgoing Metadata**           | Gateway → Todo Service   | Propagasi user_id antar service       |
+| **Incoming Metadata**           | Todo Service interceptor | Membaca x-user-id dari gateway        |
+| **Trailing Metadata**           | Auth Service → Gateway   | Kirim metrik latensi setelah respons  |
+| **Unary Server Interceptor**    | Todo Service             | Autentikasi setiap RPC call           |
+| **Keep-Alive (client)**         | Gateway                  | Pertahankan koneksi HTTP/2            |
+| **Keep-Alive (server)**         | Auth Service             | Toleransi ping dari gateway           |
+| **Shared gRPC Connection**      | Gateway                  | Satu koneksi, banyak goroutine        |
+| **`grpc.Trailer(&trailer)`**    | Gateway auth handler     | Tangkap trailing metadata dari server |
 
 ---
 
-*Dokumen ini dibuat berdasarkan kode sumber di direktori `backend/auth-service/`, `backend/todo-service/`, dan `backend/gateway/`.*
+_Dokumen ini dibuat berdasarkan kode sumber di direktori `backend/auth-service/`, `backend/todo-service/`, dan `backend/gateway/`._
