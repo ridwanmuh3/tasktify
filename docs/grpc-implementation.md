@@ -480,7 +480,7 @@ Endpoint ini tidak melalui auth-service, tidak ada DB query, tidak ada bcrypt. P
 ### 11.3 Warmup Iterasi — Menghilangkan Bias Cold-Start
 
 **Masalah:** Iterasi pertama selalu lebih lambat karena:
-- **JIT/branch prediction miss** — Go runtime belum mengoptimalkan hot path
+- **Cold path/branch prediction miss** — jalur kode dan prediktor cabang belum stabil
 - **CPU cache miss** — instruksi dan data kriptografi belum ada di cache L1/L2
 - **Heap belum terbentuk** — alokasi pertama lebih lambat karena Go harus meminta memori dari OS
 
@@ -540,10 +540,10 @@ if stats.GCOccurred {
 ```
 
 Hasil akhir melaporkan **dua set statistik**:
-- `token_generation_ms` — semua iterasi (referensi)
-- `token_generation_gc_free_ms` — **hanya iterasi bersih** ← gunakan ini di skripsi
+- `token_generation_ms` — generasi JWT access token dari payload benchmark, semua iterasi (referensi)
+- `token_generation_gc_free_ms` — generasi JWT access token dari payload benchmark, hanya iterasi bersih ← gunakan ini di skripsi
 
-**Dampak pada bias:** Memungkinkan analisis dengan dan tanpa kontaminasi GC. `gc_free` mencerminkan performa algoritma murni tanpa artefak GC.
+**Dampak pada bias:** Memungkinkan analisis dengan dan tanpa kontaminasi GC. `gc_free` mencerminkan performa generasi JWT dari payload benchmark tanpa artefak GC.
 
 ---
 
@@ -602,7 +602,7 @@ if usePerOpCPU {
 |-------------|--------|-----------------|
 | Latensi jaringan & gRPC | +0.5–5 ms per iterasi | Timer di sisi server, trailing metadata |
 | DB query + bcrypt | +100–300 ms | Endpoint benchmark khusus bypass auth pipeline |
-| Cold-start JIT/cache miss | Outlier iterasi awal | 20 iterasi warmup yang dibuang |
+| Cold-start path/cache miss | Outlier iterasi awal | 20 iterasi warmup yang dibuang |
 | GC Stop-The-World | Spike latensi artifisial | GC paksa post-warmup + deteksi per-iterasi |
 | ReadMemStats STW | +overhead kecil ke timer | ReadMemStats di luar interval timer |
 | CPU coarse-grained sampling | Tidak akurat untuk < 1ms | Per-op tick delta untuk fase isolated |

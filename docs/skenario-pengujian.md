@@ -15,7 +15,7 @@ Pengujian dirancang dalam **tiga fase berurutan** yang dieksekusi dalam satu ses
 
 | Fase | Nama | Tujuan |
 |------|------|---------|
-| 1 | Isolated Benchmark | Mengukur latensi tanda tangan murni tanpa gangguan (*noise*) eksternal |
+| 1 | Isolated Benchmark | Mengukur latensi generasi JWT dari payload benchmark tanpa gangguan (*noise*) eksternal |
 | 2 | Stress Test | Mengukur degradasi performa di bawah beban konkuren |
 | 3 | Attack Block-Rate | Memverifikasi integritas token — sistem harus menolak token yang dimanipulasi |
 
@@ -67,7 +67,7 @@ Semua algoritma merupakan algoritma kriptografi pasca-kuantum (*Post-Quantum Cry
 
 ### 4.1 Tujuan
 
-Mengukur **latensi generasi token JWT murni** pada kondisi terkendali: 1 VU, tidak ada beban konkuren, tidak ada operasi basis data, dan tidak ada bcrypt. Angka dari fase ini adalah yang digunakan sebagai **hasil utama dalam skripsi**.
+Mengukur **latensi generasi token JWT dari payload benchmark** pada kondisi terkendali: 1 VU, tidak ada beban konkuren, tidak ada operasi basis data, dan tidak ada bcrypt. Angka dari fase ini adalah yang digunakan sebagai **hasil utama dalam skripsi**.
 
 ### 4.2 Endpoint
 
@@ -75,13 +75,13 @@ Mengukur **latensi generasi token JWT murni** pada kondisi terkendali: 1 VU, tid
 POST /api/benchmark/sign
 ```
 
-Endpoint ini menjalankan loop penandatanganan langsung di dalam proses gateway, memanggil fungsi kriptografi secara langsung tanpa melalui lapisan basis data atau layanan autentikasi.
+Endpoint ini menjalankan loop generasi token langsung di dalam proses gateway. Jalur ini memanggil `Sign(payload)` tanpa melalui basis data, bcrypt, auth-service, atau gRPC.
 
 ### 4.3 Konfigurasi
 
 | Parameter | Nilai Default | Variabel Lingkungan | Keterangan |
 |-----------|--------------|---------------------|------------|
-| Jumlah iterasi | 100 | `ITERATIONS` | Jumlah penandatanganan yang diukur per algoritma |
+| Jumlah iterasi | 100 | `ITERATIONS` | Jumlah generasi token yang diukur per algoritma |
 | Iterasi warmup | 20 | `ISOLATED_WARMUP` | Iterasi yang dibuang sebelum pengukuran dimulai |
 | VU (pengguna virtual) | 1 | — | Selalu 1, tidak dapat diubah |
 | Timeout per skenario | ≥ 60 detik | — | Dihitung otomatis: `max(60, ceil(N×0.01)+30)` detik |
@@ -92,7 +92,7 @@ Endpoint ini menjalankan loop penandatanganan langsung di dalam proses gateway, 
 
 Sebelum iterasi yang diukur dimulai, server menjalankan **20 iterasi warmup** yang hasilnya dibuang. Tujuannya:
 
-1. **Pemanasan JIT kompiler** — Go mengoptimalkan kode panas setelah beberapa eksekusi
+1. **Pemanasan jalur kode** — branch predictor dan fungsi hot path mulai stabil
 2. **Pemanasan cache CPU** — instruksi dan data kriptografi masuk ke cache L1/L2
 3. **Alokasi memori awal** — Go runtime melakukan alokasi heap awal
 
@@ -107,6 +107,18 @@ Latensi diukur **di dalam proses server** (bukan dari sisi k6) menggunakan `time
 signMs = (timerStop - timerStart) dalam milidetik
 ```
 
+Cakupan timer:
+
+| Masuk timer | Tidak masuk timer |
+|-------------|-------------------|
+| Pembuatan klaim JWT dari payload benchmark | k6 round-trip |
+| JSON marshal dan base64url header/payload | HTTP request parsing |
+| Pembuatan signing string | DB query |
+| Operasi tanda tangan algoritma | bcrypt |
+| Penggabungan JWT compact (`header.payload.signature`) | auth-service/gRPC |
+
+Dengan demikian, metrik ini mengukur **generasi JWT dari payload benchmark**, bukan hanya primitif kriptografi mentah.
+
 ### 4.6 Deteksi Kontaminasi GC
 
 Selama setiap iterasi, sistem memantau apakah *Garbage Collector* (GC) Go berjalan selama pemanggilan `Sign()` menggunakan `runtime.ReadMemStats().NumGC`. Iterasi yang terkena GC ditandai sebagai **GC-contaminated** karena GC menyebabkan jeda STW (*Stop-The-World*) yang dapat menggelembungkan latensi pengukuran.
@@ -115,8 +127,11 @@ Dua set statistik dilaporkan:
 
 | Set | Keterangan |
 |-----|------------|
-| `token_generation_ms` | Semua iterasi, termasuk yang terkena GC |
-| `token_generation_gc_free_ms` | Hanya iterasi bersih (GC tidak terjadi) — **gunakan ini sebagai hasil primer skripsi** |
+| `token_generation_ms` | Access-token generation, semua iterasi, termasuk yang terkena GC |
+| `token_generation_gc_free_ms` | Access-token generation, hanya iterasi bersih (GC tidak terjadi) — **gunakan ini sebagai hasil primer skripsi** |
+| `refresh_token_generation_ms` | Refresh-token generation, semua iterasi |
+| `refresh_token_generation_gc_free_ms` | Refresh-token generation, hanya iterasi bersih |
+| `total_ms` | Access-token generation + refresh-token generation |
 
 ### 4.7 Statistik yang Dilaporkan
 
@@ -138,10 +153,11 @@ Untuk setiap set waktu (dalam milidetik):
 
 ### 5.1 Tujuan
 
-Mengukur **degradasi performa dan throughput** ketika banyak pengguna mengakses sistem secara bersamaan (*concurrent*). Fase ini menggunakan dua endpoint berbeda dalam satu iterasi VU:
+Mengukur **degradasi performa dan throughput** ketika banyak pengguna mengakses sistem secara bersamaan (*concurrent*). Fase ini menggunakan endpoint benchmark dan endpoint autentikasi nyata dalam satu iterasi VU:
 
-1. `/api/benchmark/token` — Tanda tangan JWT murni (tanpa bcrypt/DB)
-2. `/api/auth/signin` — Login lengkap (bcrypt verifikasi password + query DB + tanda tangan JWT)
+1. `/api/benchmark/token` — Generasi JWT dari payload benchmark (tanpa bcrypt/DB)
+2. `/api/auth/signin` — Login lengkap (bcrypt verifikasi password + query DB + generasi JWT)
+3. `/api/auth/refresh` — Rotasi access token dan refresh token
 
 ### 5.2 Konfigurasi
 
@@ -160,10 +176,11 @@ Mengukur **degradasi performa dan throughput** ketika banyak pengguna mengakses 
 Iterasi VU ke-N:
 ├── [Hanya iterasi pertama] 3x warmup request ke /api/benchmark/token
 ├── POST /api/benchmark/token  → ukur: sign_actual, dirty, clean, network
-└── POST /api/auth/signin       → ukur: login_dirty (terpisah, tidak campur dengan signing)
+├── POST /api/auth/signin       → ukur: login_dirty (terpisah, tidak campur dengan signing)
+└── POST /api/auth/refresh      → ukur: refresh_dirty + refresh_token_generation_clean
 ```
 
-Panggilan login dieksekusi **di luar grup pengukuran signing** agar tidak mengkontaminasi metrik latensi penandatanganan.
+Panggilan login dan refresh dieksekusi **di luar grup pengukuran benchmark token** agar tidak mengkontaminasi metrik `stress_token_generation_clean`.
 
 ### 5.4 Anggaran Latensi per Algoritma
 
@@ -181,25 +198,33 @@ Pengujian dinyatakan **gagal** (exit code non-zero) apabila nilai p95 melampaui 
 
 ### 5.5 Metrik yang Dikumpulkan (Fase 2)
 
-#### Metrik Tanda Tangan (`/api/benchmark/token`)
+#### Metrik Generasi JWT Benchmark (`/api/benchmark/token`)
 
-| Nama Metrik | Sumber | Keterangan |
-|-------------|--------|------------|
-| `stress_token_generation_clean` | Header `X-Token-Generation-Time-Ms` | Latensi penandatanganan murni di sisi server (ms) |
-| `stress_sign_dirty` | `timings.duration` | Waktu total round-trip k6 (ms) |
-| `stress_sign_clean` | `timings.waiting` | Waktu menunggu respons server / TTFB (ms) |
-| `stress_sign_network` | dirty − clean | Estimasi overhead jaringan (ms) |
+| Nama Metrik k6 | Sumber | Cakupan | Keterangan |
+|----------------|--------|---------|------------|
+| `stress_token_generation_clean` | Header `X-Token-Generation-Time-Ms` | `Sign(payload)` di server | Generasi JWT dari payload benchmark; tanpa DB, bcrypt, auth-service, dan round-trip k6 |
+| `stress_sign_clean` | `timings.waiting` | Server wait/TTFB | Waktu tunggu sampai byte respons pertama; mencakup antrean handler dan proses server |
+| `stress_sign_dirty` | `timings.duration` | Client round-trip | Total waktu dari k6 mengirim request sampai response selesai |
+| `stress_sign_network` | `dirty - clean` | Estimasi network/client overhead | Selisih antara round-trip penuh dan TTFB |
 
 #### Metrik Login Penuh (`/api/auth/signin`)
 
-| Nama Metrik | Sumber | Keterangan |
-|-------------|--------|------------|
-| `stress_login_dirty` | `timings.duration` | Waktu total round-trip login lengkap: bcrypt + DB + JWT (ms) |
+| Nama Metrik k6 | Sumber | Cakupan | Keterangan |
+|----------------|--------|---------|------------|
+| `stress_login_dirty` | `timings.duration` | Full login round-trip | bcrypt verify + DB lookup + generasi access/refresh JWT + HTTP round-trip |
+
+#### Metrik Refresh (`/api/auth/refresh`)
+
+| Nama Metrik k6 | Sumber | Cakupan | Keterangan |
+|----------------|--------|---------|------------|
+| `stress_refresh_token_generation_clean` | Header `X-Refresh-Token-Generation-Time-Ms` | Generasi token baru di server | Waktu server-side untuk generasi token saat refresh |
+| `stress_refresh_dirty` | `timings.duration` | Full refresh round-trip | Verifikasi refresh token + rotasi token + HTTP round-trip |
+| `stress_refresh_error_rate` | Rate | Kegagalan refresh | Proporsi refresh gagal per skenario |
 
 #### Metrik Keberhasilan
 
-| Nama Metrik | Tipe | Keterangan |
-|-------------|------|------------|
+| Nama Metrik k6 | Tipe | Keterangan |
+|----------------|------|------------|
 | `stress_req_success` | Counter | Jumlah permintaan berhasil (HTTP 200 + ada token) |
 | `stress_req_failed` | Counter | Jumlah permintaan gagal |
 | `stress_error_rate` | Rate | Proporsi permintaan gagal; gagal jika > 5% per skenario |
@@ -249,7 +274,7 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 |----------|-------|-------------|
 | Jumlah iterasi isolated | 100 | Sama untuk semua algoritma |
 | Iterasi warmup | 20 | Menghilangkan bias cold-start yang sama |
-| Payload JWT | `{userID, email, algorithm}` | Klaim token identik |
+| Payload benchmark | `userID`, `email`, `algorithm`, `token_use` | Struktur klaim sama; `jti`, `iat`, dan `exp` berubah per token |
 | Akun pengguna | 1 akun benchmark dibuat di `setup()` | Mengeliminasi variabilitas dari pembuatan akun berbeda |
 | Infrastruktur server | Proses gateway identik | Dikompilasi dari kode base yang sama |
 | Metode pengukuran | `time.Now()` Go di dalam proses | Konsisten untuk semua algoritma |
@@ -267,11 +292,11 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 
 | Variabel | Satuan | Fase |
 |----------|--------|------|
-| Latensi generasi token (avg, p95, p99, stdev) | milidetik | 1 |
+| Latensi generasi JWT dari payload benchmark (avg, p95, p99, stdev) | milidetik | 1 |
 | Jumlah iterasi terkontaminasi GC | integer | 1 |
-| Latensi penandatanganan di bawah beban (avg, p95) | milidetik | 2 |
+| Latensi generasi JWT di bawah beban (avg, p95) | milidetik | 2 |
 | Latensi login penuh di bawah beban (avg, p95) | milidetik | 2 |
-| Throughput autentikasi | req/detik | 2 |
+| Throughput benchmark-token sukses | req/detik | 2 |
 | Tingkat kesalahan | persen | 2 |
 | Tingkat pemblokiran token palsu | persen | 3 |
 
@@ -285,7 +310,7 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 ┌─────────────────────────────────────────────────────────────┐
 │                    dirty (k6 timings.duration)               │
 │  ┌──────────────────────────────┐  ┌────────────────────┐   │
-│  │  clean (timings.waiting)     │  │ network (dirt-clean)│   │
+│  │  clean (timings.waiting)     │  │  network overhead  │   │
 │  │  ┌───────────────────────┐  │  └────────────────────┘   │
 │  │  │ token_generation_clean │  │                           │
 │  │  │ (X-Token-Generation-  │  │                           │
@@ -295,13 +320,14 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-| Istilah | Sumber | Mencakup |
-|---------|--------|----------|
-| `token_generation_clean` | Header HTTP dari server | Hanya tanda tangan kriptografi — **metrik utama skripsi** |
-| `clean` | `timings.waiting` k6 | Server processing + jaringan satu arah (TTFB) |
-| `network` | dirty − clean | Estimasi latensi jaringan total |
-| `dirty` | `timings.duration` k6 | Total round-trip dari k6 termasuk koneksi TCP |
-| `login_dirty` | `timings.duration` k6 | Total round-trip login penuh (bcrypt + DB + sign) |
+| Istilah | Sumber | Mencakup | Tidak mencakup | Pemakaian |
+|---------|--------|----------|----------------|----------|
+| `token_generation_clean` | Header HTTP dari server | Generasi JWT dari payload benchmark: klaim, signing string, signature, compact token | DB, bcrypt, auth-service, HTTP round-trip | Metrik utama skripsi saat isolated; metrik pendukung saat stress |
+| `clean` | `timings.waiting` k6 | Waktu tunggu sampai TTFB | Download body penuh | Diagnosa antrean/server |
+| `network` | `dirty - clean` | Estimasi overhead client/network | Server-side token timer | Diagnosa transport |
+| `dirty` | `timings.duration` k6 | Total round-trip dari k6 | Pemisahan komponen internal | E2E endpoint |
+| `login_dirty` | `timings.duration` k6 | Login penuh: bcrypt + DB + JWT + HTTP round-trip | Isolasi signing | Performa autentikasi nyata |
+| `refresh_dirty` | `timings.duration` k6 | Refresh penuh: verifikasi refresh token + rotasi JWT + HTTP round-trip | Isolasi signing | Performa refresh nyata |
 
 ---
 
@@ -352,6 +378,8 @@ k6 menghasilkan tiga berkas keluaran di akhir pengujian:
         {
           "vus": 10,
           "token_generation_ms": { "avg": ..., "p95": ... },
+          "refresh_token_generation_ms": { "avg": ..., "p95": ... },
+          "refresh_ms": { "avg": ..., "p95": ... },
           "e2e_ms": { "avg": ..., "p95": ... },
           "login_ms": { "avg": ..., "p95": ... },
           "throughput_ok_per_s": ...,
@@ -372,17 +400,21 @@ k6 menghasilkan tiga berkas keluaran di akhir pengujian:
 
 ### 11.1 Metrik Primer (Fase 1)
 
-Gunakan `token_generation_gc_free_ms` dari isolated benchmark sebagai **angka utama yang dikutip dalam skripsi**:
+Gunakan `isolated.token_generation_gc_free_ms` sebagai **angka utama yang dikutip dalam skripsi**:
 
-- **avg** — latensi rata-rata generasi token (milidetik)
+- **avg** — latensi rata-rata generasi access JWT dari payload benchmark (milidetik)
 - **p95** — 95% token selesai dalam waktu ini; metrik yang umum digunakan dalam SLA
 - **stdev** — konsistensi latensi; stdev kecil berarti algoritma berperilaku prediktabel
 
+Kalimat aman: metrik ini mengukur generasi JWT server-side dari payload benchmark, bukan round-trip k6 dan bukan operasi kriptografi mentah saja.
+
 ### 11.2 Metrik Pendukung (Fase 2)
 
-- **token_generation_ms avg @ 10/30/50 VU** — latensi signing murni di bawah beban
-- **login_ms avg @ 10/30/50 VU** — waktu respon login pengguna nyata (termasuk bcrypt + DB)
-- **throughput_ok_per_s** — berapa autentikasi berhasil per detik
+- **token_generation_ms avg @ 10/30/50 VU** — latensi generasi JWT dari payload benchmark di bawah beban
+- **refresh_token_generation_ms avg @ 10/30/50 VU** — latensi generasi token baru pada endpoint refresh
+- **login_ms avg @ 10/30/50 VU** — waktu respons login pengguna nyata (termasuk bcrypt + DB + JWT)
+- **refresh_ms avg @ 10/30/50 VU** — waktu respons refresh penuh
+- **throughput_ok_per_s** — jumlah `/api/benchmark/token` sukses per detik
 
 ### 11.3 Validasi Keamanan (Fase 3)
 

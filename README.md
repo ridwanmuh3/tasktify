@@ -1,8 +1,8 @@
 # Tasktify
 
-Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks multiple JWT signing algorithms with k6.
+Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks JWT generation latency across multiple signing algorithms with k6.
 
-Primary research path measures JWT signing latency for:
+Primary research path measures server-side JWT generation from benchmark payloads for:
 
 | Algorithm                | Category                                  | Benchmark port |
 | ------------------------ | ----------------------------------------- | -------------- |
@@ -82,13 +82,13 @@ Benchmark flow:
 
 ```text
 POST /api/benchmark/sign
-Gateway signs tokens in-process, skips DB/bcrypt/auth-service path, and returns batch timing stats.
-Use this for isolated signing experiments. Request controls iterations and warmup_iterations.
-Each measured iteration signs one access token and one refresh token, then returns raw timings,
+Gateway generates JWTs in-process from benchmark payloads, skips DB/bcrypt/auth-service path, and returns batch timing stats.
+Use this for isolated JWT generation experiments. Request controls iterations and warmup_iterations.
+Each measured iteration generates one access token and one refresh token, then returns raw timings,
 p50/p95/p99 summaries, GC-free samples, CPU, and memory metrics.
 
 POST /api/benchmark/token
-Gateway signs one access token in-process, skips DB/bcrypt/auth-service path, and returns token payload.
+Gateway generates one access token in-process, skips DB/bcrypt/auth-service path, and returns token payload.
 Use this for stress tests that need one usable Bearer token per request.
 Response includes X-Sign-Time-Ms and X-Token-Generation-Time-Ms headers.
 ```
@@ -323,13 +323,47 @@ Run metadata from `benchmark_sign_result.json`:
 | `generated_at`               | `2026-05-21T03:34:25.259Z`        |
 | `endpoint`                   | `https://poc-ridwanmuh3.my.id`    |
 | `mode`                       | `Isolated + Stress + Attack`      |
-| `primary_metric`             | `isolated_clean_token_generation` |
+| `primary_metric`             | `isolated_gc_free_token_generation` |
 | `isolated_iterations`        | `100`                             |
 | `isolated_warmup_iterations` | `20`                              |
 | `stress_duration_seconds`    | `30`                              |
 | `concurrency_levels`         | `10`, `30`, `50`                  |
 
-Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. GC-free metric removes iterations where Go GC ran during signing.
+Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. It measures server-side JWT generation from the benchmark payload and removes iterations where Go GC ran during generation.
+
+Metric scope:
+
+| Metric | Scope | Use |
+| ------ | ----- | --- |
+| `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free, server-side timer | Primary thesis metric |
+| `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free, server-side timer | Secondary isolated metric |
+| `stress.token_generation_ms` | Access JWT generation under concurrent VUs, from `X-Token-Generation-Time-Ms` | Stress support metric |
+| `stress.refresh_token_generation_ms` | Refresh JWT generation under concurrent VUs | Refresh support metric |
+| `stress.e2e_ms` | Full `/api/benchmark/token` k6 round-trip | Transport/server overhead check |
+| `stress.login_ms` | Full `/api/auth/signin` round-trip: bcrypt + DB + JWT | Real auth-path metric |
+
+### Seminar Hasil Metric Definition
+
+Untuk seminar hasil, istilah resmi yang dipakai:
+
+| Level | Metric | Definisi | Dipakai untuk |
+| ----- | ------ | -------- | ------------- |
+| Primer | `isolated.token_generation_gc_free_ms` | Latensi server-side generasi access JWT dari payload benchmark; sampel yang terkena Go GC dibuang | Perbandingan utama algoritma |
+| Sekunder isolated | `isolated.refresh_token_generation_gc_free_ms` | Latensi server-side generasi refresh JWT dari payload benchmark; sampel GC dibuang | Validasi konsistensi access vs refresh token |
+| Pendukung stress | `stress.token_generation_ms` | Latensi generasi access JWT saat VU konkuren, dari header `X-Token-Generation-Time-Ms` | Dampak beban konkuren terhadap generasi JWT |
+| Pendukung sistem | `stress.e2e_ms` | Round-trip penuh k6 ke `/api/benchmark/token` | Overhead handler, antrean, dan transport |
+| Auth nyata | `stress.login_ms` | Round-trip penuh `/api/auth/signin`: bcrypt + DB + JWT | Gambaran performa login nyata, bukan metrik algoritma |
+
+Kalimat siap pakai:
+
+> Metrik utama penelitian adalah `isolated.token_generation_gc_free_ms`, yaitu latensi generasi access JWT dari payload benchmark yang diukur langsung di sisi server. Metrik ini mengecualikan round-trip k6, HTTP client overhead, DB query, bcrypt, auth-service, gRPC, dan sampel yang terkontaminasi Go GC. Karena itu, angka ini merepresentasikan biaya generasi token JWT pada masing-masing algoritma, bukan latensi login penuh dan bukan operasi kriptografi mentah saja.
+
+Batas interpretasi:
+
+- Jangan sebut metric primer sebagai "latensi login".
+- Jangan sebut metric primer sebagai "network latency".
+- Jangan sebut metric primer sebagai "pure cryptographic primitive".
+- Sebut sebagai "server-side JWT generation latency from benchmark payload".
 
 ### Statistical Testing
 
@@ -414,16 +448,16 @@ Values below come from `benchmark_sign_result.json`. Units are milliseconds unle
 
 Result reading:
 
-- `ML-DSA-44` has lowest isolated access-token signing average at `0.098 ms`.
-- `Falcon-Precomputed-512` signs faster than `Falcon-512` in isolated average, `0.284 ms` vs `0.341 ms`.
-- `SLH-DSA-SHA2-128s` is slowest isolated signer, with `248.870 ms` average and `263.372 ms` p95.
+- `ML-DSA-44` has lowest isolated access-token generation average at `0.098 ms`.
+- `Falcon-Precomputed-512` generates access tokens faster than `Falcon-512` in isolated average, `0.284 ms` vs `0.341 ms`.
+- `SLH-DSA-SHA2-128s` is slowest isolated access-token generator, with `248.870 ms` average and `263.372 ms` p95.
 
 ### Stress Results
 
-Stress phase uses `/api/benchmark/token`, `/api/auth/signin`, and `/api/auth/refresh` at 10, 30, and 50 VUs. Values come from `benchmark_sign_result.json`; all error-rate values are `0`.
+Stress phase uses `/api/benchmark/token`, `/api/auth/signin`, and `/api/auth/refresh` at 10, 30, and 50 VUs. Access avg/p95 comes from server-side JWT generation header; E2E/login/refresh values are k6 round-trip metrics. Values come from `benchmark_sign_result.json`; all error-rate values are `0`.
 
-| Algorithm                | VUs | Sign avg | Sign p95 |  E2E p95 | Login p95 | Refresh p95 | Throughput ok/s |
-| ------------------------ | --: | -------: | -------: | -------: | --------: | ----------: | --------------: |
+| Algorithm                | VUs | Access avg | Access p95 |  E2E p95 | Login p95 | Refresh p95 | Token ok/s |
+| ------------------------ | --: | ---------: | ---------: | -------: | --------: | ----------: | ---------: |
 | `Falcon-Precomputed-512` |  10 |    0.418 |    0.742 |  117.627 |   275.370 |     188.308 |           26.83 |
 | `Falcon-Precomputed-512` |  30 |    0.415 |    0.654 |   68.819 |  1395.385 |    1219.381 |           22.33 |
 | `Falcon-Precomputed-512` |  50 |    0.413 |    0.748 |   76.032 |  2174.233 |    2137.003 |           22.83 |

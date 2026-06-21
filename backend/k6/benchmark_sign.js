@@ -1,11 +1,11 @@
 /**
  * benchmark_sign.js
  *
- * Two-phase signing latency study:
+ * JWT generation latency study:
  *
  *   Phase 1 — ISOLATED (1 VU, server-side loop)
  *     POST /api/benchmark/sign with N iterations.
- *     Uses gateway-local pure signing path, no DB/bcrypt/auth-service noise.
+ *     Uses gateway-local JWT generation path, no DB/bcrypt/auth-service noise.
  *     Warmup iterations are discarded before measurement.
  *     Use these numbers in academic papers.
  *
@@ -39,14 +39,14 @@
  *
  * Latency taxonomy:
  *   token_generation_clean = X-Token-Generation-Time-Ms / X-Sign-Time-Ms header
- *                            pure JWT generation only, no DB/bcrypt/auth-service latency
+ *                            JWT generation from benchmark payload only; no DB/bcrypt/auth-service latency
  *   refresh_generation     = X-Refresh-Token-Generation-Time-Ms from /api/auth/refresh
  *   clean                  = k6 timings.waiting — TTFB/server processing approx
  *   dirty                  = k6 timings.duration — full client round-trip
  *   network                = dirty − clean
  *
  * Primary metrics:
- *   signing latency, p95 signing latency, authentication throughput,
+ *   JWT generation latency, p95 JWT generation latency, benchmark-token throughput,
  *   memory usage, CPU utilization
  *
  * Secondary metrics:
@@ -110,7 +110,7 @@ const ALGORITHMS = [
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
-// Dirty = full k6 round-trip budget; Actual = server-side pure signing budget.
+// Dirty = full k6 round-trip budget; Actual = server-side JWT generation budget.
 const STRESS_BUDGET = {
   "Falcon-Precomputed-512": { dirty: 5000, actual: 500 },
   "Falcon-512": { dirty: 10000, actual: 1000 },
@@ -244,7 +244,7 @@ const benchRefreshTokenGenerationGCFreeSample = new Trend(
 );
 const benchTotalSample = new Trend("bench_total_sample", true);
 
-// ── Phase 2: Stress — per benchmark sign call, tagged {alg, vus} ──────
+// ── Phase 2: Stress — per benchmark token call, tagged {alg, vus} ─────
 // tokenGenerationClean = X-Token-Generation-Time-Ms / X-Sign-Time-Ms
 // clean                = timings.waiting (server processing approx — TTFB after send)
 // dirty                = timings.duration (full k6 round-trip)
@@ -617,8 +617,8 @@ export function runStress(data) {
     stressErrorRate.add(!ok, tags);
   });
 
-  // Full login round-trip: bcrypt verify + DB lookup + JWT sign.
-  // Measured separately so it doesn't pollute the signing latency above.
+  // Full login round-trip: bcrypt verify + DB lookup + JWT generation.
+  // Measured separately so it doesn't pollute the benchmark-token latency above.
   const loginBody = JSON.stringify({
     email: data.user.email,
     password: data.user.password,
@@ -748,6 +748,12 @@ export function handleSummary(data) {
     return v.toFixed(digits);
   }
 
+  function getValFallback(metric, fallbackMetric, algName, vuCount, stat, digits = 3) {
+    const v = getVal(metric, algName, vuCount, stat, digits);
+    if (v !== "—") return v;
+    return getVal(fallbackMetric, algName, vuCount, stat, digits);
+  }
+
   function getCount(metric, algName, vuCount) {
     const key = getMetricKey(metric, algName, vuCount);
     return (m[key] && m[key].values.count) || 0;
@@ -807,15 +813,15 @@ export function handleSummary(data) {
             : "Isolated + Stress + Attack",
       endpoint: isMultiGateway ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}` : SINGLE_BASE,
       methodology: {
-        primary_metric: "isolated_clean_token_generation",
-        supporting_metric: "stress_concurrent_signing",
+        primary_metric: "isolated_gc_free_token_generation",
+        supporting_metric: "stress_concurrent_jwt_generation",
         isolated_iterations: ITERATIONS,
         isolated_warmup_iterations: ISOLATED_WARMUP,
         stress_duration_seconds: STRESS_DURATION_S,
         stress_warmup_enabled: STRESS_WARMUP,
         concurrency_levels: CONCURRENCY_LEVELS,
         notes: [
-          "Isolated metrics use gateway-local pure signing path.",
+          "Isolated metrics use gateway-local JWT generation path.",
           "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
           "Refresh metrics use /api/auth/refresh with refresh tokens returned by /api/auth/signin.",
           "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios.",
@@ -1114,15 +1120,15 @@ export function handleSummary(data) {
     return section + row;
   }
 
-  // ── TABLE 1: Isolated clean token-generation baseline ─────────
+  // ── TABLE 1: Isolated GC-free JWT generation baseline ────────
   const WI = [28, 6, 12, 12, 12, 12, 12, 12, 12, 10, 10];
 
   const hdrI = [
     pad("Algorithm", WI[0]),
     pad("N", WI[1]),
-    pad("Token avg", WI[2]),
-    pad("Token p95", WI[3]),
-    pad("Token stdev", WI[4]),
+    pad("Access avg", WI[2]),
+    pad("Access p95", WI[3]),
+    pad("Access sd", WI[4]),
     pad("Refresh avg", WI[5]),
     pad("Refresh p95", WI[6]),
     pad("E2E avg", WI[7]),
@@ -1149,11 +1155,41 @@ export function handleSummary(data) {
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
-    const sa = getVal("bench_token_generation_avg", n, null, "avg");
-    const sp = getVal("bench_token_generation_p95", n, null, "avg");
-    const ss = getVal("bench_token_generation_stdev", n, null, "avg");
-    const ra = getVal("bench_refresh_token_generation_avg", n, null, "avg");
-    const rp = getVal("bench_refresh_token_generation_p95", n, null, "avg");
+    const sa = getValFallback(
+      "bench_token_generation_gc_free_avg",
+      "bench_token_generation_avg",
+      n,
+      null,
+      "avg",
+    );
+    const sp = getValFallback(
+      "bench_token_generation_gc_free_p95",
+      "bench_token_generation_p95",
+      n,
+      null,
+      "avg",
+    );
+    const ss = getValFallback(
+      "bench_token_generation_gc_free_stdev",
+      "bench_token_generation_stdev",
+      n,
+      null,
+      "avg",
+    );
+    const ra = getValFallback(
+      "bench_refresh_token_generation_gc_free_avg",
+      "bench_refresh_token_generation_avg",
+      n,
+      null,
+      "avg",
+    );
+    const rp = getValFallback(
+      "bench_refresh_token_generation_gc_free_p95",
+      "bench_refresh_token_generation_p95",
+      n,
+      null,
+      "avg",
+    );
     const ta = getVal("bench_total_avg", n, null, "avg");
     const tp = getVal("bench_total_p95", n, null, "avg");
     const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
@@ -1183,11 +1219,11 @@ export function handleSummary(data) {
   const hdrP = [
     pad("Algorithm", WP[0]),
     pad("VUs", WP[1]),
-    pad("Sign avg", WP[2]),
-    pad("Sign p95", WP[3]),
+    pad("Access avg", WP[2]),
+    pad("Access p95", WP[3]),
     pad("Refresh avg", WP[4]),
     pad("Refresh p95", WP[5]),
-    pad("Auth thrpt", WP[6]),
+    pad("Token ok/s", WP[6]),
   ].join("");
 
   const unitP = [
@@ -1278,20 +1314,20 @@ export function handleSummary(data) {
 
   const table = `
 ${SEP}
-  SIGNING LATENCY STUDY  —  ${new Date().toISOString()}
+  JWT GENERATION LATENCY STUDY  —  ${new Date().toISOString()}
   Mode      : ${ATTACK_ONLY ? "Attack only" : STRESS_ONLY ? "Stress only" : ISOLATED_ONLY ? "Isolated only" : "Isolated + Stress + Attack"}
   Endpoint  : ${isMultiGateway ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}` : SINGLE_BASE}
 ${SEP}
 
-  ── PRIMARY THESIS METRIC: ISOLATED CLEAN TOKEN GENERATION (1 VU, ${ITERATIONS} iterations) ──
+  ── PRIMARY THESIS METRIC: ISOLATED GC-FREE JWT GENERATION (1 VU, ${ITERATIONS} iterations) ──
   ${hdrI}
   ${unitI}
   ${LINE}
   ${isolated.trimEnd().split("\n").join("\n  ")}
 
-  Token   = JWT generation measured in local benchmark signer only; excludes DB lookup, bcrypt, auth-service, and network
-  E2E     = Full local benchmark handler iteration during isolated benchmark
-  Warmup  = ${ISOLATED_WARMUP} discarded iterations before each isolated measurement
+  Access/Refresh = GC-free JWT generation from benchmark payload when available; fallback to all samples
+  E2E            = Full local benchmark handler iteration during isolated benchmark
+  Warmup         = ${ISOLATED_WARMUP} discarded iterations before each isolated measurement
 
   ── SUPPORTING SYSTEM METRICS: STRESS (${CONCURRENCY_LEVELS.join(" / ")} VUs, ${STRESS_DURATION_S}s each) ──
   ${hdrP}
@@ -1305,13 +1341,13 @@ ${SEP}
   ${LINE}
   ${secondary.trimEnd().split("\n").join("\n  ")}
 
-  Sign avg/p95 = X-Token-Generation-Time-Ms header; pure JWT generation only
+  Access avg/p95 = X-Token-Generation-Time-Ms header; JWT generation from benchmark payload only
   Refresh avg/p95 = X-Refresh-Token-Generation-Time-Ms header on /api/auth/refresh
-  Auth thrpt   = Successful benchmark-sign requests / ${STRESS_DURATION_S}s
-  Login        = Full /api/auth/signin round-trip: bcrypt verify + DB lookup + JWT sign
+  Token ok/s   = Successful /api/benchmark/token responses / ${STRESS_DURATION_S}s
+  Login        = Full /api/auth/signin round-trip: bcrypt verify + DB lookup + JWT generation
   Refresh      = Full /api/auth/refresh round-trip: refresh-token verify + JWT rotation
-  E2E          = Full k6 client round-trip for /api/benchmark/token (sign only, no bcrypt/DB)
-  RPS          = Total benchmark-sign requests / ${STRESS_DURATION_S}s
+  E2E          = Full k6 client round-trip for /api/benchmark/token (JWT generation only, no bcrypt/DB)
+  RPS          = Total benchmark-token requests / ${STRESS_DURATION_S}s
   Atk block    = Tampered-token /api/profile requests blocked with 401/403
   Thesis note  = Primary thesis result = isolated table; supporting system result = stress tables
 ${SEP}

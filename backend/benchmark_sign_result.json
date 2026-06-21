@@ -3,8 +3,8 @@
   "mode": "Isolated + Stress + Attack",
   "endpoint": "https://poc-ridwanmuh3.my.id",
   "methodology": {
-    "primary_metric": "isolated_clean_token_generation",
-    "supporting_metric": "stress_concurrent_signing",
+    "primary_metric": "isolated_gc_free_token_generation",
+    "supporting_metric": "stress_concurrent_jwt_generation",
     "isolated_iterations": 100,
     "isolated_warmup_iterations": 20,
     "stress_duration_seconds": 30,
@@ -15,7 +15,7 @@
       50
     ],
     "notes": [
-      "Isolated metrics use gateway-local pure signing path.",
+      "Isolated metrics use gateway-local JWT generation path.",
       "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
       "Refresh metrics use /api/auth/refresh with refresh tokens returned by /api/auth/signin.",
       "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios."

@@ -75,7 +75,7 @@ flowchart LR
   gateway --> bench_api
   auth_svc -->|"signin / refresh"| claims
   signer -->|"Falcon-Precomputed-512"| key_load
-  signer -->|"pure signing endpoint"| bench_api
+  signer -->|"JWT generation endpoint"| bench_api
   signer -->|"latency samples"| metrics
 
   classDef entry fill:#dbeafe,stroke:#2563eb,color:#111827
@@ -105,7 +105,7 @@ Diagram reading:
 - 3.2: Gateway dispatch ke Auth/Todo; data inti ada di `users` dan `tasks`.
 - 3.3: Auth/benchmark membentuk JWT, signer PQC menandatangani, Gateway memverifikasi.
 - 3.4: Falcon-Precomputed memindahkan decode, FFT basis, dan LDL tree ke startup cache.
-- 3.5: k6 mengukur signing, stress, attack block-rate; output jadi JSON, statistik, figure, docs.
+- 3.5: k6 mengukur generasi JWT, stress, attack block-rate; output jadi JSON, statistik, figure, docs.
 
 ## Production Runtime
 
@@ -159,7 +159,7 @@ flowchart LR
 
   gateway -->|"verify JWT"| jwtutils
   auth_svc -->|"sign + parse JWT"| jwtutils
-  bench_handler -->|"in-process signing"| jwtutils
+  bench_handler -->|"in-process JWT generation"| jwtutils
   jwtutils --> jwtpkg
   jwtpkg --> fndsa
   keygen --> keys
@@ -422,14 +422,14 @@ Optimization logic:
 - Startup precompute stores `hashedVK`, FFT basis arrays `b00`, `b01`, `b10`, `b11`, and LDL tree.
 - Runtime signing reuses stored basis and LDL tree, so each JWT sign avoids repeated private-key decode, `G` recomputation, FFT basis generation, Gram matrix construction, and LDL tree construction.
 - Verification unchanged: gateway verifies signature with public key, same algorithm allowlist and issuer checks.
-- Benchmark measures effect through `/api/benchmark/sign`: warmup, forced GC, per-iteration access/refresh signing, GC-contaminated count, CPU, memory, and timing stats.
+- Benchmark measures effect through `/api/benchmark/sign`: warmup, forced GC, per-iteration access/refresh JWT generation, GC-contaminated count, CPU, memory, and timing stats.
 
 ## Research Artifact Pipeline
 
 ```mermaid
 flowchart LR
   compose["docker-compose.benchmark.yml<br/>isolated gateway/auth pairs"]
-  k6scripts["k6 scenarios<br/>isolated signing<br/>stress test<br/>attack block-rate"]
+  k6scripts["k6 scenarios<br/>isolated JWT generation<br/>stress test<br/>attack block-rate"]
   raw["benchmark_sign_raw.json<br/>adversarial_raw.json"]
   stats["scripts/benchmark_stat_tests.py<br/>statistical checks"]
   graphics["scripts/generate_article_graphics*.py<br/>figure generation"]
