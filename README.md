@@ -335,12 +335,20 @@ Metric scope:
 
 | Metric | Scope | Use |
 | ------ | ----- | --- |
-| `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free, server-side timer | Primary thesis metric |
-| `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free, server-side timer | Secondary isolated metric |
-| `stress.token_generation_ms` | Access JWT generation under concurrent VUs, from `X-Token-Generation-Time-Ms` | Stress support metric |
-| `stress.refresh_token_generation_ms` | Refresh JWT generation under concurrent VUs | Refresh support metric |
-| `stress.e2e_ms` | Full `/api/benchmark/token` k6 round-trip | Transport/server overhead check |
-| `stress.login_ms` | Full `/api/auth/signin` round-trip: bcrypt + DB + JWT | Real auth-path metric |
+| `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free, server-side timer | Primary signing metric |
+| `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free, server-side timer | Secondary signing metric |
+| `stress.token_generation_ms` | Access JWT generation under concurrent VUs, from `X-Token-Generation-Time-Ms` | Signing under load |
+| `stress.refresh_token_generation_ms` | New refresh-path JWT generation under concurrent VUs, from server timing header | Refresh signing under load |
+| `stress.login_ms` | Full `/api/auth/signin` round-trip: DB lookup + bcrypt + access/refresh JWT signing + transport | Real login workflow impact, includes signing |
+| `stress.refresh_ms` | Full `/api/auth/refresh` round-trip: refresh-token verification + JWT rotation/signing + transport | Real refresh workflow impact, includes signing and verification |
+| `stress.e2e_ms` | Full `/api/benchmark/token` k6 round-trip | Benchmark endpoint overhead check |
+
+Signing relevance:
+
+- `isolated.token_generation_gc_free_ms` is the cleanest signing-time metric because it isolates backend JWT generation and removes GC-contaminated samples.
+- `stress.token_generation_ms` and `stress.refresh_token_generation_ms` still measure direct token generation, but under concurrent load.
+- `stress.login_ms` and `stress.refresh_ms` are relevant because both workflows invoke JWT signing directly. They are not pure signing-time metrics because they also include DB, bcrypt, verification, service/transport, and response overhead.
+- `stress.e2e_ms` is not a signing-time metric. It is endpoint round-trip latency for `/api/benchmark/token`.
 
 ### Seminar Hasil Metric Definition
 
@@ -351,12 +359,16 @@ Untuk seminar hasil, istilah resmi yang dipakai:
 | Primer | `isolated.token_generation_gc_free_ms` | Latensi server-side generasi access JWT dari payload benchmark; sampel yang terkena Go GC dibuang | Perbandingan utama algoritma |
 | Sekunder isolated | `isolated.refresh_token_generation_gc_free_ms` | Latensi server-side generasi refresh JWT dari payload benchmark; sampel GC dibuang | Validasi konsistensi access vs refresh token |
 | Pendukung stress | `stress.token_generation_ms` | Latensi generasi access JWT saat VU konkuren, dari header `X-Token-Generation-Time-Ms` | Dampak beban konkuren terhadap generasi JWT |
+| Signing refresh | `stress.refresh_token_generation_ms` | Latensi generasi JWT baru pada flow refresh saat VU konkuren | Dampak signing di refresh token rotation |
+| Auth nyata login | `stress.login_ms` | Round-trip penuh `/api/auth/signin`: DB lookup + bcrypt + access/refresh JWT signing + transport | Dampak algoritma pada workflow login nyata, bukan signing murni |
+| Auth nyata refresh | `stress.refresh_ms` | Round-trip penuh `/api/auth/refresh`: refresh-token verification + JWT rotation/signing + transport | Dampak algoritma pada workflow refresh nyata, bukan signing murni |
 | Pendukung sistem | `stress.e2e_ms` | Round-trip penuh k6 ke `/api/benchmark/token` | Overhead handler, antrean, dan transport |
-| Auth nyata | `stress.login_ms` | Round-trip penuh `/api/auth/signin`: bcrypt + DB + JWT | Gambaran performa login nyata, bukan metrik algoritma |
 
 Kalimat siap pakai:
 
 > Metrik utama penelitian adalah `isolated.token_generation_gc_free_ms`, yaitu latensi generasi access JWT dari payload benchmark yang diukur langsung di sisi server. Metrik ini mengecualikan round-trip k6, HTTP client overhead, DB query, bcrypt, auth-service, gRPC, dan sampel yang terkontaminasi Go GC. Karena itu, angka ini merepresentasikan biaya generasi token JWT pada masing-masing algoritma, bukan latensi login penuh dan bukan operasi kriptografi mentah saja.
+
+> Metrik `stress.login_ms` dan `stress.refresh_ms` tetap dilaporkan karena keduanya memanggil proses signing JWT secara langsung pada workflow autentikasi nyata. Namun, keduanya dikategorikan sebagai metrik dampak workflow, bukan metrik signing murni, karena ikut memuat DB lookup, bcrypt atau verifikasi refresh token, transport, antrean, dan serialisasi response.
 
 Batas interpretasi:
 
@@ -364,6 +376,8 @@ Batas interpretasi:
 - Jangan sebut metric primer sebagai "network latency".
 - Jangan sebut metric primer sebagai "pure cryptographic primitive".
 - Sebut sebagai "server-side JWT generation latency from benchmark payload".
+- Sebut `stress.login_ms` sebagai "login latency with JWT signing", bukan "signing latency".
+- Sebut `stress.refresh_ms` sebagai "refresh latency with token verification and JWT signing", bukan "signing latency".
 
 ### Statistical Testing
 
