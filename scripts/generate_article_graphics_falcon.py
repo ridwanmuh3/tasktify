@@ -406,12 +406,30 @@ def render_isolated_metric_png(
     draw_png_axes(img, draw, y_label, ticks, y_map)
 
     width = right - left
-    gap = 54
-    slot = (width - gap * (len(values) - 1)) / len(values)
-    bar_w = min(300, slot * 0.62)
     baseline = bottom
     marker_r = 26
     label_bounds = (left, top, right, bottom)
+
+    if not log_scale:
+        bar_w = min(300, width / 4)
+        gap = 240
+        group_w = len(values) * bar_w + (len(values) - 1) * gap
+        x0 = left + (width - group_w) / 2
+
+        for idx, (alg, value) in enumerate(values):
+            x = x0 + idx * (bar_w + gap)
+            cx = x + bar_w / 2
+            color = COLORS[alg]
+            y = y_map(value)
+            draw.rectangle((x, y, x + bar_w, baseline), fill=color)
+            png_value_label(draw, cx, y - 42, fmt(value), label_bounds, VALUE_SIZE)
+            draw_png_multiline(draw, cx, bottom + 48, ALGORITHM_WRAP[alg])
+
+        return save_png(img, name)
+
+    gap = 54
+    slot = (width - gap * (len(values) - 1)) / len(values)
+    bar_w = min(300, slot * 0.62)
 
     if compact_bars:
         bar_w = min(560, width / (len(values) * 1.45))
@@ -439,9 +457,6 @@ def render_isolated_metric_png(
                 fill=WHITE,
             )
             draw.ellipse((cx - marker_r, y - marker_r, cx + marker_r, y + marker_r), fill=color)
-        else:
-            x = cx - bar_w / 2
-            draw.rounded_rectangle((x, y, x + bar_w, baseline), radius=5, fill=color)
         png_value_label(draw, cx, y - 42, fmt(value), label_bounds, VALUE_SIZE)
         draw_png_multiline(draw, cx, bottom + 42, ALGORITHM_WRAP[alg])
 
@@ -602,7 +617,7 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
                 ("isolated", alg, "", "refresh_token_generation_p95", iso["refresh_token_generation_ms"]["p95"], "ms"),
                 ("isolated", alg, "", "total_generation_avg", iso["total_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "cpu_utilization_avg", iso["cpu_pct"]["avg"], "%"),
-                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"], "KB"),
+                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"] / 1024, "MB"),
             ]
             for row in rows:
                 writer.writerow(row)
@@ -690,36 +705,36 @@ def main() -> None:
             "fig_01_isolated_access_token_generation_avg_ms",
             "Fig. 1",
             "Isolated access-token generation latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda item: item["isolated"]["token_generation_ms"]["avg"],
-            True,
+            False,
             "access_token_generation_avg_ms",
         ),
         (
             "fig_02_isolated_access_token_generation_p95_ms",
             "Fig. 2",
             "Isolated access-token generation p95 latency",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda item: item["isolated"]["token_generation_ms"]["p95"],
-            True,
+            False,
             "access_token_generation_p95_ms",
         ),
         (
             "fig_03_isolated_refresh_token_generation_avg_ms",
             "Fig. 3",
             "Isolated refresh-token generation latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda item: item["isolated"]["refresh_token_generation_ms"]["avg"],
-            True,
+            False,
             "refresh_token_generation_avg_ms",
         ),
         (
             "fig_04_isolated_total_generation_avg_ms",
             "Fig. 4",
             "Isolated total token generation latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda item: item["isolated"]["total_ms"]["avg"],
-            True,
+            False,
             "total_generation_avg_ms",
         ),
         (
@@ -732,13 +747,13 @@ def main() -> None:
             "cpu_utilization_avg_pct",
         ),
         (
-            "fig_06_isolated_memory_alloc_avg_kb",
+            "fig_06_isolated_memory_alloc_avg_mb",
             "Fig. 6",
             "Isolated memory allocation",
-            "Average allocation (KB)",
-            lambda item: item["isolated"]["memory_alloc_kb"]["avg"],
+            "Average allocation (MB)",
+            lambda item: item["isolated"]["memory_alloc_kb"]["avg"] / 1024,
             False,
-            "memory_alloc_avg_kb",
+            "memory_alloc_avg_mb",
         ),
     ]
 

@@ -23,8 +23,15 @@ bin/
 tmp/
 **/dist/
 **/.vite/
+**/__pycache__/
+*.py[cod]
 
 **/k6/*.txt
+result.json
+results/
+backend/token.json
+backend/adversarial_result.txt
+backend/cmd/keygen/keygen
 
 .claude
 CLAUDE.md

@@ -1,7 +1,0 @@
-variant,iters,ms_per_op,kb_per_op,allocs_per_op,vs_a0_percent,vs_a0_direction,step_percent,step_direction,note
-A0_Original,100,0.70890175,47.265625,15.0,0.0,same,0.0,baseline,"Original: decode key, recompute G/hash, FFT basis, Gram, LDL tree during sign."
-A1_KeyMaterialDetached,100,0.54920622,43.265625,9.0,22.52717389962714,faster,22.52717389962714,faster,"A0 + detach private-key decode, G recomputation, verifying-key hash."
-A2_FFTBasisDetached,100,0.58486106,43.265625,9.0,17.497585525779837,faster,6.492067770099196,slower,A1 + detach FFT basis b00/b01/b10/b11.
-A3_GramDetached,100,0.52191969,43.265625,9.0,26.376301088267866,faster,10.76176451207061,faster,A2 + detach Gram matrix.
-A4_LDLTreeDetached,100,0.4930128,35.265625,9.0,30.45400155945447,faster,5.538570503059594,faster,A3 + detach LDL tree; runtime uses precomputed sampler tree.
-A5_AllPrecomputedCombined,100,0.44356316,35.265625,9.0,37.429529550463094,faster,10.030092524981088,faster,A1-A4 combined through production PrecomputedSigner.

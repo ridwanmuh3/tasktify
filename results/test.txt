@@ -1,8 +1,0 @@
-| Variant | ns/op | B/op | allocs/op | Significance % | Step % | Detached component |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| A0_Original | 1217121.00 | 48400.00 | 15 | 0% | 0% | Original: decode key, recompute G/hash, FFT basis, Gram, LDL tree during sign. |
-| A1_KeyMaterialDetached | 548227.00 | 44304.00 | 9 | 54.96% | 54.96% | A0 + detach private-key decode, G recomputation, verifying-key hash. |
-| A2_FFTBasisDetached | 612620.00 | 44304.00 | 9 | 49.67% | -11.75% | A1 + detach FFT basis b00/b01/b10/b11. |
-| A3_GramDetached | 615126.00 | 44304.00 | 9 | 49.46% | -0.4091% | A2 + detach Gram matrix. |
-| A4_LDLTreeDetached | 652804.00 | 36112.00 | 9 | 46.36% | -6.125% | A3 + detach LDL tree; runtime uses precomputed sampler tree. |
-| A5_AllPrecomputedCombined | 480521.00 | 36112.00 | 9 | 60.52% | 26.39% | A1-A4 combined through production PrecomputedSigner. |
