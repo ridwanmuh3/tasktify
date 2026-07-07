@@ -11,6 +11,33 @@ Primary research path measures server-side JWT generation from benchmark payload
 
 `Falcon-Precomputed-512` and `Falcon-512` are benchmark profiles, not distinct JWS algorithms. Tokens from both profiles use experimental JWS `alg` value `FN-DSA-512`; precomputation is signer implementation state recorded in config and benchmark metadata.
 
+## Update Yang Dilakukan
+
+Perubahan terakhir yang sudah masuk:
+
+| Area | Update | Dampak |
+| ---- | ------ | ------ |
+| Scope benchmark | Benchmark dipersempit ke `Falcon-Precomputed-512` dan `Falcon-512` | Compose, keygen, gateway config, dan k6 hanya fokus ke dua profil Falcon |
+| JWS algorithm | `Falcon-Precomputed-512` tidak dipakai sebagai nilai `alg` | Token kedua profil Falcon tetap memakai `FN-DSA-512`; precompute hanya metadata profil signer |
+| JWT issuance | Endpoint `POST /api/benchmark/jwt-issuance` ditambahkan | Mengukur klaim JWT, serialization, Base64URL, signing, dan compact assembly tanpa DB/bcrypt/gRPC |
+| Pure signing | Endpoint `POST /api/benchmark/pure-signing` ditambahkan | Mengukur `SigningMethod.Sign(fixedMessage)` saja, tanpa JWT serialization/Base64URL/compact assembly |
+| k6 workflow | Fase isolated k6 sekarang menjalankan JWT issuance dan pure signing | Output `benchmark_sign_result.json` memuat `isolated.pure_signing_gc_free_ms`, `isolated.token_generation_gc_free_ms`, dan ratio overhead JWT vs pure signing |
+| Stress metadata | k6 summary menambahkan durasi stage, ramp-up, steady state, ramp-down, request count, think time, load model, timeout, connection reuse, TLS, error rate, pool/quota metadata | Beban tidak dijelaskan hanya dengan jumlah VU |
+| Security tests | Pengujian JWT diperluas untuk claim validation, malformed token, duplicate header/claim, invalid Base64URL, oversized token, `kid`, `typ`, token-use confusion, dan unsigned/signature-empty token | Cakupan lebih dekat ke profil RFC 8725; gap audience/replay/key rotation tetap dicatat |
+| Falcon correctness | Test FN-DSA dynamic dan precomputed diperluas, termasuk `TestFNDSA_Precomputed_KAT` | Dynamic/precomputed signer dan verifier punya validasi KAT/interoperability |
+| Automation | Target `make falcon-kat`, `make falcon-check`, `make wait-bench`, dan workflow `make bench-sign` dirapikan | Validasi dan benchmark bisa dijalankan otomatis dengan langkah lebih pendek |
+| Documentation | README, skenario pengujian, dan catatan gRPC diperbarui | Definisi metric, batas interpretasi, dan prioritas ilmiah lebih jelas |
+
+Validasi terakhir:
+
+```bash
+go test ./internal/delivery/http/handler ./internal/delivery/http/route
+go test ./internal/config
+cd backend/pkg && go test ./utils/jwtutils ./jwt ./fndsa
+cd backend && k6 inspect k6/benchmark_sign.js
+cd backend && make falcon-check
+```
+
 ## System Architecture
 
 Production topology:
