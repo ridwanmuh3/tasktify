@@ -65,7 +65,7 @@ func setupBenchmarkAlgorithms(t *testing.T) []algSetup {
 	if err != nil {
 		t.Fatalf("Precomputed signer creation failed: %v", err)
 	}
-	fnpMethod := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	fnpMethod := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	fnpMethod.SetPrecomputedSigner(precomputedSigner)
 	algs = append(algs, algSetup{
 		Name:      "Falcon-Precomputed-512",
@@ -239,7 +239,7 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 
 			confusionPass := true
 			for j, other := range algs {
-				if i == j {
+				if i == j || alg.Method.Alg() == other.Method.Alg() {
 					continue
 				}
 				err := verifyBenchToken(tokenString, other.VerifyKey, other.Method.Alg())

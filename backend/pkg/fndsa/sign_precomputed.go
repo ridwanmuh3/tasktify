@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"io"
+	"unsafe"
 
 	sha3 "golang.org/x/crypto/sha3"
 )
@@ -35,6 +36,34 @@ func (ps *PrecomputedSigner) LogN() uint {
 		return 0
 	}
 	return ps.logn
+}
+
+// PersistentBytes estimates resident expanded-key material held by this signer.
+// It includes struct headers and backing arrays for FFT basis plus LDL tree.
+func (ps *PrecomputedSigner) PersistentBytes() int {
+	if ps == nil {
+		return 0
+	}
+	return int(unsafe.Sizeof(*ps)) +
+		f64SliceBytes(ps.b00) +
+		f64SliceBytes(ps.b01) +
+		f64SliceBytes(ps.b10) +
+		f64SliceBytes(ps.b11) +
+		ldlTreePersistentBytes(ps.tree)
+}
+
+func ldlTreePersistentBytes(tree *ldlTree) int {
+	if tree == nil {
+		return 0
+	}
+	return int(unsafe.Sizeof(*tree)) +
+		f64SliceBytes(tree.l10) +
+		ldlTreePersistentBytes(tree.left) +
+		ldlTreePersistentBytes(tree.right)
+}
+
+func f64SliceBytes(values []f64) int {
+	return len(values) * int(unsafe.Sizeof(f64_ZERO))
 }
 
 // NewPrecomputedSigner creates a signer for standard degrees (512 and 1024).

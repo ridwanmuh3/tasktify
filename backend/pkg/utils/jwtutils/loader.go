@@ -15,7 +15,7 @@ import (
 // For verification only (gateway), pass signMode=false.
 func LoadAlgConfig(keysDir string, alg string, signMode bool) (*AlgConfig, error) {
 	switch alg {
-	case "Falcon-512":
+	case "FN-DSA-512", "Falcon-512":
 		return loadFalconOriginal(keysDir, alg, signMode)
 	case "Falcon-Precomputed-512":
 		return loadFalconPrecomputed(keysDir, alg, signMode)
@@ -86,7 +86,7 @@ func loadFalconOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) 
 }
 
 func loadFalconPrecomputed(keysDir, alg string, signMode bool) (*AlgConfig, error) {
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 
 	// Public key for verification
 	vkBytes, err := readFile(filepath.Join(keysDir, "FNDSA-512_pk.pem"))

@@ -31,6 +31,12 @@ Override gateway target:
 VITE_PROXY_TARGET=http://localhost:3000 npm run dev
 ```
 
+Preview server uses the same proxy, so VPS smoke deploys can point `/api` to the gateway:
+
+```bash
+VITE_PROXY_TARGET=http://127.0.0.1:3000 npm run preview
+```
+
 For deployed builds that call a remote gateway directly:
 
 ```bash
@@ -53,3 +59,5 @@ make up-build
 ```
 
 Caddy serves `frontend/dist`, proxies `/api` and `/health` to `gateway:3000`, blocks framing, sets a restrictive CSP, and allows 64 KB request headers for large PQC JWTs.
+
+If VPS returns `405 Method Not Allowed` on sign in/register, the request is hitting the static frontend server. Route `/api/*` and `/health` to the gateway, or run the included Caddy stack.

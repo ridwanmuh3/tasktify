@@ -10,7 +10,7 @@ import (
 
 func TestFalconPrecomputedSignUsesPrivateKeyMaterial(t *testing.T) {
 	skey, vkey := mustFalconKeyPair(t, 9)
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	signingString := "header.payload"
 
 	sig, err := method.Sign(signingString, skey)
@@ -34,6 +34,33 @@ func TestFalconPrecomputedSignUsesPrivateKeyMaterial(t *testing.T) {
 	}
 }
 
+func TestFalconPrecomputedAndDynamicInteroperate(t *testing.T) {
+	skey, vkey := mustFalconKeyPair(t, 9)
+	signer, err := fndsa.NewPrecomputedSigner(skey)
+	if err != nil {
+		t.Fatalf("precompute failed: %v", err)
+	}
+	precomputed := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	precomputed.SetPrecomputedSigner(signer)
+	signingString := "header.payload"
+
+	precomputedSig, err := precomputed.Sign(signingString, nil)
+	if err != nil {
+		t.Fatalf("precomputed sign failed: %v", err)
+	}
+	if err := jwt.SigningMethodFN512.Verify(signingString, precomputedSig, vkey); err != nil {
+		t.Fatalf("dynamic verifier rejected precomputed signature: %v", err)
+	}
+
+	dynamicSig, err := jwt.SigningMethodFN512.Sign(signingString, skey)
+	if err != nil {
+		t.Fatalf("dynamic sign failed: %v", err)
+	}
+	if err := precomputed.Verify(signingString, dynamicSig, vkey); err != nil {
+		t.Fatalf("precomputed verifier rejected dynamic signature: %v", err)
+	}
+}
+
 func TestFalconPrecomputedRejectsAlgorithmDegreeMismatch(t *testing.T) {
 	skey1024, vkey1024 := mustFalconKeyPair(t, 10)
 	signer1024, err := fndsa.NewPrecomputedSigner(skey1024)
@@ -41,7 +68,7 @@ func TestFalconPrecomputedRejectsAlgorithmDegreeMismatch(t *testing.T) {
 		t.Fatalf("precompute failed: %v", err)
 	}
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	if _, err := method.Sign("header.payload", signer1024); err == nil {
 		t.Fatal("expected sign error for mismatched precomputed signer")
 	}

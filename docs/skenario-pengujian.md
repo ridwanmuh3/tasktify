@@ -49,17 +49,17 @@ Pada mode multi-gateway, setiap algoritma mendapatkan proses gateway terpisah se
 
 ---
 
-## 3. Algoritma yang Diuji
+## 3. Profil Signer yang Diuji
 
-| ID Internal | Nama Algoritma | Kategori | Port (Multi-GW) |
-|-------------|---------------|----------|-----------------|
-| `FNP512` | Falcon-Precomputed-512 | PQC | 5001 |
-| `FN512` | Falcon-512 | PQC | 5002 |
-| `MLDSA44` | ML-DSA-44 | PQC | 5003 |
-| `SLHDSA128f` | SLH-DSA-SHA2-128f | PQC | 5004 |
-| `SLHDSA128s` | SLH-DSA-SHA2-128s | PQC | 5005 |
+| ID Internal | Profil Benchmark | JWS `alg` | Kategori | Port (Multi-GW) |
+|-------------|-------------------|-----------|----------|-----------------|
+| `FNP512` | Falcon-Precomputed-512 | FN-DSA-512 | PQC | 5001 |
+| `FN512` | Falcon-512 | FN-DSA-512 | PQC | 5002 |
+| `MLDSA44` | ML-DSA-44 | ML-DSA-44 | PQC | 5003 |
+| `SLHDSA128f` | SLH-DSA-SHA2-128f | SLH-DSA-SHA2-128f | PQC | 5004 |
+| `SLHDSA128s` | SLH-DSA-SHA2-128s | SLH-DSA-SHA2-128s | PQC | 5005 |
 
-Semua algoritma merupakan algoritma kriptografi pasca-kuantum (*Post-Quantum Cryptography*/PQC) yang telah distandarkan atau dicalonkan oleh NIST. Falcon-Precomputed-512 merupakan varian Falcon-512 yang menggunakan pohon LDL yang telah dihitung sebelumnya (*precomputed*) untuk mempercepat proses penandatanganan.
+Kolom **Profil Benchmark** adalah konfigurasi signer internal untuk eksperimen. Untuk Falcon, token JWT tetap memakai JWS `alg` eksperimental `FN-DSA-512`; profil `Falcon-Precomputed-512` tidak muncul sebagai nilai `alg` karena precomputation hanya teknik implementasi signer. Falcon-512 adalah basis FN-DSA-512, sedangkan profil JOSE/FIPS final masih harus mengikuti spesifikasi resmi terbaru ketika tersedia.
 
 ---
 
@@ -284,7 +284,8 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 
 | Variabel | Keterangan |
 |----------|------------|
-| Algoritma tanda tangan | Falcon-Precomputed-512, Falcon-512, ML-DSA-44, SLH-DSA-SHA2-128f, SLH-DSA-SHA2-128s |
+| Profil signer | Falcon-Precomputed-512, Falcon-512, ML-DSA-44, SLH-DSA-SHA2-128f, SLH-DSA-SHA2-128s |
+| JWS `alg` | `FN-DSA-512` untuk kedua profil Falcon; nama algoritma lain sesuai profil |
 | Ukuran kunci privat | Berbeda per algoritma |
 | Kompleksitas komputasi penandatanganan | Karakteristik matematis algoritma |
 
@@ -299,6 +300,9 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 | Throughput benchmark-token sukses | req/detik | 2 |
 | Tingkat kesalahan | persen | 2 |
 | Tingkat pemblokiran token palsu | persen | 3 |
+| CPU time per token | milidetik | 1 |
+| Memori persisten expanded key | byte | Go benchmark |
+| Startup cost precomputed signer | ns/op, B/op, allocs/op | Go benchmark |
 
 ---
 
@@ -368,6 +372,7 @@ k6 menghasilkan tiga berkas keluaran di akhir pengujian:
   "algorithms": [
     {
       "algorithm": "Falcon-Precomputed-512",
+      "jws_alg": "FN-DSA-512",
       "isolated": {
         "iterations": 100,
         "gc_contaminated_count": 3,
@@ -418,11 +423,11 @@ Kalimat aman: metrik ini mengukur generasi JWT server-side dari payload benchmar
 
 ### 11.3 Validasi Keamanan (Fase 3)
 
-- **tampered_token_block_rate_pct = 100%** — sistem berhasil memblokir seluruh token palsu
+- **tampered_token_block_rate_pct = 100%** — seluruh kasus negatif yang diuji ditolak oleh gateway. Angka ini bukan bukti keamanan sistem secara menyeluruh.
 
 ### 11.4 Perbandingan Falcon-Precomputed vs Falcon-512
 
-Falcon-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisialisasi dan disimpan di memori. Perbandingan `avg_ms` keduanya pada Fase 1 menunjukkan **tradeoff waktu-memori** (*time-memory tradeoff*): penggunaan memori lebih tinggi pada Precomputed sebagai imbalan latensi penandatanganan yang lebih rendah.
+Falcon-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisialisasi dan disimpan di memori. Kedua profil Falcon tetap menghasilkan JWT dengan JWS `alg` `FN-DSA-512`; perbedaan precomputed hanya tercatat pada konfigurasi signer, metadata benchmark, dan hasil eksperimen. Perbandingan `avg_ms` keduanya pada Fase 1 menunjukkan **tradeoff waktu-memori** (*time-memory tradeoff*): penggunaan memori persisten lebih tinggi pada Precomputed sebagai imbalan latensi penandatanganan runtime yang lebih rendah.
 
 ### 11.5 Studi Ablasi FN-DSA Falcon Precomputed
 

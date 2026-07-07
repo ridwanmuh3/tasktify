@@ -273,8 +273,9 @@ Data structure rules:
 - Persistent data split by owner: Auth service owns `users`; Todo service owns `tasks`.
 - `users.email` is unique. Password stored as bcrypt hash, never plaintext.
 - `tasks.user_id` links task rows to authenticated user. API and repository scope task reads/writes by that user.
-- JWT payload carries `user_id`, `email`, `token_use`, `iss`, `iat`, `exp`, and `jti`.
-- Token header carries `alg`; gateway parser accepts only configured `JWT_ALLOWED_ALGS`.
+- JWT payload carries `sub`, `user_id`, `email`, `token_use`, `iss`, `iat`, `exp`, and `jti`.
+- Token header carries `alg` and `typ`; gateway parser accepts only configured algorithms and validates token type against `token_use`.
+- `Falcon-Precomputed-512` is a signer profile. JWT header `alg` remains `FN-DSA-512` for both dynamic and precomputed Falcon profiles.
 - gRPC contracts use protobuf messages. HTTP handlers map JSON DTOs to protobuf requests.
 - Benchmark output keeps raw samples plus summary stats so research can audit p50/p95/p99 and GC-free timing.
 
@@ -421,7 +422,7 @@ Optimization logic:
 - Optimized `Falcon-Precomputed-512` builds `PrecomputedSigner` once at service startup.
 - Startup precompute stores `hashedVK`, FFT basis arrays `b00`, `b01`, `b10`, `b11`, and LDL tree.
 - Runtime signing reuses stored basis and LDL tree, so each JWT sign avoids repeated private-key decode, `G` recomputation, FFT basis generation, Gram matrix construction, and LDL tree construction.
-- Verification unchanged: gateway verifies signature with public key, same algorithm allowlist and issuer checks.
+- Verification unchanged at cryptographic level: gateway verifies `FN-DSA-512` signature with public key, algorithm allowlist, `typ`, issuer, subject, token_use, issued-at, and expiry checks.
 - Benchmark measures effect through `/api/benchmark/sign`: warmup, forced GC, per-iteration access/refresh JWT generation, GC-contaminated count, CPU, memory, and timing stats.
 
 ## Research Artifact Pipeline

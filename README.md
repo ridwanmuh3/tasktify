@@ -2,7 +2,7 @@
 
 Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks JWT generation latency across multiple signing algorithms with k6.
 
-Primary research path measures server-side JWT generation from benchmark payloads for:
+Primary research path measures server-side JWT generation from benchmark payloads for signer profiles:
 
 | Algorithm                | Category                                  | Benchmark port |
 | ------------------------ | ----------------------------------------- | -------------- |
@@ -11,6 +11,8 @@ Primary research path measures server-side JWT generation from benchmark payload
 | `ML-DSA-44`              | PQC, FIPS 204 / Dilithium2 class          | `5003`         |
 | `SLH-DSA-SHA2-128f`      | PQC, FIPS 205 / SPHINCS+ fast variant     | `5004`         |
 | `SLH-DSA-SHA2-128s`      | PQC, FIPS 205 / SPHINCS+ small variant    | `5005`         |
+
+`Falcon-Precomputed-512` and `Falcon-512` are benchmark profiles, not distinct JWS algorithms. Tokens from both profiles use experimental JWS `alg` value `FN-DSA-512`; precomputation is signer implementation state recorded in config and benchmark metadata.
 
 ## System Architecture
 
@@ -74,7 +76,7 @@ Protected API flow:
 
 ```text
 GET /api/profile or /api/tasks/*
-Gateway AuthMiddleware -> parse JWT -> validate alg/issuer/signature -> set user locals
+Gateway AuthMiddleware -> parse JWT -> validate alg/typ/issuer/signature/token_use -> set user locals
 Task routes -> gRPC metadata x-user-id -> Todo AuthInterceptor -> task service
 ```
 
@@ -85,7 +87,7 @@ POST /api/benchmark/sign
 Gateway generates JWTs in-process from benchmark payloads, skips DB/bcrypt/auth-service path, and returns batch timing stats.
 Use this for isolated JWT generation experiments. Request controls iterations and warmup_iterations.
 Each measured iteration generates one access token and one refresh token, then returns raw timings,
-p50/p95/p99 summaries, GC-free samples, CPU, and memory metrics.
+p50/p95/p99 summaries, GC-free samples, CPU, CPU time, memory metrics, and canonical JWS `alg`.
 
 POST /api/benchmark/token
 Gateway generates one access token in-process, skips DB/bcrypt/auth-service path, and returns token payload.
@@ -302,8 +304,36 @@ k6 run --out json=benchmark_sign_samples.ndjson -e BENCH_HOST=localhost k6/bench
 Remote benchmark:
 
 ```bash
-make bench-sign-remote
+cd backend
+make client-k6 BASE_URL=https://poc-ridwanmuh3.my.id
 ```
+
+Split client/VPS Hostinger flow:
+
+```bash
+cd backend
+
+# Start benchmark stack on VPS.
+make hostinger-bench-up VPS_SSH=user@hostinger-host VPS_REPO=/home/user/tasktify
+
+# Run k6 from client, upload artifacts, calculate stats on VPS, fetch reports.
+make hostinger-bench \
+  VPS_SSH=user@hostinger-host \
+  VPS_REPO=/home/user/tasktify \
+  BASE_URL=https://poc-ridwanmuh3.my.id
+```
+
+Useful split targets:
+
+| Target | Runs on | Purpose |
+| ------ | ------- | ------- |
+| `make client-k6 BASE_URL=...` | Client | Run full k6 benchmark against VPS HTTP endpoint |
+| `make client-k6-isolated BASE_URL=...` | Client | Run isolated phase only |
+| `make client-k6-stress BASE_URL=...` | Client | Run stress phase only |
+| `make client-k6-attack BASE_URL=...` | Client | Run attack block-rate only |
+| `make hostinger-upload VPS_SSH=...` | Client -> VPS | Copy k6 artifacts to VPS backend directory |
+| `make hostinger-calc VPS_SSH=...` | VPS | Run statistical calculation scripts on Hostinger |
+| `make hostinger-fetch VPS_SSH=...` | VPS -> Client | Fetch generated calculation outputs |
 
 ## Benchmark JSON Results
 
@@ -315,6 +345,9 @@ Current benchmark targets write these files under `backend/`:
 | `benchmark_sign_raw.json`       | Full k6 raw metric dump                        |
 | `benchmark_sign_samples.ndjson` | Per-iteration k6 samples for statistical tests |
 | `result.txt`                    | Human-readable k6 stdout                       |
+| `benchmark_stats.md`            | Statistical summary generated on VPS           |
+| `benchmark_welch.md`            | Welch pairwise comparison generated on VPS      |
+| `fndsa_precompute_ablation.csv` | FN-DSA precompute ablation generated on VPS     |
 
 Run metadata from `benchmark_sign_result.json`:
 
@@ -465,6 +498,8 @@ Result reading:
 - `ML-DSA-44` has lowest isolated access-token generation average at `0.098 ms`.
 - `Falcon-Precomputed-512` generates access tokens faster than `Falcon-512` in isolated average, `0.284 ms` vs `0.341 ms`.
 - `SLH-DSA-SHA2-128s` is slowest isolated access-token generator, with `248.870 ms` average and `263.372 ms` p95.
+- Heap allocation columns are runtime process/allocation samples, not persistent expanded-key memory. Use `PrecomputedSigner.PersistentBytes()` and `BenchmarkBuildPrecomputedSigner512` for expanded-key memory/startup cost.
+- CPU avg % is utilization, not CPU cost per token. New benchmark output also includes `cpu_time_ms` and `cpu_time_per_token_ms`.
 
 ### Stress Results
 
@@ -489,6 +524,8 @@ Stress phase uses `/api/benchmark/token`, `/api/auth/signin`, and `/api/auth/ref
 | `SLH-DSA-SHA2-128s`      |  50 | 4257.338 | 6628.612 | 6814.575 | 19911.388 |   23039.505 |            2.43 |
 
 Stress thresholds in `benchmark_sign_raw.json` all pass. `stress_error_rate` is `0`, and `stress_refresh_error_rate` is `0`.
+
+At 30 VU, `Falcon-Precomputed-512` has worse login/refresh tail latency and lower throughput than `Falcon-512` in this run. Treat that as a load-test anomaly requiring repeated independent runs, not proof that precomputation improves end-to-end performance under every load.
 
 ### Attack Results
 

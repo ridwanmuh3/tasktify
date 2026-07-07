@@ -16,6 +16,20 @@ ATTACK_BASE_URL ?= http://localhost:5001
 ATTACK_ITERATIONS ?= 10
 ATTACK_ALGORITHM ?= Falcon-Precomputed-512
 BENCH_SAMPLE_OUT ?= benchmark_sign_samples.ndjson
+BENCH_RESULT_OUT ?= benchmark_sign_result.json
+BENCH_RAW_OUT ?= benchmark_sign_raw.json
+BENCH_STDOUT_OUT ?= result.txt
+BENCH_STAT_OUT ?= benchmark_stats.md
+BENCH_WELCH_OUT ?= benchmark_welch.md
+BENCH_ABLATION_OUT ?= fndsa_precompute_ablation.csv
+BASE_URL ?= https://poc-ridwanmuh3.my.id
+VPS_SSH ?=
+VPS_REPO ?= ~/tasktify
+VPS_BACKEND ?= $(VPS_REPO)/backend
+SSH ?= ssh
+SCP ?= scp
+SSH_OPTS ?=
+K6 ?= k6
 LOCAL_GO_ENV = env APP_MODE=dev GOCACHE=$(GOCACHE) CGO_ENABLED=0
 
 help:
@@ -50,6 +64,13 @@ help:
 	@echo "  make tidy             Tidy Go modules"
 	@echo "  make test             Run Go tests"
 	@echo "  make check            Run frontend check and Compose config validation"
+	@echo ""
+	@echo "Split benchmark:"
+	@echo "  make hostinger-bench-up VPS_SSH=user@host  Start benchmark stack on VPS"
+	@echo "  make client-k6 BASE_URL=https://host       Run k6 from client"
+	@echo "  make hostinger-upload VPS_SSH=user@host    Upload k6 artifacts to VPS"
+	@echo "  make hostinger-calc VPS_SSH=user@host      Calculate stats on VPS"
+	@echo "  make hostinger-bench VPS_SSH=user@host     Run client k6 + VPS calc"
 
 env:
 	@test -f .env || cp .env.example .env
@@ -229,7 +250,7 @@ bench-config:
 	$(BENCH_COMPOSE) config
 
 bench-run:
-	k6 run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
+	$(K6) run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 # keygen-all + vendor + bench-up + jalankan k6
 bench: bench-up
@@ -238,7 +259,7 @@ bench: bench-up
 		printf "."; sleep 3; \
 	done
 	@echo " ready!"
-	k6 run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
+	$(K6) run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 bench-sign: bench-up
 	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
@@ -246,14 +267,67 @@ bench-sign: bench-up
 		printf "."; sleep 3; \
 	done
 	@echo " ready!"
-	k6 run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee result.txt
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 bench-sign-remote:
-	k6 run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js 2>&1 | tee result.txt
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=$(BASE_URL) k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+
+require-vps:
+	@test -n "$(VPS_SSH)" || (echo "Set VPS_SSH=user@hostinger-host"; exit 2)
+
+require-k6:
+	@command -v $(K6) >/dev/null || (echo "k6 not found"; exit 2)
+
+hostinger-bench-up: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && make bench-up'
+
+hostinger-bench-down: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && make bench-down'
+
+hostinger-bench-logs: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && make bench-logs'
+
+hostinger-health: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && $(BENCH_COMPOSE) ps'
+	@curl -fsS "$(BASE_URL)/health" >/dev/null && echo "HTTP OK: $(BASE_URL)/health"
+
+client-k6: require-k6
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=$(BASE_URL) k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+
+client-k6-isolated: require-k6
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=$(BASE_URL) -e ISOLATED_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+
+client-k6-stress: require-k6
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=$(BASE_URL) -e STRESS_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+
+client-k6-attack: require-k6
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BASE_URL=$(BASE_URL) -e ATTACK_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+
+hostinger-upload: require-vps
+	@test -f $(BENCH_RESULT_OUT) || (echo "Missing $(BENCH_RESULT_OUT). Run make client-k6 first."; exit 2)
+	@test -f $(BENCH_RAW_OUT) || (echo "Missing $(BENCH_RAW_OUT). Run make client-k6 first."; exit 2)
+	@test -f $(BENCH_SAMPLE_OUT) || (echo "Missing $(BENCH_SAMPLE_OUT). Run make client-k6 first."; exit 2)
+	$(SCP) $(SSH_OPTS) $(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_SAMPLE_OUT) $(BENCH_STDOUT_OUT) $(VPS_SSH):$(VPS_BACKEND)/
+
+hostinger-calc: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_stat_tests.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) > backend/$(BENCH_STAT_OUT)'
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_welch_all_baselines.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) > backend/$(BENCH_WELCH_OUT)'
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/fndsa_precompute_ablation.py --format csv > backend/$(BENCH_ABLATION_OUT)'
+
+hostinger-fetch: require-vps
+	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_STAT_OUT) .
+	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_WELCH_OUT) .
+	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_ABLATION_OUT) .
+
+hostinger-bench:
+	$(MAKE) client-k6
+	$(MAKE) hostinger-upload
+	$(MAKE) hostinger-calc
+	$(MAKE) hostinger-fetch
 
 # --- Adversarial Attack Test ---
 attack-adversarial:
-	k6 run --no-color \
+	$(K6) run --no-color \
 		-e BASE_URL=$(ATTACK_BASE_URL) \
 		-e ITERATIONS=$(ATTACK_ITERATIONS) \
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
@@ -265,17 +339,17 @@ attack-adversarial-bench: bench-up
 		printf "."; sleep 3; \
 	done
 	@echo " ready!"
-	k6 run --no-color \
+	$(K6) run --no-color \
 		-e BENCH_HOST=localhost \
 		-e ITERATIONS=$(ATTACK_ITERATIONS) \
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
 attack-adversarial-remote:
-	k6 run --no-color \
+	$(K6) run --no-color \
 		-e BASE_URL=https://poc-ridwanmuh3.my.id \
 		-e ITERATIONS=$(ATTACK_ITERATIONS) \
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote

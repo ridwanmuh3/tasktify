@@ -97,6 +97,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	gcFreeRefreshTokenTimings := make([]float64, 0, req.Iterations)
 	totalTimings := make([]float64, 0, req.Iterations)
 	cpuSamples := make([]float64, 0, req.Iterations)
+	cpuTimeSamples := make([]float64, 0, req.Iterations)
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
 	memSysSamples := make([]float64, 0, req.Iterations)
@@ -139,6 +140,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		refreshTokenTimings = append(refreshTokenTimings, refreshMs)
 		totalTimings = append(totalTimings, totalMs)
 		cpuSamples = append(cpuSamples, stats.CPUPct)
+		cpuTimeSamples = append(cpuTimeSamples, stats.CPUTimeMs)
 		memAllocSamples = append(memAllocSamples, stats.MemoryAllocKB)
 		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaKB)
 		memSysSamples = append(memSysSamples, stats.MemorySysKB)
@@ -153,6 +155,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 
 	result := BenchmarkSignResult{
 		Algorithm:                req.Algorithm,
+		JWSAlgorithm:             jwtutils.HeaderAlgForConfigAlg(req.Algorithm),
 		Iterations:               req.Iterations,
 		WarmupIterations:         warmupIterations,
 		SuccessCount:             len(signTimings),
@@ -165,6 +168,7 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 		RefreshTokenGCFreeMs:     gcFreeRefreshTokenTimings,
 		TotalTimingsMs:           totalTimings,
 		AuthCPUPct:               cpuSamples,
+		AuthCPUTimeMs:            cpuTimeSamples,
 		AuthMemoryAllocKB:        memAllocSamples,
 		AuthMemoryAllocDeltaKB:   memAllocDeltaSamples,
 		AuthMemorySysKB:          memSysSamples,
@@ -176,6 +180,8 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	result.Stats.RefreshTokenGCFree = computeTimingStats(gcFreeRefreshTokenTimings)
 	result.Stats.Total = computeTimingStats(totalTimings)
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
+	result.Stats.Resource.CPUTimeMs = computeNumericStats(cpuTimeSamples)
+	result.Stats.Resource.CPUTimePerTokenMs = computeNumericStats(scaleValues(cpuTimeSamples, 0.5))
 	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
 	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)
@@ -281,6 +287,7 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 		MemoryAllocKB:      bytesToKB(memAfter.HeapAlloc),
 		MemoryAllocDeltaKB: bytesToKB(memAfter.TotalAlloc - memBefore.TotalAlloc),
 		MemorySysKB:        bytesToKB(memAfter.Sys),
+		CPUTimeMs:          float64(cpuDelta) * 10.0,
 		CPUPct:             cpuPct,
 		GCOccurred:         memAfter.NumGC > memBefore.NumGC,
 	}
@@ -298,6 +305,7 @@ func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) Benc
 		MemoryAllocKB:      refreshStats.MemoryAllocKB,
 		MemoryAllocDeltaKB: accessStats.MemoryAllocDeltaKB + refreshStats.MemoryAllocDeltaKB,
 		MemorySysKB:        refreshStats.MemorySysKB,
+		CPUTimeMs:          accessStats.CPUTimeMs + refreshStats.CPUTimeMs,
 		CPUPct:             cpuPct,
 		GCOccurred:         accessStats.GCOccurred || refreshStats.GCOccurred,
 	}
@@ -372,4 +380,15 @@ func computeNumericStats(values []float64) NumericStats {
 		Stdev: t.StdevMs,
 		Sum:   t.SumMs,
 	}
+}
+
+func scaleValues(values []float64, factor float64) []float64 {
+	if len(values) == 0 {
+		return nil
+	}
+	scaled := make([]float64, len(values))
+	for i, value := range values {
+		scaled[i] = value * factor
+	}
+	return scaled
 }

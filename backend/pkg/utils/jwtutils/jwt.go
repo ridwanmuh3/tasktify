@@ -33,6 +33,9 @@ type JWTPayload struct {
 const (
 	TokenUseAccess  = "access"
 	TokenUseRefresh = "refresh"
+
+	TokenTypeAccess  = "at+jwt"
+	TokenTypeRefresh = "rt+jwt"
 )
 
 // AlgConfig holds the signing method, sign key, and verify key for a single algorithm.
@@ -40,6 +43,57 @@ type AlgConfig struct {
 	Method    jwt.SigningMethod
 	SignKey   any // private key (nil for precomputed signers)
 	VerifyKey any // public key
+}
+
+func (c JWTClaims) Validate() error {
+	if c.UserID == uuid.Nil {
+		return errors.New("user_id claim is required")
+	}
+	if c.Email == "" {
+		return errors.New("email claim is required")
+	}
+	if c.TokenUse != TokenUseAccess && c.TokenUse != TokenUseRefresh {
+		return errors.New("token_use claim is invalid")
+	}
+	if c.Subject == "" {
+		return errors.New("sub claim is required")
+	}
+	if c.Subject != c.UserID.String() {
+		return errors.New("sub claim must match user_id")
+	}
+	return nil
+}
+
+func TokenTypeForUse(tokenUse string) string {
+	switch tokenUse {
+	case TokenUseRefresh:
+		return TokenTypeRefresh
+	default:
+		return TokenTypeAccess
+	}
+}
+
+func HeaderAlgForConfigAlg(alg string) string {
+	switch alg {
+	case "Falcon-512", "Falcon-Precomputed-512", "FN-DSA-512":
+		return jwt.AlgFNDSA512
+	default:
+		return alg
+	}
+}
+
+func normalizeAllowedAlgs(algs []string) []string {
+	seen := make(map[string]struct{}, len(algs))
+	out := make([]string, 0, len(algs))
+	for _, alg := range algs {
+		headerAlg := HeaderAlgForConfigAlg(alg)
+		if _, ok := seen[headerAlg]; ok {
+			continue
+		}
+		seen[headerAlg] = struct{}{}
+		out = append(out, headerAlg)
+	}
+	return out
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -58,7 +112,7 @@ type jwtUtil struct {
 // The verifyKey is the Falcon public key bytes.
 func NewJwtUtil(config *viper.Viper, verifyKey []byte) JwtUtil {
 	return &jwtUtil{
-		allowedAlgs: config.GetStringSlice("JWT_ALLOWED_ALGS"),
+		allowedAlgs: normalizeAllowedAlgs(config.GetStringSlice("JWT_ALLOWED_ALGS")),
 		issuer:      config.GetString("JWT_ISSUER"),
 		verifyKey:   verifyKey,
 		duration:    config.GetInt("JWT_TOKEN_DURATION"),
@@ -69,7 +123,7 @@ func NewJwtUtil(config *viper.Viper, verifyKey []byte) JwtUtil {
 // The method should already have PrecomputedSigner set via SetPrecomputedSigner.
 func NewJwtUtilWithSigner(config *viper.Viper, method jwt.SigningMethod, verifyKey []byte) JwtUtil {
 	return &jwtUtil{
-		allowedAlgs: config.GetStringSlice("JWT_ALLOWED_ALGS"),
+		allowedAlgs: normalizeAllowedAlgs(config.GetStringSlice("JWT_ALLOWED_ALGS")),
 		issuer:      config.GetString("JWT_ISSUER"),
 		verifyKey:   verifyKey,
 		method:      method,
@@ -94,11 +148,13 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
+			Subject:   payload.UserID.String(),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(currentTime.Add(time.Duration(j.duration) * time.Minute)),
 			Issuer:    j.issuer,
 		},
 	})
+	token.Header["typ"] = TokenTypeForUse(tokenUse)
 
 	// For precomputed Falcon, key is ignored by Sign() as signer is embedded
 	s, err := token.SignedString(nil)
@@ -124,6 +180,9 @@ func (j *jwtUtil) Parse(token string) (*JWTClaims, error) {
 	}
 
 	if claims, ok := parsedToken.Claims.(*JWTClaims); ok && parsedToken.Valid {
+		if err := validateTokenTypeHeader(parsedToken, claims.TokenUse); err != nil {
+			return nil, err
+		}
 		return claims, nil
 	}
 	return nil, errors.New("token is not valid")
@@ -161,7 +220,10 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 
 	cfg, ok := m.configs[alg]
 	if !ok {
-		return "", fmt.Errorf("unsupported algorithm: %s", alg)
+		cfg, ok = m.configForSignAlg(alg)
+		if !ok {
+			return "", fmt.Errorf("unsupported algorithm: %s", alg)
+		}
 	}
 
 	currentTime := time.Now()
@@ -176,11 +238,13 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
+			Subject:   payload.UserID.String(),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(currentTime.Add(time.Duration(m.duration) * time.Minute)),
 			Issuer:    m.issuer,
 		},
 	})
+	token.Header["typ"] = TokenTypeForUse(tokenUse)
 
 	s, err := token.SignedString(cfg.SignKey)
 	if err != nil {
@@ -190,11 +254,7 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 }
 
 func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
-	// Build allowed algorithms list from all configured algorithms
-	allowedAlgs := make([]string, 0, len(m.configs))
-	for alg := range m.configs {
-		allowedAlgs = append(allowedAlgs, alg)
-	}
+	allowedAlgs := m.allowedHeaderAlgs()
 
 	parser := jwt.NewParser(
 		jwt.WithValidMethods(allowedAlgs),
@@ -205,7 +265,7 @@ func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
 	parsedToken, err := parser.ParseWithClaims(tokenStr, &JWTClaims{}, func(t *jwt.Token) (any, error) {
 		// Return the correct verify key based on the token's algorithm
 		alg := t.Method.Alg()
-		cfg, ok := m.configs[alg]
+		cfg, ok := m.configForHeaderAlg(alg)
 		if !ok {
 			return nil, fmt.Errorf("no key configured for algorithm: %s", alg)
 		}
@@ -216,9 +276,58 @@ func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
 	}
 
 	if claims, ok := parsedToken.Claims.(*JWTClaims); ok && parsedToken.Valid {
+		if err := validateTokenTypeHeader(parsedToken, claims.TokenUse); err != nil {
+			return nil, err
+		}
 		return claims, nil
 	}
 	return nil, errors.New("token is not valid")
+}
+
+func (m *multiAlgJwtUtil) configForSignAlg(alg string) (*AlgConfig, bool) {
+	headerAlg := HeaderAlgForConfigAlg(alg)
+	if cfg, ok := m.configs[m.defaultAlg]; ok && cfg.Method.Alg() == headerAlg {
+		return cfg, true
+	}
+	return m.configForHeaderAlg(headerAlg)
+}
+
+func (m *multiAlgJwtUtil) configForHeaderAlg(headerAlg string) (*AlgConfig, bool) {
+	for _, cfg := range m.configs {
+		if cfg.Method.Alg() == headerAlg {
+			return cfg, true
+		}
+	}
+	return nil, false
+}
+
+func (m *multiAlgJwtUtil) allowedHeaderAlgs() []string {
+	seen := make(map[string]struct{}, len(m.configs))
+	algs := make([]string, 0, len(m.configs))
+	for _, cfg := range m.configs {
+		if cfg == nil || cfg.Method == nil {
+			continue
+		}
+		alg := cfg.Method.Alg()
+		if _, ok := seen[alg]; ok {
+			continue
+		}
+		seen[alg] = struct{}{}
+		algs = append(algs, alg)
+	}
+	return algs
+}
+
+func validateTokenTypeHeader(token *jwt.Token, tokenUse string) error {
+	expected := TokenTypeForUse(tokenUse)
+	if expected == "" {
+		return nil
+	}
+	got, _ := token.Header["typ"].(string)
+	if got != expected {
+		return fmt.Errorf("token typ %q does not match token_use %q", got, tokenUse)
+	}
+	return nil
 }
 
 func AlgorithmFromToken(tokenStr string) (string, error) {

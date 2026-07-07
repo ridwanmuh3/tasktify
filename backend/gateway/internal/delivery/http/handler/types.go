@@ -54,6 +54,7 @@ type BenchmarkRuntimeStats struct {
 	MemoryAllocKB      float64
 	MemoryAllocDeltaKB float64
 	MemorySysKB        float64
+	CPUTimeMs          float64
 	CPUPct             float64
 	GCOccurred         bool
 }
@@ -97,6 +98,7 @@ type NumericStats struct {
 
 type BenchmarkSignResult struct {
 	Algorithm                string    `json:"algorithm"`
+	JWSAlgorithm             string    `json:"jws_alg"`
 	Iterations               int       `json:"iterations"`
 	WarmupIterations         int       `json:"warmup_iterations"`
 	SuccessCount             int       `json:"success_count"`
@@ -109,6 +111,7 @@ type BenchmarkSignResult struct {
 	RefreshTokenGCFreeMs     []float64 `json:"refresh_token_generation_gc_free_timings_ms"`
 	TotalTimingsMs           []float64 `json:"total_timings_ms"`
 	AuthCPUPct               []float64 `json:"auth_cpu_pct"`
+	AuthCPUTimeMs            []float64 `json:"auth_cpu_time_ms"`
 	AuthMemoryAllocKB        []float64 `json:"auth_memory_alloc_kb"`
 	AuthMemoryAllocDeltaKB   []float64 `json:"auth_memory_alloc_delta_kb"`
 	AuthMemorySysKB          []float64 `json:"auth_memory_sys_kb"`
@@ -121,6 +124,8 @@ type BenchmarkSignResult struct {
 		Total                 TimingStats `json:"total"`
 		Resource              struct {
 			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
+			CPUTimeMs          NumericStats `json:"cpu_time_ms"`
+			CPUTimePerTokenMs  NumericStats `json:"cpu_time_per_token_ms"`
 			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
 			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
 			MemorySysKB        NumericStats `json:"memory_sys_kb"`

@@ -19,17 +19,8 @@ var (
 )
 
 func init() {
-	// Falcon-512
-	SigningMethodFNP512 = &SigningMethodFalconPrecomputed{"Falcon-Precomputed-512", nil}
-	RegisterSigningMethod(SigningMethodFNP512.Alg(), func() SigningMethod {
-		return SigningMethodFNP512
-	})
-
-	// Falcon-1024
-	SigningMethodFNP1024 = &SigningMethodFalconPrecomputed{"Falcon-Precomputed-1024", nil}
-	RegisterSigningMethod(SigningMethodFNP1024.Alg(), func() SigningMethod {
-		return SigningMethodFNP1024
-	})
+	SigningMethodFNP512 = &SigningMethodFalconPrecomputed{AlgFNDSA512, nil}
+	SigningMethodFNP1024 = &SigningMethodFalconPrecomputed{AlgFNDSA1024, nil}
 }
 
 func (m *SigningMethodFalconPrecomputed) Alg() string {
@@ -128,9 +119,9 @@ func (m *SigningMethodFalconPrecomputed) validatePublicKey(key []byte) error {
 
 func (m *SigningMethodFalconPrecomputed) expectedLogN() (uint, error) {
 	switch m.Alg() {
-	case "Falcon-Precomputed-512":
+	case AlgFNDSA512, LegacyAlgFalconPrecomputed512:
 		return 9, nil
-	case "Falcon-Precomputed-1024":
+	case AlgFNDSA1024, LegacyAlgFalconPrecomputed1024:
 		return 10, nil
 	default:
 		return 0, newError("unsupported Falcon precomputed algorithm", ErrInvalidKey)

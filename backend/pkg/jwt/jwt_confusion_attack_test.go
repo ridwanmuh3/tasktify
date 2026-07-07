@@ -46,7 +46,7 @@ func setupFalconKeys(t *testing.T) (skey []byte, vkey []byte, signer *fndsa.Prec
 func createValidToken(t *testing.T, signer *fndsa.PrecomputedSigner) string {
 	t.Helper()
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -71,7 +71,7 @@ func createValidToken(t *testing.T, signer *fndsa.PrecomputedSigner) string {
 // parseWithProtection mensimulasikan parser yang digunakan di gateway/auth-service
 func parseWithProtection(tokenString string, vkey []byte) (*jwt.Token, error) {
 	parser := jwt.NewParser(
-		jwt.WithValidMethods([]string{"Falcon-Precomputed-512"}),
+		jwt.WithValidMethods([]string{jwt.AlgFNDSA512}),
 		jwt.WithIssuer("tasktify"),
 		jwt.WithIssuedAt(),
 	)
@@ -279,7 +279,7 @@ func TestAttack_SignatureStripping(t *testing.T) {
 func TestAttack_ExpiredToken(t *testing.T) {
 	_, vkey, signer := setupFalconKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -313,7 +313,7 @@ func TestAttack_ExpiredToken(t *testing.T) {
 func TestAttack_IssuerSpoofing(t *testing.T) {
 	_, vkey, signer := setupFalconKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	fakeIssuers := []string{"evil-service", "example.com", "attacker.io", ""}
@@ -435,7 +435,7 @@ func TestAttack_MalformedTokens(t *testing.T) {
 func TestAttack_FutureIssuedAt(t *testing.T) {
 	_, vkey, signer := setupFalconKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -564,7 +564,7 @@ func TestAttack_ReplayAttack(t *testing.T) {
 func TestVerification_ValidTokenAccepted(t *testing.T) {
 	_, vkey, signer := setupFalconKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: "Falcon-Precomputed-512"}
+	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	expectedUserID := uuid.New()
@@ -610,16 +610,18 @@ func TestVerification_ValidTokenAccepted(t *testing.T) {
 // SUMMARY: Menjalankan semua attack test dan ringkasan
 //
 // Mapping ke 10 Vektor Serangan Adversarial JWT:
-//  #1  Signature Tampering       → TestAttack_SignatureTampering
-//  #2  Token Forgery             → TestAttack_SignatureStripping (empty/fake sig)
-//  #3  Algorithm Confusion       → TestAttack_UnknownAlgorithm (HS256/RS256/ES256)
-//  #4  None Algorithm Attack     → TestAttack_AlgorithmNone, TestAttack_NoneWithSignature
-//  #5  Payload/Claim Manipulation→ TestAttack_JSONInjectionInClaims
-//  #6  Expired Token Abuse       → TestAttack_ExpiredToken
-//  #7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
-//  #8  Missing Sig Verification  → TestAttack_SignatureStripping (empty signature case)
-//  #9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke Falcon verifier)
-//  #10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
+//
+//	#1  Signature Tampering       → TestAttack_SignatureTampering
+//	#2  Token Forgery             → TestAttack_SignatureStripping (empty/fake sig)
+//	#3  Algorithm Confusion       → TestAttack_UnknownAlgorithm (HS256/RS256/ES256)
+//	#4  None Algorithm Attack     → TestAttack_AlgorithmNone, TestAttack_NoneWithSignature
+//	#5  Payload/Claim Manipulation→ TestAttack_JSONInjectionInClaims
+//	#6  Expired Token Abuse       → TestAttack_ExpiredToken
+//	#7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
+//	#8  Missing Sig Verification  → TestAttack_SignatureStripping (empty signature case)
+//	#9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke Falcon verifier)
+//	#10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
+//
 // ========================================================
 func TestConfusionAttackSummary(t *testing.T) {
 	attacks := []struct {

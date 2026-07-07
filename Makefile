@@ -34,6 +34,7 @@ help:
 	@echo "  make clean            Stop stack and remove volumes"
 	@echo "  make compose-config   Validate production Compose config"
 	@echo "  make bench-config     Validate benchmark Compose config"
+	@echo "  make hostinger-bench  Run client k6, upload artifacts, calculate on VPS"
 	@echo "  make ps               Show production Compose services"
 	@echo "  make logs             Follow all logs"
 	@echo "  make logs-gateway     Follow gateway logs"
@@ -131,7 +132,16 @@ check:
 bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
+hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health:
+	$(MAKE) -C $(BACKEND_DIR) $@
+
+client-k6 client-k6-isolated client-k6-stress client-k6-attack:
+	$(MAKE) -C $(BACKEND_DIR) $@
+
+hostinger-upload hostinger-calc hostinger-fetch hostinger-bench:
+	$(MAKE) -C $(BACKEND_DIR) $@
+
 attack-adversarial attack-adversarial-bench attack-adversarial-remote:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote

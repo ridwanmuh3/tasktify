@@ -19,14 +19,12 @@ var (
 )
 
 func init() {
-	// Falcon-512
-	SigningMethodFN512 = &SigningMethodFalcon{"Falcon-512"}
+	SigningMethodFN512 = &SigningMethodFalcon{AlgFNDSA512}
 	RegisterSigningMethod(SigningMethodFN512.Alg(), func() SigningMethod {
 		return SigningMethodFN512
 	})
 
-	// Falcon-1024
-	SigningMethodFN1024 = &SigningMethodFalcon{"Falcon-1024"}
+	SigningMethodFN1024 = &SigningMethodFalcon{AlgFNDSA1024}
 	RegisterSigningMethod(SigningMethodFN1024.Alg(), func() SigningMethod {
 		return SigningMethodFN1024
 	})

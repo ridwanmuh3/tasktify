@@ -47,7 +47,7 @@
  *
  * Primary metrics:
  *   JWT generation latency, p95 JWT generation latency, benchmark-token throughput,
- *   memory usage, CPU utilization
+ *   memory usage, CPU utilization, CPU time
  *
  * Secondary metrics:
  *   end-to-end response time, request per second, token/header/body size,
@@ -130,6 +130,13 @@ function benchmarkBody(email, algName) {
     email,
     algorithm: algName,
   });
+}
+
+function jwsAlgForBenchmarkProfile(algName) {
+  if (algName === "Falcon-Precomputed-512" || algName === "Falcon-512") {
+    return "FN-DSA-512";
+  }
+  return algName;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -228,6 +235,8 @@ const benchRefreshTokenGenerationGCFreeStdev = new Trend(
 const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
+const benchAuthCPUTimeMsAvg = new Trend("bench_auth_cpu_time_ms_avg", true);
+const benchAuthCPUTimePerTokenMsAvg = new Trend("bench_auth_cpu_time_per_token_ms_avg", true);
 const benchAuthMemoryAllocKBAvg = new Trend("bench_auth_memory_alloc_kb_avg");
 const benchAuthMemoryAllocDeltaKBAvg = new Trend("bench_auth_memory_alloc_delta_kb_avg");
 const benchAuthMemorySysKBAvg = new Trend("bench_auth_memory_sys_kb_avg");
@@ -337,6 +346,8 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_total_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_cpu_time_ms_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_cpu_time_per_token_ms_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_delta_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
@@ -475,6 +486,8 @@ export function runIsolated(data) {
     benchTotalP95.add(s.total.p95_ms, tags);
     benchTotalAvg.add(s.total.avg_ms, tags);
     benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
+    benchAuthCPUTimeMsAvg.add(s.resource?.cpu_time_ms?.avg ?? 0, tags);
+    benchAuthCPUTimePerTokenMsAvg.add(s.resource?.cpu_time_per_token_ms?.avg ?? 0, tags);
     benchAuthMemoryAllocKBAvg.add(s.resource?.memory_alloc_kb?.avg ?? 0, tags);
     benchAuthMemoryAllocDeltaKBAvg.add(s.resource?.memory_alloc_delta_kb?.avg ?? 0, tags);
     benchAuthMemorySysKBAvg.add(s.resource?.memory_sys_kb?.avg ?? 0, tags);
@@ -891,6 +904,13 @@ export function handleSummary(data) {
       const isolatedTotalAvg = getNumber("bench_total_avg", alg.name, null, "avg");
       const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
       const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
+      const isolatedCPUTimeAvg = getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "avg");
+      const isolatedCPUTimePerTokenAvg = getNumber(
+        "bench_auth_cpu_time_per_token_ms_avg",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedMemAvg = getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "avg");
       const isolatedMemDeltaAvg = getNumber(
         "bench_auth_memory_alloc_delta_kb_avg",
@@ -903,6 +923,7 @@ export function handleSummary(data) {
 
       const item = {
         algorithm: alg.name,
+        jws_alg: jwsAlgForBenchmarkProfile(alg.name),
         category: alg.category,
         isolated: RUN_ISOLATED
           ? {
@@ -988,6 +1009,24 @@ export function handleSummary(data) {
                 p95: getNumber("bench_auth_cpu_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_cpu_avg", alg.name, null, "p(99)"),
                 sd: getNumber("bench_auth_cpu_avg", alg.name, null, "stdev"),
+              },
+              cpu_time_ms: {
+                avg: isolatedCPUTimeAvg,
+                min: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "stdev"),
+              },
+              cpu_time_per_token_ms: {
+                avg: isolatedCPUTimePerTokenAvg,
+                min: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "stdev"),
               },
               memory_alloc_kb: {
                 avg: isolatedMemAvg,

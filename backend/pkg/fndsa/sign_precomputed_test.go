@@ -2,6 +2,8 @@ package fndsa
 
 import (
 	"bytes"
+	"fmt"
+	"sync"
 	"testing"
 )
 
@@ -74,6 +76,84 @@ func TestPrecomputedSign(t *testing.T) {
 	}
 	if !Verify(kat_512_vkey, DOMAIN_NONE, 0, data, sig2) {
 		t.Fatalf("precomputed signature verification failed")
+	}
+}
+
+func TestPrecomputedSignerPersistentBytes(t *testing.T) {
+	_, _, ps := newDeterministicPrecomputedSigner(t, 9, 0)
+	if got := ps.PersistentBytes(); got < 57344 {
+		t.Fatalf("persistent bytes too small: got %d, want at least 57344", got)
+	}
+}
+
+func TestPrecomputedSignRejectsTampering(t *testing.T) {
+	_, vkey, ps := newDeterministicPrecomputedSigner(t, 9, 1)
+	data := []byte("tamper-check message")
+	sig, err := ps.Sign(nil, DOMAIN_NONE, 0, data)
+	if err != nil {
+		t.Fatalf("precomputed sign failed: %v", err)
+	}
+
+	tamperedSig := append([]byte(nil), sig...)
+	tamperedSig[len(tamperedSig)/2] ^= 0x80
+	if Verify(vkey, DOMAIN_NONE, 0, data, tamperedSig) {
+		t.Fatal("tampered signature verified")
+	}
+
+	tamperedData := append([]byte(nil), data...)
+	tamperedData[0] ^= 0x01
+	if Verify(vkey, DOMAIN_NONE, 0, tamperedData, sig) {
+		t.Fatal("tampered message verified")
+	}
+}
+
+func TestPrecomputedSignConcurrent(t *testing.T) {
+	_, vkey, ps := newDeterministicPrecomputedSigner(t, 9, 2)
+	data := []byte("same concurrent message")
+	total := 512
+	if testing.Short() {
+		total = 64
+	}
+
+	sigs := make([][]byte, total)
+	errs := make(chan error, total)
+	var wg sync.WaitGroup
+	for i := 0; i < total; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sig, err := ps.Sign(nil, DOMAIN_NONE, 0, data)
+			if err != nil {
+				errs <- fmt.Errorf("sign %d: %w", i, err)
+				return
+			}
+			if !Verify(vkey, DOMAIN_NONE, 0, data, sig) {
+				errs <- fmt.Errorf("verify %d failed", i)
+				return
+			}
+			sigs[i] = sig
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		t.Error(err)
+	}
+	if t.Failed() {
+		return
+	}
+
+	seen := make(map[string]struct{}, total)
+	for i, sig := range sigs {
+		if len(sig) == 0 {
+			t.Fatalf("signature %d is empty", i)
+		}
+		key := string(sig)
+		if _, ok := seen[key]; ok {
+			t.Fatalf("duplicate signature for same message at index %d", i)
+		}
+		seen[key] = struct{}{}
 	}
 }
 
