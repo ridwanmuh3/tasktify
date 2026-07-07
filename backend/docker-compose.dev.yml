@@ -1,8 +1,0 @@
-services:
-  postgres:
-    ports:
-      - "${DB_PORT:-5432}:5432"
-
-networks:
-  backend:
-    internal: false
