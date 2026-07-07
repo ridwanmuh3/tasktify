@@ -1,7 +1,7 @@
 /**
  * adversarial_jwt.js
  *
- * k6 adversarial JWT security test — 8 Attack Vectors
+ * k6 adversarial JWT security test — 8 black-box attack vectors
  *
  * Tests that the gateway correctly blocks all JWT attack scenarios.
  * Each attack manipulates a valid token and asserts 401/403 response.
@@ -13,7 +13,7 @@
  *   #4  None Algorithm Attack     — alg=none (with and without signature)
  *   #5  Payload Manipulation      — change email claim without re-signing
  *   #6  Expired Token Abuse       — set exp to past (payload mod, sig fails)
- *   #7  Missing Sig Verification  — send token with empty signature
+ *   #7  Unsigned Compact Token    — send compact JWS with empty signature
  *   #8  Cross-Algorithm Injection — classic header against Falcon verifier
  *
  * Usage:
@@ -94,7 +94,7 @@ const blockRateAlgConfusion = new Rate("attack_block_rate_3_algorithm_confusion"
 const blockRateNoneAlg = new Rate("attack_block_rate_4_none_algorithm");
 const blockRatePayloadManip = new Rate("attack_block_rate_5_payload_manipulation");
 const blockRateExpiredToken = new Rate("attack_block_rate_6_expired_token");
-const blockRateMissingSig = new Rate("attack_block_rate_7_missing_signature");
+const blockRateUnsignedCompact = new Rate("attack_block_rate_7_unsigned_compact_token");
 const blockRateCrossAlg = new Rate("attack_block_rate_8_cross_algorithm_injection");
 
 // ═══════════════════════════════════════════════════════════════
@@ -113,14 +113,14 @@ export const options = {
   },
   thresholds: {
     // All attack vectors must be blocked 100%.
-    attack_block_rate: ["rate>0.85"],
+    attack_block_rate: ["rate>0.99"],
     attack_block_rate_1_signature_tampering: ["rate>0.99"],
     attack_block_rate_2_token_forgery: ["rate>0.99"],
     attack_block_rate_3_algorithm_confusion: ["rate>0.99"],
     attack_block_rate_4_none_algorithm: ["rate>0.99"],
     attack_block_rate_5_payload_manipulation: ["rate>0.99"],
     attack_block_rate_6_expired_token: ["rate>0.99"],
-    attack_block_rate_7_missing_signature: ["rate>0.99"],
+    attack_block_rate_7_unsigned_compact_token: ["rate>0.99"],
     attack_block_rate_8_cross_algorithm_injection: ["rate>0.99"],
   },
   setupTimeout: "120s",
@@ -311,15 +311,15 @@ export default function (data) {
     );
   });
 
-  // ── #7 Missing Signature Verification ──────────────────────
-  group("7_missing_signature", () => {
-    const tags = { attack: "7_missing_signature" };
+  // ── #7 Unsigned compact token / empty signature ─────────────
+  group("7_unsigned_compact_token", () => {
+    const tags = { attack: "7_unsigned_compact_token" };
     const parts = token.split(".");
     const emptyToken = parts[0] + "." + parts[1] + ".";
     recordAttack(
-      "#7 Missing Signature (empty)",
+      "#7 Unsigned Compact Token (empty signature)",
       hitProtected(emptyToken),
-      blockRateMissingSig,
+      blockRateUnsignedCompact,
       tags,
     );
   });
@@ -387,8 +387,8 @@ export function handleSummary(data) {
     },
     {
       id: 7,
-      name: "Missing Signature",
-      metric: "attack_block_rate_7_missing_signature",
+      name: "Unsigned Compact Token",
+      metric: "attack_block_rate_7_unsigned_compact_token",
       expected: "401/403",
     },
     {

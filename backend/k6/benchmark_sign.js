@@ -4,8 +4,10 @@
  * JWT generation latency study:
  *
  *   Phase 1 — ISOLATED (1 VU, server-side loop)
- *     POST /api/benchmark/sign with N iterations.
+ *     POST /api/benchmark/jwt-issuance with N iterations.
+ *     POST /api/benchmark/pure-signing with N iterations.
  *     Uses gateway-local JWT generation path, no DB/bcrypt/auth-service noise.
+ *     Pure signing excludes JWT serialization, Base64URL, and compact assembly.
  *     Warmup iterations are discarded before measurement.
  *     Use these numbers in academic papers.
  *
@@ -46,8 +48,8 @@
  *   network                = dirty − clean
  *
  * Primary metrics:
- *   JWT generation latency, p95 JWT generation latency, benchmark-token throughput,
- *   memory usage, CPU utilization, CPU time
+ *   pure signing latency, JWT generation latency, p95 JWT generation latency,
+ *   benchmark-token throughput, memory usage, CPU utilization, CPU time
  *
  * Secondary metrics:
  *   end-to-end response time, request per second, token/header/body size,
@@ -93,10 +95,14 @@ const CONCURRENCY_LEVELS = [10, 30, 50];
 // Stress scenario duration (seconds per VU level per algorithm)
 const STRESS_DURATION_S = 30;
 const STRESS_GAP_S = 20; // settle gap between stress scenarios
+const STRESS_THINK_TIME_S = 0.05;
+const STRESS_WARMUP_REQUESTS = 3;
 const ISOLATED_GAP_S = 5; // gap between isolated scenarios
 const PHASE_GAP_S = 30; // settle gap between Phase 1 and Phase 2
 const ATTACK_ITERATIONS = parseInt(__ENV.ATTACK_ITERATIONS || "25", 10);
 const ATTACK_GAP_S = 5;
+const JWT_ISSUANCE_ENDPOINT = "/api/benchmark/jwt-issuance";
+const PURE_SIGNING_ENDPOINT = "/api/benchmark/pure-signing";
 const RUN_ISOLATED = !STRESS_ONLY && !ATTACK_ONLY;
 const RUN_STRESS = !ISOLATED_ONLY && !ATTACK_ONLY;
 const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
@@ -104,9 +110,6 @@ const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_
 const ALGORITHMS = [
   { id: "FNP512", name: "Falcon-Precomputed-512", category: "PQC", port: 5001 },
   { id: "FN512", name: "Falcon-512", category: "PQC", port: 5002 },
-  { id: "MLDSA44", name: "ML-DSA-44", category: "PQC", port: 5003 },
-  { id: "SLHDSA128f", name: "SLH-DSA-SHA2-128f", category: "PQC", port: 5004 },
-  { id: "SLHDSA128s", name: "SLH-DSA-SHA2-128s", category: "PQC", port: 5005 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
@@ -114,9 +117,6 @@ const ALGORITHMS = [
 const STRESS_BUDGET = {
   "Falcon-Precomputed-512": { dirty: 5000, actual: 500 },
   "Falcon-512": { dirty: 10000, actual: 1000 },
-  "ML-DSA-44": { dirty: 10000, actual: 500 },
-  "SLH-DSA-SHA2-128f": { dirty: 90000, actual: 30000 },
-  "SLH-DSA-SHA2-128s": { dirty: 300000, actual: 120000 },
 };
 const DEFAULT_STRESS_BUDGET = { dirty: 300000, actual: 120000 };
 
@@ -137,6 +137,15 @@ function jwsAlgForBenchmarkProfile(algName) {
     return "FN-DSA-512";
   }
   return algName;
+}
+
+function envOrNotProvided(name) {
+  return __ENV[name] || "not provided";
+}
+
+function endpointUsesTLS() {
+  const base = isMultiGateway ? HOST_BASE : SINGLE_BASE;
+  return base.startsWith("https://");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -205,7 +214,7 @@ if (RUN_ATTACKS) {
 // Custom Metrics
 // ═══════════════════════════════════════════════════════════════
 
-// ── Phase 1: Isolated — values reported by /api/benchmark/sign ─
+// ── Phase 1: Isolated — values reported by /api/benchmark/jwt-issuance ─
 const benchSignP95 = new Trend("bench_sign_p95", true);
 const benchSignAvg = new Trend("bench_sign_avg", true);
 const benchSignMin = new Trend("bench_sign_min", true);
@@ -217,6 +226,12 @@ const benchTokenGenerationStdev = new Trend("bench_token_generation_stdev", true
 const benchTokenGenerationGCFreeP95 = new Trend("bench_token_generation_gc_free_p95", true);
 const benchTokenGenerationGCFreeAvg = new Trend("bench_token_generation_gc_free_avg", true);
 const benchTokenGenerationGCFreeStdev = new Trend("bench_token_generation_gc_free_stdev", true);
+const benchPureSigningP95 = new Trend("bench_pure_signing_p95", true);
+const benchPureSigningAvg = new Trend("bench_pure_signing_avg", true);
+const benchPureSigningStdev = new Trend("bench_pure_signing_stdev", true);
+const benchPureSigningGCFreeP95 = new Trend("bench_pure_signing_gc_free_p95", true);
+const benchPureSigningGCFreeAvg = new Trend("bench_pure_signing_gc_free_avg", true);
+const benchPureSigningGCFreeStdev = new Trend("bench_pure_signing_gc_free_stdev", true);
 const benchRefreshTokenGenerationP95 = new Trend("bench_refresh_token_generation_p95", true);
 const benchRefreshTokenGenerationAvg = new Trend("bench_refresh_token_generation_avg", true);
 const benchRefreshTokenGenerationStdev = new Trend("bench_refresh_token_generation_stdev", true);
@@ -243,9 +258,13 @@ const benchAuthMemorySysKBAvg = new Trend("bench_auth_memory_sys_kb_avg");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
+const benchPureSigningSuccess = new Counter("bench_pure_signing_success");
+const benchPureSigningFailed = new Counter("bench_pure_signing_failed");
 const benchSignSample = new Trend("bench_sign_sample", true);
 const benchTokenGenerationSample = new Trend("bench_token_generation_sample", true);
 const benchTokenGenerationGCFreeSample = new Trend("bench_token_generation_gc_free_sample", true);
+const benchPureSigningSample = new Trend("bench_pure_signing_sample", true);
+const benchPureSigningGCFreeSample = new Trend("bench_pure_signing_gc_free_sample", true);
 const benchRefreshTokenGenerationSample = new Trend("bench_refresh_token_generation_sample", true);
 const benchRefreshTokenGenerationGCFreeSample = new Trend(
   "bench_refresh_token_generation_gc_free_sample",
@@ -289,6 +308,7 @@ const thresholds = {};
 
 if (RUN_ISOLATED) {
   thresholds.bench_success = ["count>0"];
+  thresholds.bench_pure_signing_success = ["count>0"];
 }
 
 if (RUN_STRESS) {
@@ -337,6 +357,12 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_token_generation_gc_free_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_generation_gc_free_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_token_generation_gc_free_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_gc_free_p95${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_gc_free_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_gc_free_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_refresh_token_generation_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_refresh_token_generation_avg${ta}`] = [`avg>=0`];
     thresholds[`bench_refresh_token_generation_stdev${ta}`] = [`avg>=0`];
@@ -352,6 +378,7 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_auth_memory_alloc_delta_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>=0`];
+    thresholds[`bench_pure_signing_success${ta}`] = [`count>=0`];
   }
   if (RUN_ATTACKS) {
     thresholds[`attack_block_rate${ta}`] = [`rate>0.99`];
@@ -361,6 +388,8 @@ for (const alg of ALGORITHMS) {
 export const options = {
   scenarios,
   thresholds,
+  noConnectionReuse: false,
+  noVUConnectionReuse: false,
   setupTimeout: "180s",
   teardownTimeout: "30s",
 };
@@ -430,7 +459,7 @@ export function runIsolated(data) {
     payload_note: `isolated-${alg.id}-${ITERATIONS}iter`,
   });
 
-  const res = http.post(`${BASE}/api/benchmark/sign`, payload, {
+  const res = http.post(`${BASE}${JWT_ISSUANCE_ENDPOINT}`, payload, {
     headers: { "Content-Type": "application/json" },
     timeout: "600s",
   });
@@ -439,7 +468,8 @@ export function runIsolated(data) {
     [`[isolated|${alg.name}] 200`]: (r) => r.status === 200,
     [`[isolated|${alg.name}] has stats`]: (r) => {
       try {
-        return !!JSON.parse(r.body).data?.stats;
+        const body = JSON.parse(r.body).data;
+        return body?.metric_scope === "jwt_issuance" && !!body?.stats;
       } catch {
         return false;
       }
@@ -526,6 +556,64 @@ export function runIsolated(data) {
     console.error(`[isolated|${alg.name}] parse error: ${e}`);
   }
 
+  const pureRes = http.post(`${BASE}${PURE_SIGNING_ENDPOINT}`, payload, {
+    headers: { "Content-Type": "application/json" },
+    timeout: "600s",
+  });
+
+  const pureOk = check(pureRes, {
+    [`[pure-signing|${alg.name}] 200`]: (r) => r.status === 200,
+    [`[pure-signing|${alg.name}] has stats`]: (r) => {
+      try {
+        const body = JSON.parse(r.body).data;
+        return body?.metric_scope === "pure_signing" && !!body?.stats;
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!pureOk) {
+    benchPureSigningFailed.add(1, tags);
+    console.error(
+      `[pure-signing|${alg.name}] FAILED status=${pureRes.status} body=${pureRes.body.slice(0, 300)}`,
+    );
+    sleep(1);
+    return;
+  }
+
+  benchPureSigningSuccess.add(1, tags);
+
+  try {
+    const result = JSON.parse(pureRes.body).data;
+    const s = result.stats;
+
+    benchPureSigningP95.add(s.pure_signing.p95_ms, tags);
+    benchPureSigningAvg.add(s.pure_signing.avg_ms, tags);
+    benchPureSigningStdev.add(s.pure_signing.stdev_ms, tags);
+    if (s.pure_signing_gc_free?.avg_ms != null) {
+      benchPureSigningGCFreeP95.add(s.pure_signing_gc_free.p95_ms, tags);
+      benchPureSigningGCFreeAvg.add(s.pure_signing_gc_free.avg_ms, tags);
+      benchPureSigningGCFreeStdev.add(s.pure_signing_gc_free.stdev_ms, tags);
+    }
+    addSamples(benchPureSigningSample, result.pure_signing_timings_ms, tags);
+    addSamples(benchPureSigningGCFreeSample, result.pure_signing_gc_free_timings_ms, tags);
+
+    const gcFree = s.pure_signing_gc_free;
+    const gcCount = result.gc_contaminated_count ?? 0;
+    console.log(
+      `[pure-signing|${alg.name}] n=${result.success_count}/${result.iterations}` +
+        ` warmup=${result.warmup_iterations}` +
+        ` gc_contaminated=${gcCount}` +
+        ` | pure(all): avg=${s.pure_signing.avg_ms?.toFixed(3)} p95=${s.pure_signing.p95_ms?.toFixed(3)} stdev=${s.pure_signing.stdev_ms?.toFixed(3)} ms` +
+        (gcFree && gcFree.avg_ms != null
+          ? ` | pure(gc_free): avg=${gcFree.avg_ms?.toFixed(3)} p95=${gcFree.p95_ms?.toFixed(3)} stdev=${gcFree.stdev_ms?.toFixed(3)} ms`
+          : ""),
+    );
+  } catch (e) {
+    console.error(`[pure-signing|${alg.name}] parse error: ${e}`);
+  }
+
   sleep(1);
 }
 
@@ -563,7 +651,7 @@ function tamperToken(token) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Phase 2: Stress — concurrent pure-sign calls, latency under load
+// Phase 2: Stress — concurrent benchmark-token calls, latency under load
 // ═══════════════════════════════════════════════════════════════
 
 export function runStress(data) {
@@ -580,10 +668,10 @@ export function runStress(data) {
   const body = benchmarkBody(data.user.email, alg.name);
 
   if (STRESS_WARMUP && __ITER === 0) {
-    // 3 warmup calls per VU: first primes the connection pool, subsequent warm code/data caches.
-    warmupBenchmarkToken(BASE, body, jsonHdr);
-    warmupBenchmarkToken(BASE, body, jsonHdr);
-    warmupBenchmarkToken(BASE, body, jsonHdr);
+    // First call primes the connection pool, subsequent calls warm code/data caches.
+    for (let i = 0; i < STRESS_WARMUP_REQUESTS; i++) {
+      warmupBenchmarkToken(BASE, body, jsonHdr);
+    }
   }
 
   group(`stress ${alg.name} ${vuCount}VU`, () => {
@@ -690,7 +778,7 @@ export function runStress(data) {
     stressRefreshErrorRate.add(true, tags);
   }
 
-  sleep(0.05);
+  sleep(STRESS_THINK_TIME_S);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -779,6 +867,16 @@ export function handleSummary(data) {
     return v === undefined ? null : v;
   }
 
+  function divideOrNull(num, den) {
+    if (num === null || den === null || den === 0) return null;
+    return num / den;
+  }
+
+  function subtractOrNull(left, right) {
+    if (left === null || right === null) return null;
+    return left - right;
+  }
+
   function getThroughput(algName, vuCount) {
     const sk = `stress_req_success{alg:${algName},vus:${vuCount}}`;
     const sc = (m[sk] && m[sk].values.count) || 0;
@@ -827,14 +925,42 @@ export function handleSummary(data) {
       endpoint: isMultiGateway ? `${HOST_BASE}:{5001-${5000 + ALGORITHMS.length}}` : SINGLE_BASE,
       methodology: {
         primary_metric: "isolated_gc_free_token_generation",
+        pure_signing_metric: "isolated_gc_free_pure_signing",
         supporting_metric: "stress_concurrent_jwt_generation",
+        isolated_endpoint: JWT_ISSUANCE_ENDPOINT,
+        pure_signing_endpoint: PURE_SIGNING_ENDPOINT,
         isolated_iterations: ITERATIONS,
         isolated_warmup_iterations: ISOLATED_WARMUP,
         stress_duration_seconds: STRESS_DURATION_S,
+        stress_stage_model: {
+          executor: "constant-vus",
+          load_model: "closed-loop",
+          ramp_up_seconds: 0,
+          steady_state_seconds: STRESS_DURATION_S,
+          ramp_down_seconds: 0,
+          settle_gap_between_stress_scenarios_seconds: STRESS_GAP_S,
+          graceful_stop_seconds: 15,
+          think_time_seconds: STRESS_THINK_TIME_S,
+          warmup_requests_per_vu: STRESS_WARMUP ? STRESS_WARMUP_REQUESTS : 0,
+        },
+        stress_transport: {
+          request_timeout: "k6 default unless request overrides it; setup registration uses 10s",
+          connection_reuse: "enabled",
+          http_protocol: "negotiated by k6/server; see benchmark_sign_raw.json http_req_* protocol tags if emitted",
+          tls_enabled: endpointUsesTLS(),
+        },
+        stress_environment: {
+          database_pool_idle: envOrNotProvided("DB_POOL_IDLE"),
+          database_pool_open: envOrNotProvided("DB_POOL_OPEN"),
+          rate_limit: envOrNotProvided("RATE_LIMIT"),
+          cpu_quota: envOrNotProvided("CPU_QUOTA"),
+          memory_quota: envOrNotProvided("MEMORY_QUOTA"),
+        },
         stress_warmup_enabled: STRESS_WARMUP,
         concurrency_levels: CONCURRENCY_LEVELS,
         notes: [
           "Isolated metrics use gateway-local JWT generation path.",
+          "Pure signing metrics use /api/benchmark/pure-signing and exclude JWT serialization, Base64URL, and compact assembly.",
           "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
           "Refresh metrics use /api/auth/refresh with refresh tokens returned by /api/auth/signin.",
           "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios.",
@@ -879,6 +1005,27 @@ export function handleSummary(data) {
       );
       const isolatedTokenGCFreeStdev = getNumber(
         "bench_token_generation_gc_free_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedPureAvg = getNumber("bench_pure_signing_avg", alg.name, null, "avg");
+      const isolatedPureP95 = getNumber("bench_pure_signing_p95", alg.name, null, "avg");
+      const isolatedPureStdev = getNumber("bench_pure_signing_stdev", alg.name, null, "avg");
+      const isolatedPureGCFreeAvg = getNumber(
+        "bench_pure_signing_gc_free_avg",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedPureGCFreeP95 = getNumber(
+        "bench_pure_signing_gc_free_p95",
+        alg.name,
+        null,
+        "avg",
+      );
+      const isolatedPureGCFreeStdev = getNumber(
+        "bench_pure_signing_gc_free_stdev",
         alg.name,
         null,
         "avg",
@@ -928,7 +1075,36 @@ export function handleSummary(data) {
         isolated: RUN_ISOLATED
           ? {
               iterations: ITERATIONS,
+              endpoint: JWT_ISSUANCE_ENDPOINT,
+              pure_signing_endpoint: PURE_SIGNING_ENDPOINT,
+              metric_scope: "jwt_issuance",
+              pure_signing_metric_scope: "pure_signing",
               gc_contaminated_count: isolatedGCCnt || 0,
+              pure_signing_ms: {
+                avg: isolatedPureAvg,
+                min: getNumber("bench_pure_signing_sample", alg.name, null, "min"),
+                max: getNumber("bench_pure_signing_sample", alg.name, null, "max"),
+                p50: getNumber("bench_pure_signing_sample", alg.name, null, "med"),
+                p95: isolatedPureP95,
+                p99: getNumber("bench_pure_signing_sample", alg.name, null, "p(99)"),
+                sd: isolatedPureStdev,
+              },
+              pure_signing_gc_free_ms: isolatedPureGCFreeAvg != null
+                ? {
+                    avg: isolatedPureGCFreeAvg,
+                    min: getNumber("bench_pure_signing_gc_free_sample", alg.name, null, "min"),
+                    max: getNumber("bench_pure_signing_gc_free_sample", alg.name, null, "max"),
+                    p50: getNumber("bench_pure_signing_gc_free_sample", alg.name, null, "med"),
+                    p95: isolatedPureGCFreeP95,
+                    p99: getNumber(
+                      "bench_pure_signing_gc_free_sample",
+                      alg.name,
+                      null,
+                      "p(99)",
+                    ),
+                    sd: isolatedPureGCFreeStdev,
+                  }
+                : null,
               token_generation_ms: {
                 avg: isolatedTokenAvg,
                 min: getNumber("bench_token_generation_avg", alg.name, null, "min"),
@@ -1001,6 +1177,16 @@ export function handleSummary(data) {
                 isolatedTokenAvg != null && isolatedTotalAvg != null
                   ? isolatedTotalAvg - isolatedTokenAvg
                   : null,
+              jwt_issuance_over_pure_avg_ms: subtractOrNull(isolatedTokenAvg, isolatedPureAvg),
+              jwt_issuance_over_pure_ratio: divideOrNull(isolatedTokenAvg, isolatedPureAvg),
+              jwt_issuance_over_pure_gc_free_avg_ms: subtractOrNull(
+                isolatedTokenGCFreeAvg,
+                isolatedPureGCFreeAvg,
+              ),
+              jwt_issuance_over_pure_gc_free_ratio: divideOrNull(
+                isolatedTokenGCFreeAvg,
+                isolatedPureGCFreeAvg,
+              ),
               cpu_pct: {
                 avg: isolatedCPUAvg,
                 min: getNumber("bench_auth_cpu_avg", alg.name, null, "min"),
@@ -1077,8 +1263,31 @@ export function handleSummary(data) {
           return getNumber(metric, alg.name, vusKey, stat);
         }
 
+        const benchmarkTokenSuccess = getCount("stress_req_success", alg.name, vusKey);
+        const benchmarkTokenFailed = getCount("stress_req_failed", alg.name, vusKey);
+        const refreshSuccess = getCount("stress_refresh_success", alg.name, vusKey);
+        const refreshFailed = getCount("stress_refresh_failed", alg.name, vusKey);
+
         item.stress.push({
           vus,
+          load: {
+            executor: "constant-vus",
+            load_model: "closed-loop",
+            duration_seconds: STRESS_DURATION_S,
+            ramp_up_seconds: 0,
+            steady_state_seconds: STRESS_DURATION_S,
+            ramp_down_seconds: 0,
+            think_time_seconds: STRESS_THINK_TIME_S,
+          },
+          requests: {
+            benchmark_token_success: benchmarkTokenSuccess,
+            benchmark_token_failed: benchmarkTokenFailed,
+            benchmark_token_total: benchmarkTokenSuccess + benchmarkTokenFailed,
+            login_total: stressStat("stress_login_dirty", "count") || 0,
+            refresh_success: refreshSuccess,
+            refresh_failed: refreshFailed,
+            refresh_total: refreshSuccess + refreshFailed,
+          },
           token_generation_ms: {
             avg: stressStat("stress_token_generation_clean", "avg"),
             min: stressStat("stress_token_generation_clean", "min"),
@@ -1147,8 +1356,8 @@ export function handleSummary(data) {
     return result;
   }
 
-  const SEP = "═".repeat(156);
-  const LINE = "─".repeat(156);
+  const SEP = "═".repeat(170);
+  const LINE = "─".repeat(170);
 
   function pad(s, w) {
     const str = String(s);
@@ -1165,13 +1374,13 @@ export function handleSummary(data) {
   const hdrI = [
     pad("Algorithm", WI[0]),
     pad("N", WI[1]),
-    pad("Access avg", WI[2]),
-    pad("Access p95", WI[3]),
-    pad("Access sd", WI[4]),
-    pad("Refresh avg", WI[5]),
-    pad("Refresh p95", WI[6]),
-    pad("E2E avg", WI[7]),
-    pad("E2E p95", WI[8]),
+    pad("Pure avg", WI[2]),
+    pad("Pure p95", WI[3]),
+    pad("Access avg", WI[4]),
+    pad("Access p95", WI[5]),
+    pad("Refresh avg", WI[6]),
+    pad("Refresh p95", WI[7]),
+    pad("E2E avg", WI[8]),
     pad("CPU avg", WI[9]),
     pad("Mem avg", WI[10]),
   ].join("");
@@ -1194,6 +1403,20 @@ export function handleSummary(data) {
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
+    const pa = getValFallback(
+      "bench_pure_signing_gc_free_avg",
+      "bench_pure_signing_avg",
+      n,
+      null,
+      "avg",
+    );
+    const pp = getValFallback(
+      "bench_pure_signing_gc_free_p95",
+      "bench_pure_signing_p95",
+      n,
+      null,
+      "avg",
+    );
     const sa = getValFallback(
       "bench_token_generation_gc_free_avg",
       "bench_token_generation_avg",
@@ -1204,13 +1427,6 @@ export function handleSummary(data) {
     const sp = getValFallback(
       "bench_token_generation_gc_free_p95",
       "bench_token_generation_p95",
-      n,
-      null,
-      "avg",
-    );
-    const ss = getValFallback(
-      "bench_token_generation_gc_free_stdev",
-      "bench_token_generation_stdev",
       n,
       null,
       "avg",
@@ -1230,7 +1446,6 @@ export function handleSummary(data) {
       "avg",
     );
     const ta = getVal("bench_total_avg", n, null, "avg");
-    const tp = getVal("bench_total_p95", n, null, "avg");
     const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
     const mem = getVal("bench_auth_memory_alloc_kb_avg", n, null, "avg");
 
@@ -1238,13 +1453,13 @@ export function handleSummary(data) {
       [
         pad(n, WI[0]),
         pad(ITERATIONS, WI[1]),
-        pad(sa, WI[2]),
-        pad(sp, WI[3]),
-        pad(ss, WI[4]),
-        pad(ra, WI[5]),
-        pad(rp, WI[6]),
-        pad(ta, WI[7]),
-        pad(tp, WI[8]),
+        pad(pa, WI[2]),
+        pad(pp, WI[3]),
+        pad(sa, WI[4]),
+        pad(sp, WI[5]),
+        pad(ra, WI[6]),
+        pad(rp, WI[7]),
+        pad(ta, WI[8]),
         pad(cpu, WI[9]),
         pad(mem, WI[10]),
       ].join("") + "\n";
@@ -1364,8 +1579,9 @@ ${SEP}
   ${LINE}
   ${isolated.trimEnd().split("\n").join("\n  ")}
 
+  Pure           = GC-free direct SigningMethod.Sign over fixed message; fallback to all samples
   Access/Refresh = GC-free JWT generation from benchmark payload when available; fallback to all samples
-  E2E            = Full local benchmark handler iteration during isolated benchmark
+  E2E            = Full local JWT issuance handler iteration during isolated benchmark
   Warmup         = ${ISOLATED_WARMUP} discarded iterations before each isolated measurement
 
   ── SUPPORTING SYSTEM METRICS: STRESS (${CONCURRENCY_LEVELS.join(" / ")} VUs, ${STRESS_DURATION_S}s each) ──
@@ -1380,6 +1596,7 @@ ${SEP}
   ${LINE}
   ${secondary.trimEnd().split("\n").join("\n  ")}
 
+  Pure avg/p95 = /api/benchmark/pure-signing; no JWT serialization/Base64URL/compact assembly
   Access avg/p95 = X-Token-Generation-Time-Ms header; JWT generation from benchmark payload only
   Refresh avg/p95 = X-Refresh-Token-Generation-Time-Ms header on /api/auth/refresh
   Token ok/s   = Successful /api/benchmark/token responses / ${STRESS_DURATION_S}s

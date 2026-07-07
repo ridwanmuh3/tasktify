@@ -20,11 +20,13 @@ import (
 )
 
 type BenchmarkHandler struct {
-	log          *zap.SugaredLogger
-	benchmarkJWT jwtutils.JwtUtil
+	log              *zap.SugaredLogger
+	benchmarkJWT     jwtutils.JwtUtil
+	benchmarkConfigs map[string]*jwtutils.AlgConfig
 }
 
 const bytesPerKB = 1024.0
+const pureSigningInput = "tasktify-fndsa-pure-signing-benchmark-message-v1"
 
 // cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
 // /proc/self/stat utime+stime always sums all threads — reliable in containers.
@@ -77,15 +79,126 @@ func readCPUTicks() int64 {
 	return utime + stime
 }
 
-func NewBenchmarkHandler(log *zap.SugaredLogger, benchmarkJWT jwtutils.JwtUtil) *BenchmarkHandler {
-	return &BenchmarkHandler{log: log, benchmarkJWT: benchmarkJWT}
+func NewBenchmarkHandler(
+	log *zap.SugaredLogger,
+	benchmarkJWT jwtutils.JwtUtil,
+	benchmarkConfigs map[string]*jwtutils.AlgConfig,
+) *BenchmarkHandler {
+	return &BenchmarkHandler{
+		log:              log,
+		benchmarkJWT:     benchmarkJWT,
+		benchmarkConfigs: benchmarkConfigs,
+	}
 }
 
-// SignLatency runs N sequential pure-sign iterations and returns per-iteration timing data.
+// JWTIssuance runs N sequential JWT issuance iterations and returns per-iteration timing data.
 // Designed for isolated academic experiments — use 1 VU in k6 for controlled measurements.
+//
+// POST /api/benchmark/jwt-issuance
+func (h *BenchmarkHandler) JWTIssuance(c fiber.Ctx) error {
+	return h.jwtIssuance(c, "/api/benchmark/jwt-issuance")
+}
+
+// SignLatency is kept as a backward-compatible alias for older k6 scripts.
 //
 // POST /api/benchmark/sign
 func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
+	return h.jwtIssuance(c, "/api/benchmark/sign")
+}
+
+// PureSigning runs N sequential signing primitive iterations.
+// It excludes JWT claim serialization, Base64URL, and compact-token assembly.
+//
+// POST /api/benchmark/pure-signing
+func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
+	var req BenchmarkSignRequest
+	if err := c.Bind().JSON(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if req.Iterations <= 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "iterations must be positive")
+	}
+
+	pureSigningTimings := make([]float64, 0, req.Iterations)
+	gcFreePureSigningTimings := make([]float64, 0, req.Iterations)
+	cpuSamples := make([]float64, 0, req.Iterations)
+	cpuTimeSamples := make([]float64, 0, req.Iterations)
+	memAllocSamples := make([]float64, 0, req.Iterations)
+	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
+	memSysSamples := make([]float64, 0, req.Iterations)
+	warmupIterations := req.WarmupIterations
+	if warmupIterations < 0 {
+		warmupIterations = 0
+	}
+
+	for i := 0; i < warmupIterations; i++ {
+		if _, _, err := h.signPure(req.Algorithm, false); err != nil {
+			h.log.Warnf("pure signing warmup iter %d failed: %v", i, err)
+		}
+	}
+
+	runtime.GC()
+	runtime.GC()
+
+	gcContaminatedCount := 0
+	for i := 0; i < req.Iterations; i++ {
+		signMs, stats, err := h.signPure(req.Algorithm, true)
+		if err != nil {
+			h.log.Warnf("pure signing iter %d failed: %v", i, err)
+			continue
+		}
+
+		pureSigningTimings = append(pureSigningTimings, signMs)
+		cpuSamples = append(cpuSamples, stats.CPUPct)
+		cpuTimeSamples = append(cpuTimeSamples, stats.CPUTimeMs)
+		memAllocSamples = append(memAllocSamples, stats.MemoryAllocKB)
+		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaKB)
+		memSysSamples = append(memSysSamples, stats.MemorySysKB)
+
+		if stats.GCOccurred {
+			gcContaminatedCount++
+		} else {
+			gcFreePureSigningTimings = append(gcFreePureSigningTimings, signMs)
+		}
+	}
+
+	result := BenchmarkPureSigningResult{
+		Endpoint:               "/api/benchmark/pure-signing",
+		MetricScope:            "pure_signing",
+		Algorithm:              req.Algorithm,
+		JWSAlgorithm:           jwtutils.HeaderAlgForConfigAlg(req.Algorithm),
+		Iterations:             req.Iterations,
+		WarmupIterations:       warmupIterations,
+		SuccessCount:           len(pureSigningTimings),
+		GCContaminatedCount:    gcContaminatedCount,
+		PayloadNote:            req.PayloadNote,
+		SigningInputBytes:      len(pureSigningInput),
+		PureSigningTimingsMs:   pureSigningTimings,
+		PureSigningGCFreeMs:    gcFreePureSigningTimings,
+		AuthCPUPct:             cpuSamples,
+		AuthCPUTimeMs:          cpuTimeSamples,
+		AuthMemoryAllocKB:      memAllocSamples,
+		AuthMemoryAllocDeltaKB: memAllocDeltaSamples,
+		AuthMemorySysKB:        memSysSamples,
+	}
+	result.Stats.PureSigning = computeTimingStats(pureSigningTimings)
+	result.Stats.PureSigningGCFree = computeTimingStats(gcFreePureSigningTimings)
+	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
+	result.Stats.Resource.CPUTimeMs = computeNumericStats(cpuTimeSamples)
+	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
+	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
+	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)
+
+	c.Set("X-Bench-Pure-Signing-P95-Ms", fmt.Sprintf("%.3f", result.Stats.PureSigning.P95Ms))
+
+	return c.JSON(model.Response[any]{
+		Status:  fiber.StatusOK,
+		Message: "pure signing benchmark complete",
+		Data:    result,
+	})
+}
+
+func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 	var req BenchmarkSignRequest
 	if err := c.Bind().JSON(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
@@ -154,6 +267,8 @@ func (h *BenchmarkHandler) SignLatency(c fiber.Ctx) error {
 	}
 
 	result := BenchmarkSignResult{
+		Endpoint:                 endpoint,
+		MetricScope:              "jwt_issuance",
 		Algorithm:                req.Algorithm,
 		JWSAlgorithm:             jwtutils.HeaderAlgForConfigAlg(req.Algorithm),
 		Iterations:               req.Iterations,
@@ -263,9 +378,51 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 
 	runtime.ReadMemStats(&memAfter)
 
+	cpuDelta := cpuOpAfter - cpuOpBefore
+
+	stats := benchmarkRuntimeStats(memBefore, memAfter, elapsed, cpuDelta, usePerOpCPU)
+
+	return token, signMs, stats, nil
+}
+
+func (h *BenchmarkHandler) signPure(algorithm string, usePerOpCPU bool) (float64, BenchmarkRuntimeStats, error) {
+	if len(h.benchmarkConfigs) == 0 {
+		return 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark signer configs not configured")
+	}
+	cfg, ok := h.benchmarkConfigs[algorithm]
+	if !ok || cfg == nil || cfg.Method == nil {
+		return 0, BenchmarkRuntimeStats{}, fmt.Errorf("benchmark algorithm not configured: %s", algorithm)
+	}
+
+	var memBefore, memAfter runtime.MemStats
+	runtime.ReadMemStats(&memBefore)
+
+	cpuOpBefore := readCPUTicks()
+	t0 := time.Now()
+	_, err := cfg.Method.Sign(pureSigningInput, cfg.SignKey)
+	elapsed := time.Since(t0)
+	signMs := durationToMs(elapsed)
+	cpuOpAfter := readCPUTicks()
+
+	if err != nil {
+		return 0, BenchmarkRuntimeStats{}, err
+	}
+
+	runtime.ReadMemStats(&memAfter)
+	stats := benchmarkRuntimeStats(memBefore, memAfter, elapsed, cpuOpAfter-cpuOpBefore, usePerOpCPU)
+
+	return signMs, stats, nil
+}
+
+func benchmarkRuntimeStats(
+	memBefore runtime.MemStats,
+	memAfter runtime.MemStats,
+	elapsed time.Duration,
+	cpuDelta int64,
+	usePerOpCPU bool,
+) BenchmarkRuntimeStats {
 	var cpuPct float64
 	wallNs := elapsed.Nanoseconds()
-	cpuDelta := cpuOpAfter - cpuOpBefore
 	if usePerOpCPU {
 		// Per-op tick delta: accurate for sub-millisecond isolated iterations where
 		// the 100ms background window would average in unrelated workload.
@@ -283,7 +440,7 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 		}
 	}
 
-	stats := BenchmarkRuntimeStats{
+	return BenchmarkRuntimeStats{
 		MemoryAllocKB:      bytesToKB(memAfter.HeapAlloc),
 		MemoryAllocDeltaKB: bytesToKB(memAfter.TotalAlloc - memBefore.TotalAlloc),
 		MemorySysKB:        bytesToKB(memAfter.Sys),
@@ -291,8 +448,6 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 		CPUPct:             cpuPct,
 		GCOccurred:         memAfter.NumGC > memBefore.NumGC,
 	}
-
-	return token, signMs, stats, nil
 }
 
 func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) BenchmarkRuntimeStats {

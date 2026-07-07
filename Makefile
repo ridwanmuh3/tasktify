@@ -47,6 +47,7 @@ help:
 	@echo "  make build-frontend   Build frontend dist"
 	@echo "  make test             Run backend Go tests"
 	@echo "  make check            Run frontend check and Compose config validation"
+	@echo "  make falcon-check     Run Falcon KAT/tests and benchmark config checks"
 
 env:
 	$(MAKE) -C $(BACKEND_DIR) env
@@ -129,6 +130,9 @@ test:
 check:
 	$(MAKE) -C $(BACKEND_DIR) check
 
+falcon-kat falcon-check wait-bench:
+	$(MAKE) -C $(BACKEND_DIR) $@
+
 bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
@@ -144,4 +148,4 @@ hostinger-upload hostinger-calc hostinger-fetch hostinger-bench:
 attack-adversarial attack-adversarial-bench attack-adversarial-remote:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env install keys keygen vendor gateway run-gateway auth run-auth todo run-todo frontend run-frontend backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build build-frontend proto compile-proto test check falcon-kat falcon-check wait-bench bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote

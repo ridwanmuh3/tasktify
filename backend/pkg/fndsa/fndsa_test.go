@@ -190,6 +190,12 @@ func TestFNDSA_KAT(t *testing.T) {
 	fmt.Println()
 }
 
+func TestFNDSA_Precomputed_KAT(t *testing.T) {
+	testFNDSA_Precomputed_KAT_inner(t, 9, kat_512)
+	testFNDSA_Precomputed_KAT_inner(t, 10, kat_1024)
+	fmt.Println()
+}
+
 func testFNDSA_KAT_inner(t *testing.T, logn uint, kat []string) {
 	fmt.Printf("[%d]", logn)
 	for j := 0; j < len(kat); j++ {
@@ -243,6 +249,63 @@ func testFNDSA_KAT_inner(t *testing.T, logn uint, kat []string) {
 		ref, _ := hex.DecodeString(kat[j])
 		if !bytes.Equal(tmp, ref) {
 			t.Fatalf("KAT failed (logn=%d, j=%d): wrong hash\n", logn, j)
+		}
+
+		fmt.Print(".")
+	}
+}
+
+func testFNDSA_Precomputed_KAT_inner(t *testing.T, logn uint, kat []string) {
+	fmt.Printf("[precomputed-%d]", logn)
+	for j := 0; j < len(kat); j++ {
+		var seed [6]byte
+		seed[0] = 0x00
+		seed[1] = byte(logn)
+		seed[2] = byte(j)
+		seed[3] = byte(j >> 8)
+		seed[4] = byte(j >> 16)
+		seed[5] = byte(j >> 24)
+
+		var seedKgen [32]byte
+		sh := sha3.NewShake256()
+		sh.Write(seed[:])
+		sh.Read(seedKgen[:])
+		skey, vkey, err := KeyGen(logn, bytes.NewReader(seedKgen[:]))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ps, err := NewPrecomputedSigner(skey)
+		if err != nil {
+			t.Fatalf("precompute failed (logn=%d, j=%d): %v", logn, j, err)
+		}
+
+		seed[0] = 0x01
+		ctx := DomainContext([]byte("domain"))
+		var id crypto.Hash
+		msg := []byte("message")
+		if (j & 1) != 0 {
+			id = crypto.SHA3_256
+			hv := sha3.Sum256(msg)
+			msg = hv[:]
+		}
+
+		sig, err := ps.signSeeded(seed[:], ctx, id, msg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !Verify(vkey, ctx, id, msg, sig) {
+			t.Fatalf("precomputed signature verification failed (logn=%d, j=%d)", logn, j)
+		}
+
+		sc := sha3.New256()
+		sc.Write(skey)
+		sc.Write(vkey)
+		sc.Write(sig)
+		tmp := sc.Sum(nil)
+		ref, _ := hex.DecodeString(kat[j])
+		if !bytes.Equal(tmp, ref) {
+			t.Fatalf("precomputed KAT failed (logn=%d, j=%d): wrong hash\n", logn, j)
 		}
 
 		fmt.Print(".")

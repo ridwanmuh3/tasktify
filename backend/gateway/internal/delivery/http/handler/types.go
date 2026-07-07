@@ -97,6 +97,8 @@ type NumericStats struct {
 }
 
 type BenchmarkSignResult struct {
+	Endpoint                 string    `json:"endpoint"`
+	MetricScope              string    `json:"metric_scope"`
 	Algorithm                string    `json:"algorithm"`
 	JWSAlgorithm             string    `json:"jws_alg"`
 	Iterations               int       `json:"iterations"`
@@ -126,6 +128,37 @@ type BenchmarkSignResult struct {
 			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
 			CPUTimeMs          NumericStats `json:"cpu_time_ms"`
 			CPUTimePerTokenMs  NumericStats `json:"cpu_time_per_token_ms"`
+			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
+			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
+			MemorySysKB        NumericStats `json:"memory_sys_kb"`
+		} `json:"resource"`
+	} `json:"stats"`
+}
+
+type BenchmarkPureSigningResult struct {
+	Endpoint               string    `json:"endpoint"`
+	MetricScope            string    `json:"metric_scope"`
+	Algorithm              string    `json:"algorithm"`
+	JWSAlgorithm           string    `json:"jws_alg"`
+	Iterations             int       `json:"iterations"`
+	WarmupIterations       int       `json:"warmup_iterations"`
+	SuccessCount           int       `json:"success_count"`
+	GCContaminatedCount    int       `json:"gc_contaminated_count"`
+	PayloadNote            string    `json:"payload_note,omitempty"`
+	SigningInputBytes      int       `json:"signing_input_bytes"`
+	PureSigningTimingsMs   []float64 `json:"pure_signing_timings_ms"`
+	PureSigningGCFreeMs    []float64 `json:"pure_signing_gc_free_timings_ms"`
+	AuthCPUPct             []float64 `json:"auth_cpu_pct"`
+	AuthCPUTimeMs          []float64 `json:"auth_cpu_time_ms"`
+	AuthMemoryAllocKB      []float64 `json:"auth_memory_alloc_kb"`
+	AuthMemoryAllocDeltaKB []float64 `json:"auth_memory_alloc_delta_kb"`
+	AuthMemorySysKB        []float64 `json:"auth_memory_sys_kb"`
+	Stats                  struct {
+		PureSigning       TimingStats `json:"pure_signing"`
+		PureSigningGCFree TimingStats `json:"pure_signing_gc_free"`
+		Resource          struct {
+			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
+			CPUTimeMs          NumericStats `json:"cpu_time_ms"`
 			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
 			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
 			MemorySysKB        NumericStats `json:"memory_sys_kb"`

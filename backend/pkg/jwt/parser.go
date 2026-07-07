@@ -147,6 +147,9 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 	if headerBytes, err = p.DecodeSegment(parts[0]); err != nil {
 		return token, parts, newError("could not base64 decode header", ErrTokenMalformed, err)
 	}
+	if err = rejectDuplicateTopLevelJSONKeys(headerBytes); err != nil {
+		return token, parts, newError("could not JSON decode header", ErrTokenMalformed, err)
+	}
 	if err = json.Unmarshal(headerBytes, &token.Header); err != nil {
 		return token, parts, newError("could not JSON decode header", ErrTokenMalformed, err)
 	}
@@ -157,6 +160,9 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 	claimBytes, err := p.DecodeSegment(parts[1])
 	if err != nil {
 		return token, parts, newError("could not base64 decode claim", ErrTokenMalformed, err)
+	}
+	if err = rejectDuplicateTopLevelJSONKeys(claimBytes); err != nil {
+		return token, parts, newError("could not JSON decode claim", ErrTokenMalformed, err)
 	}
 
 	// If `useJSONNumber` is enabled then we must use *json.Decoder to decode
@@ -226,6 +232,42 @@ func splitToken(token string) ([]string, bool) {
 	parts[2] = signature
 
 	return parts, true
+}
+
+func rejectDuplicateTopLevelJSONKeys(data []byte) error {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	tok, err := dec.Token()
+	if err != nil {
+		return err
+	}
+	delim, ok := tok.(json.Delim)
+	if !ok || delim != '{' {
+		return nil
+	}
+
+	seen := map[string]struct{}{}
+	for dec.More() {
+		tok, err := dec.Token()
+		if err != nil {
+			return err
+		}
+		key, ok := tok.(string)
+		if !ok {
+			return fmt.Errorf("JSON object key must be a string")
+		}
+		if _, exists := seen[key]; exists {
+			return fmt.Errorf("duplicate JSON object key %q", key)
+		}
+		seen[key] = struct{}{}
+
+		var raw json.RawMessage
+		if err := dec.Decode(&raw); err != nil {
+			return err
+		}
+	}
+
+	_, err = dec.Token()
+	return err
 }
 
 // DecodeSegment decodes a JWT specific base64url encoding. This function will

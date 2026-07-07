@@ -1,6 +1,6 @@
 # Tasktify
 
-Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks JWT generation latency across multiple signing algorithms with k6.
+Tasktify is Go microservice task API with post-quantum JWT signing. System exposes HTTP/JSON through Fiber gateway, uses gRPC between services, stores users and tasks in PostgreSQL, and benchmarks JWT generation latency across Falcon signer profiles with k6.
 
 Primary research path measures server-side JWT generation from benchmark payloads for signer profiles:
 
@@ -8,9 +8,6 @@ Primary research path measures server-side JWT generation from benchmark payload
 | ------------------------ | ----------------------------------------- | -------------- |
 | `Falcon-Precomputed-512` | PQC, FN-DSA-512 with precomputed LDL tree | `5001`         |
 | `Falcon-512`             | PQC, FN-DSA-512 original signer           | `5002`         |
-| `ML-DSA-44`              | PQC, FIPS 204 / Dilithium2 class          | `5003`         |
-| `SLH-DSA-SHA2-128f`      | PQC, FIPS 205 / SPHINCS+ fast variant     | `5004`         |
-| `SLH-DSA-SHA2-128s`      | PQC, FIPS 205 / SPHINCS+ small variant    | `5005`         |
 
 `Falcon-Precomputed-512` and `Falcon-512` are benchmark profiles, not distinct JWS algorithms. Tokens from both profiles use experimental JWS `alg` value `FN-DSA-512`; precomputation is signer implementation state recorded in config and benchmark metadata.
 
@@ -39,7 +36,7 @@ UserService + AuthService     TaskService
 tasktify database             tasktify database
 ```
 
-Benchmark topology in `backend/docker-compose.benchmark.yml` starts one auth-service plus one gateway per algorithm. Shared `bench-todo` and `bench-postgres` keep task/database infrastructure constant while each algorithm gets isolated gateway/auth process pair.
+Benchmark topology in `backend/docker-compose.benchmark.yml` starts one auth-service plus one gateway per Falcon signer profile. Shared `bench-todo` and `bench-postgres` keep task/database infrastructure constant while each profile gets isolated gateway/auth process pair.
 
 | Component      | Path                                                               | Responsibility                                                                       |
 | -------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
@@ -83,9 +80,13 @@ Task routes -> gRPC metadata x-user-id -> Todo AuthInterceptor -> task service
 Benchmark flow:
 
 ```text
-POST /api/benchmark/sign
-Gateway generates JWTs in-process from benchmark payloads, skips DB/bcrypt/auth-service path, and returns batch timing stats.
+POST /api/benchmark/jwt-issuance
+Gateway generates JWTs in-process from benchmark payloads, skips DB/bcrypt/auth-service path, and returns batch timing stats. `/api/benchmark/sign` remains as backward-compatible alias.
 Use this for isolated JWT generation experiments. Request controls iterations and warmup_iterations.
+
+POST /api/benchmark/pure-signing
+Gateway signs a fixed message with the selected Falcon signer profile and returns batch timing stats. This excludes JWT claim serialization, Base64URL, and compact-token assembly.
+Use this for isolated pure Falcon/FN-DSA signing experiments inside the k6 workflow.
 Each measured iteration generates one access token and one refresh token, then returns raw timings,
 p50/p95/p99 summaries, GC-free samples, CPU, CPU time, memory metrics, and canonical JWS `alg`.
 
@@ -128,7 +129,9 @@ Response envelope:
 | `POST` | `/api/auth/register`   | `name`, `email`, `password`                             | Creates user, returns `201`                           |
 | `POST` | `/api/auth/signin`     | `email`, `password`, optional `algorithm`               | Returns `token_type`, `access_token`, `refresh_token` |
 | `POST` | `/api/auth/refresh`    | `refresh_token`, optional `user_id`                     | Returns new access and refresh tokens                 |
-| `POST` | `/api/benchmark/sign`  | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated signing stats                                |
+| `POST` | `/api/benchmark/jwt-issuance` | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated JWT issuance stats                           |
+| `POST` | `/api/benchmark/pure-signing` | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated pure signing stats                           |
+| `POST` | `/api/benchmark/sign`  | `algorithm`, `iterations`, `warmup_iterations`, `email` | Backward-compatible alias for isolated JWT issuance   |
 | `POST` | `/api/benchmark/token` | `algorithm`, `email`                                    | One benchmark token plus signing-time headers         |
 
 Sign-in and refresh response headers:
@@ -243,7 +246,7 @@ make keygen-all
 
 Command generates shared keys into `backend/keys/`, mounted by all benchmark containers.
 
-Expected key filenames come from `backend/pkg/utils/jwtutils/loader.go`, including `FNDSA-512_pk.pem`, `FNDSA-512_sk.pem`, `ML-DSA-44_pk.pem`, `ML-DSA-44_sk.pem`, `SLH-DSA-SHA2-128f_pk.pem`, and matching private-key files.
+Expected key filenames come from `backend/pkg/utils/jwtutils/loader.go`: `FNDSA-512_pk.pem` and `FNDSA-512_sk.pem`.
 
 ### Build And Run
 
@@ -291,14 +294,17 @@ cd backend
 make compile-proto
 ```
 
-Benchmark stack:
+Automated Falcon validation:
 
 ```bash
-cd backend
-make keygen-all
-make vendor
-make bench-up
-k6 run --out json=benchmark_sign_samples.ndjson -e BENCH_HOST=localhost k6/benchmark_sign.js
+make falcon-check
+```
+
+Local benchmark stack:
+
+```bash
+make bench-sign
+make bench-down
 ```
 
 Remote benchmark:
@@ -362,12 +368,15 @@ Run metadata from `benchmark_sign_result.json`:
 | `stress_duration_seconds`    | `30`                              |
 | `concurrency_levels`         | `10`, `30`, `50`                  |
 
-Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. It measures server-side JWT generation from the benchmark payload and removes iterations where Go GC ran during generation.
+New benchmark runs also emit `stress_stage_model`, `stress_transport`, `stress_environment`, and per-scenario request counts so VUs are not the only load descriptor.
+
+Primary academic metric is `isolated.token_generation_gc_free_ms`, not k6 round-trip latency. It measures server-side JWT generation from the benchmark payload and removes iterations where Go GC ran during generation. Pure primitive cost is also emitted as `isolated.pure_signing_gc_free_ms`.
 
 Metric scope:
 
 | Metric | Scope | Use |
 | ------ | ----- | --- |
+| `isolated.pure_signing_gc_free_ms` | Direct Falcon/FN-DSA signing over fixed message, GC-free, server-side timer | Pure signing baseline |
 | `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free, server-side timer | Primary signing metric |
 | `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free, server-side timer | Secondary signing metric |
 | `stress.token_generation_ms` | Access JWT generation under concurrent VUs, from `X-Token-Generation-Time-Ms` | Signing under load |
@@ -379,6 +388,7 @@ Metric scope:
 Signing relevance:
 
 - `isolated.token_generation_gc_free_ms` is the cleanest signing-time metric because it isolates backend JWT generation and removes GC-contaminated samples.
+- `isolated.pure_signing_gc_free_ms` is pure Falcon/FN-DSA signing. It excludes JWT claim serialization, Base64URL, and compact-token assembly.
 - `stress.token_generation_ms` and `stress.refresh_token_generation_ms` still measure direct token generation, but under concurrent load.
 - `stress.login_ms` and `stress.refresh_ms` are relevant because both workflows invoke JWT signing directly. They are not pure signing-time metrics because they also include DB, bcrypt, verification, service/transport, and response overhead.
 - `stress.e2e_ms` is not a signing-time metric. It is endpoint round-trip latency for `/api/benchmark/token`.
@@ -389,6 +399,7 @@ Untuk seminar hasil, istilah resmi yang dipakai:
 
 | Level | Metric | Definisi | Dipakai untuk |
 | ----- | ------ | -------- | ------------- |
+| Pure signing | `isolated.pure_signing_gc_free_ms` | Latensi primitive Falcon/FN-DSA signing terhadap pesan tetap; sampel GC dibuang | Baseline kriptografi murni |
 | Primer | `isolated.token_generation_gc_free_ms` | Latensi server-side generasi access JWT dari payload benchmark; sampel yang terkena Go GC dibuang | Perbandingan utama algoritma |
 | Sekunder isolated | `isolated.refresh_token_generation_gc_free_ms` | Latensi server-side generasi refresh JWT dari payload benchmark; sampel GC dibuang | Validasi konsistensi access vs refresh token |
 | Pendukung stress | `stress.token_generation_ms` | Latensi generasi access JWT saat VU konkuren, dari header `X-Token-Generation-Time-Ms` | Dampak beban konkuren terhadap generasi JWT |
@@ -409,8 +420,10 @@ Batas interpretasi:
 - Jangan sebut metric primer sebagai "network latency".
 - Jangan sebut metric primer sebagai "pure cryptographic primitive".
 - Sebut sebagai "server-side JWT generation latency from benchmark payload".
+- Sebut `isolated.pure_signing_gc_free_ms` sebagai "pure Falcon/FN-DSA signing latency".
 - Sebut `stress.login_ms` sebagai "login latency with JWT signing", bukan "signing latency".
 - Sebut `stress.refresh_ms` sebagai "refresh latency with token verification and JWT signing", bukan "signing latency".
+- Untuk pure Falcon/FN-DSA signing, gunakan `isolated.pure_signing_gc_free_ms` dari k6 atau Go benchmark `pkg/fndsa`; jangan samakan dengan JWT issuance.
 
 ### Statistical Testing
 
@@ -489,15 +502,10 @@ Values below come from `benchmark_sign_result.json`. Units are milliseconds unle
 | ------------------------ | ---: | --------------: | ---------: | ---------: | -----------: | ----------: | ----------: | --------: | ------------: | -------------: |
 | `Falcon-Precomputed-512` |  100 |               5 |      0.284 |      0.344 |        0.050 |       0.295 |       0.415 |   120.895 |         2.698 |          0.091 |
 | `Falcon-512`             |  100 |               6 |      0.341 |      0.422 |        0.043 |       0.354 |       0.452 |   104.484 |         2.798 |          0.114 |
-| `ML-DSA-44`              |  100 |               2 |      0.098 |      0.244 |        0.070 |       0.109 |       0.243 |   115.447 |         2.721 |          0.043 |
-| `SLH-DSA-SHA2-128f`      |  100 |              10 |     12.046 |     12.462 |        0.301 |      12.044 |      12.429 |    59.081 |         2.836 |          0.211 |
-| `SLH-DSA-SHA2-128s`      |  100 |               5 |    248.870 |    263.372 |        8.111 |     247.588 |     258.625 |    50.164 |         3.053 |          0.126 |
 
 Result reading:
 
-- `ML-DSA-44` has lowest isolated access-token generation average at `0.098 ms`.
 - `Falcon-Precomputed-512` generates access tokens faster than `Falcon-512` in isolated average, `0.284 ms` vs `0.341 ms`.
-- `SLH-DSA-SHA2-128s` is slowest isolated access-token generator, with `248.870 ms` average and `263.372 ms` p95.
 - Heap allocation columns are runtime process/allocation samples, not persistent expanded-key memory. Use `PrecomputedSigner.PersistentBytes()` and `BenchmarkBuildPrecomputedSigner512` for expanded-key memory/startup cost.
 - CPU avg % is utilization, not CPU cost per token. New benchmark output also includes `cpu_time_ms` and `cpu_time_per_token_ms`.
 
@@ -513,15 +521,6 @@ Stress phase uses `/api/benchmark/token`, `/api/auth/signin`, and `/api/auth/ref
 | `Falcon-512`             |  10 |    0.523 |    0.956 |   84.491 |   309.218 |     203.734 |           25.53 |
 | `Falcon-512`             |  30 |    0.504 |    0.899 |  124.337 |   906.812 |     593.971 |           27.67 |
 | `Falcon-512`             |  50 |    0.511 |    0.758 |  132.346 |  2429.321 |    2220.635 |           21.70 |
-| `ML-DSA-44`              |  10 |    0.194 |    0.394 |   81.170 |   290.151 |     210.904 |           26.10 |
-| `ML-DSA-44`              |  30 |    0.230 |    0.486 |   90.315 |  1311.638 |    1374.570 |           21.60 |
-| `ML-DSA-44`              |  50 |    0.266 |    0.520 |  107.458 |  2284.412 |    2436.186 |           21.33 |
-| `SLH-DSA-SHA2-128f`      |  10 |   20.377 |   39.474 |  389.473 |   782.439 |     918.115 |           10.90 |
-| `SLH-DSA-SHA2-128f`      |  30 |   31.899 |   85.706 |  942.078 |  2160.787 |    2512.400 |           11.40 |
-| `SLH-DSA-SHA2-128f`      |  50 |   19.162 |   36.419 |  751.799 |  4151.146 |    3699.200 |           13.17 |
-| `SLH-DSA-SHA2-128s`      |  10 |  786.799 | 1552.408 | 1624.340 |  3515.741 |    3242.158 |            1.67 |
-| `SLH-DSA-SHA2-128s`      |  30 | 2842.993 | 3814.459 | 4067.915 |  9250.730 |    9967.187 |            2.00 |
-| `SLH-DSA-SHA2-128s`      |  50 | 4257.338 | 6628.612 | 6814.575 | 19911.388 |   23039.505 |            2.43 |
 
 Stress thresholds in `benchmark_sign_raw.json` all pass. `stress_error_rate` is `0`, and `stress_refresh_error_rate` is `0`.
 
@@ -531,14 +530,13 @@ At 30 VU, `Falcon-Precomputed-512` has worse login/refresh tail latency and lowe
 
 `benchmark_sign_result.json` has `attack: null` per algorithm, but `benchmark_sign_raw.json` contains attack metrics. Tampered-token block rate is `100%` overall and `100%` for every algorithm.
 
+Security scope: k6 covers black-box token manipulation. RFC 8725-style signed claim cases live in Go unit tests. Audience enforcement, refresh-token replay/reuse, and key revocation/rotation remain explicit gaps until the app adds audience config, token state, and key registry support.
+
 | Metric                                          | Passes | Fails |  Rate | Threshold           |
 | ----------------------------------------------- | -----: | ----: | ----: | ------------------- |
-| `attack_block_rate`                             |    125 |     0 | 1.000 | `rate>0.99`, passed |
+| `attack_block_rate`                             |     50 |     0 | 1.000 | `rate>0.99`, passed |
 | `attack_block_rate{alg:Falcon-Precomputed-512}` |     25 |     0 | 1.000 | `rate>0.99`, passed |
 | `attack_block_rate{alg:Falcon-512}`             |     25 |     0 | 1.000 | `rate>0.99`, passed |
-| `attack_block_rate{alg:ML-DSA-44}`              |     25 |     0 | 1.000 | `rate>0.99`, passed |
-| `attack_block_rate{alg:SLH-DSA-SHA2-128f}`      |     25 |     0 | 1.000 | `rate>0.99`, passed |
-| `attack_block_rate{alg:SLH-DSA-SHA2-128s}`      |     25 |     0 | 1.000 | `rate>0.99`, passed |
 
 Raw aggregate `http_req_failed` is `0.5308%` because k6 counts intentional `401` responses from tampered-token attacks as failed HTTP requests. Custom attack checks confirm those `401` responses are expected blocks.
 
@@ -586,7 +584,10 @@ Run these from `backend/`.
 | `make vendor`             | Vendor dependencies for Docker builds                                     |
 | `make tidy`               | Run `go mod tidy` in Go modules                                           |
 | `make build`              | Build gateway, auth-service, and todo-service binaries into `bin/`        |
+| `make falcon-check`       | Run Falcon KAT/tests plus Compose and k6 script checks                    |
+| `make falcon-kat`         | Run FN-DSA dynamic and precomputed KAT only                               |
 | `make bench-up`           | Build and start benchmark Compose stack                                   |
+| `make wait-bench`         | Wait until Falcon benchmark gateways on ports 5001 and 5002 are ready     |
 | `make bench-down`         | Stop benchmark stack and remove volumes                                   |
 | `make bench-sign`         | Run local benchmark and write `result.txt`                                |
 | `make bench-sign-remote`  | Run remote benchmark against `https://poc-ridwanmuh3.my.id`               |

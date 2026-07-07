@@ -29,15 +29,6 @@ type BootstrapConfig struct {
 var supportedAlgorithms = []string{
 	"Falcon-512",
 	"Falcon-Precomputed-512",
-	"ML-DSA-44",
-	"SLH-DSA-SHA2-128f",
-	"SLH-DSA-SHA2-128s",
-	"SLH-DSA-SHAKE-128f",
-	"SLH-DSA-SHAKE-128s",
-	"ES256",
-	"RS256",
-	"HS256",
-	"EdDSA",
 }
 
 func Bootstrap(config *BootstrapConfig) {

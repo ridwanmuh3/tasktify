@@ -48,8 +48,10 @@ func (c *RouteConfig) Setup() {
 	tasks.Put("/:id", c.TaskHandler.Update)
 	tasks.Delete("/:id", c.TaskHandler.Delete)
 
-	// Public: academic benchmark — isolated signing-latency experiment, no auth required
+	// Public: academic benchmark — isolated JWT issuance experiment, no auth required
 	bench := api.Group("/benchmark")
+	bench.Post("/jwt-issuance", c.BenchmarkHandler.JWTIssuance)
+	bench.Post("/pure-signing", c.BenchmarkHandler.PureSigning)
 	bench.Post("/sign", c.BenchmarkHandler.SignLatency)
 	bench.Post("/token", c.BenchmarkHandler.SignToken)
 }

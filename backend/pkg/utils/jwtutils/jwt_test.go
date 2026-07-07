@@ -11,15 +11,6 @@ const keysDir = "../../../keys"
 var testAlgs = []string{
 	"Falcon-Precomputed-512",
 	"Falcon-512",
-	"ML-DSA-44",
-	"SLH-DSA-SHA2-128f",
-	"SLH-DSA-SHA2-128s",
-	"SLH-DSA-SHAKE-128f",
-	"SLH-DSA-SHAKE-128s",
-	"ES256",
-	"RS256",
-	"HS256",
-	"EdDSA",
 }
 
 // BenchmarkJWTSign menguji waktu murni untuk generasi token (Sign)
@@ -29,7 +20,7 @@ func BenchmarkJWTSign(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "ES256", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "Falcon-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",
@@ -57,7 +48,7 @@ func BenchmarkJWTVerify(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "ES256", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "Falcon-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",

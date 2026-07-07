@@ -22,6 +22,7 @@ BENCH_STDOUT_OUT ?= result.txt
 BENCH_STAT_OUT ?= benchmark_stats.md
 BENCH_WELCH_OUT ?= benchmark_welch.md
 BENCH_ABLATION_OUT ?= fndsa_precompute_ablation.csv
+BENCH_PORTS ?= 5001 5002
 BASE_URL ?= https://poc-ridwanmuh3.my.id
 VPS_SSH ?=
 VPS_REPO ?= ~/tasktify
@@ -64,6 +65,7 @@ help:
 	@echo "  make tidy             Tidy Go modules"
 	@echo "  make test             Run Go tests"
 	@echo "  make check            Run frontend check and Compose config validation"
+	@echo "  make falcon-check     Run Falcon KAT/tests and benchmark config checks"
 	@echo ""
 	@echo "Split benchmark:"
 	@echo "  make hostinger-bench-up VPS_SSH=user@host  Start benchmark stack on VPS"
@@ -76,13 +78,13 @@ env:
 	@test -f .env || cp .env.example .env
 
 # --- Key Generation ---
-# keygen: generate semua keys ke auth-service/keys dan copy ke gateway/keys (production)
+# keygen: generate Falcon JWT keys ke auth-service/keys dan copy ke gateway/keys (production)
 keygen:
 	mkdir -p auth-service/keys gateway/keys
 	cd cmd/keygen && go run main.go ../../auth-service/keys
 	cp -r auth-service/keys/. gateway/keys/
 
-# keygen-all: generate semua keys ke ./keys untuk benchmark (shared oleh semua service)
+# keygen-all: generate Falcon JWT keys ke ./keys untuk benchmark (shared oleh semua service)
 keygen-all:
 	mkdir -p keys
 	cd cmd/keygen && go run main.go ../../keys
@@ -230,6 +232,18 @@ test:
 	cd cmd/keygen && env GOCACHE=/tmp/go-build-cache go test ./...
 	cd pkg && env GOCACHE=/tmp/go-build-cache go test ./utils/jwtutils
 
+falcon-kat:
+	cd pkg && env GOCACHE=$(GOCACHE) go test ./fndsa -run 'TestFNDSA_(Precomputed_)?KAT$$'
+
+falcon-check: require-k6 falcon-kat
+	cd pkg && env GOCACHE=$(GOCACHE) go test ./fndsa ./jwt ./utils/jwtutils
+	cd cmd/keygen && env GOCACHE=$(GOCACHE) go test ./...
+	cd auth-service && env GOCACHE=$(GOCACHE) go test ./internal/config
+	cd gateway && env GOCACHE=$(GOCACHE) go test ./internal/config
+	$(BENCH_COMPOSE) config >/dev/null
+	$(K6) inspect k6/benchmark_sign.js >/dev/null
+	$(K6) inspect k6/adversarial_jwt.js >/dev/null
+
 check:
 	cd $(FRONTEND_DIR) && $(NPM) run check
 	$(COMPOSE) config >/dev/null
@@ -249,24 +263,23 @@ bench-logs:
 bench-config:
 	$(BENCH_COMPOSE) config
 
+wait-bench:
+	@for port in $(BENCH_PORTS); do \
+		echo "Menunggu gateway benchmark port $$port..."; \
+		until curl -sf http://localhost:$$port/ > /dev/null 2>&1; do \
+			printf "."; sleep 3; \
+		done; \
+		echo " ready"; \
+	done
+
 bench-run:
 	$(K6) run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
 # keygen-all + vendor + bench-up + jalankan k6
-bench: bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
+bench: bench-up wait-bench
 	$(K6) run --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js
 
-bench-sign: bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
+bench-sign: bench-up wait-bench
 	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) -e BENCH_HOST=localhost k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 bench-sign-remote:
@@ -333,12 +346,7 @@ attack-adversarial:
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-attack-adversarial-bench: bench-up
-	@echo "Menunggu bench-gw-fnp512 (port 5001) siap..."
-	@until curl -sf http://localhost:5001/ > /dev/null 2>&1; do \
-		printf "."; sleep 3; \
-	done
-	@echo " ready!"
+attack-adversarial-bench: bench-up wait-bench
 	$(K6) run --no-color \
 		-e BENCH_HOST=localhost \
 		-e ITERATIONS=$(ATTACK_ITERATIONS) \
@@ -352,4 +360,4 @@ attack-adversarial-remote:
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test check bench-up bench-down bench-logs bench-config bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo run-frontend frontend build build-frontend frontend-install tidy vendor ensure-vendor test falcon-kat falcon-check check bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote

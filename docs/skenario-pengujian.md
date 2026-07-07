@@ -26,7 +26,8 @@ Pengujian dirancang dalam **tiga fase berurutan** yang dieksekusi dalam satu ses
 ```
 ┌─────────────┐         HTTP          ┌──────────────────────────────┐
 │   k6 Client │ ─────────────────────▶│ Gateway Service              │
-│  (1 mesin)  │                       │  /api/benchmark/sign  (Ph.1) │
+│  (1 mesin)  │                       │  /api/benchmark/jwt-issuance │
+│             │                       │  /api/benchmark/pure-signing │
 └─────────────┘                       │  /api/benchmark/token (Ph.2) │
                                       │  /api/auth/signin     (Ph.2) │
                                       │  /api/profile         (Ph.3) │
@@ -43,9 +44,9 @@ Pengujian dirancang dalam **tiga fase berurutan** yang dieksekusi dalam satu ses
 | Mode | Variabel Lingkungan | Keterangan |
 |------|---------------------|------------|
 | **Single Gateway** | `BASE_URL=https://...` | Satu gateway melayani semua algoritma |
-| **Multi Gateway** | `BENCH_HOST=localhost` | Satu gateway per algoritma, port berbeda (5001–5005) |
+| **Multi Gateway** | `BENCH_HOST=localhost` | Satu gateway per profil Falcon, port berbeda (5001-5002) |
 
-Pada mode multi-gateway, setiap algoritma mendapatkan proses gateway terpisah sehingga tidak ada kontestasi sumber daya antar algoritma selama pengujian.
+Pada mode multi-gateway, setiap profil Falcon mendapatkan proses gateway terpisah sehingga tidak ada kontestasi sumber daya antar profil selama pengujian.
 
 ---
 
@@ -55,9 +56,6 @@ Pada mode multi-gateway, setiap algoritma mendapatkan proses gateway terpisah se
 |-------------|-------------------|-----------|----------|-----------------|
 | `FNP512` | Falcon-Precomputed-512 | FN-DSA-512 | PQC | 5001 |
 | `FN512` | Falcon-512 | FN-DSA-512 | PQC | 5002 |
-| `MLDSA44` | ML-DSA-44 | ML-DSA-44 | PQC | 5003 |
-| `SLHDSA128f` | SLH-DSA-SHA2-128f | SLH-DSA-SHA2-128f | PQC | 5004 |
-| `SLHDSA128s` | SLH-DSA-SHA2-128s | SLH-DSA-SHA2-128s | PQC | 5005 |
 
 Kolom **Profil Benchmark** adalah konfigurasi signer internal untuk eksperimen. Untuk Falcon, token JWT tetap memakai JWS `alg` eksperimental `FN-DSA-512`; profil `Falcon-Precomputed-512` tidak muncul sebagai nilai `alg` karena precomputation hanya teknik implementasi signer. Falcon-512 adalah basis FN-DSA-512, sedangkan profil JOSE/FIPS final masih harus mengikuti spesifikasi resmi terbaru ketika tersedia.
 
@@ -72,16 +70,22 @@ Mengukur **latensi generasi token JWT dari payload benchmark** pada kondisi terk
 ### 4.2 Endpoint
 
 ```
-POST /api/benchmark/sign
+POST /api/benchmark/jwt-issuance
 ```
 
-Endpoint ini menjalankan loop generasi token langsung di dalam proses gateway. Jalur ini memanggil `Sign(payload)` tanpa melalui basis data, bcrypt, auth-service, atau gRPC.
+Endpoint ini menjalankan loop generasi token langsung di dalam proses gateway. Jalur ini memanggil `Sign(payload)` tanpa melalui basis data, bcrypt, auth-service, atau gRPC. Endpoint lama `/api/benchmark/sign` tetap tersedia sebagai alias kompatibilitas.
+
+```
+POST /api/benchmark/pure-signing
+```
+
+Endpoint ini menjalankan loop `SigningMethod.Sign()` terhadap pesan tetap. Jalur ini tidak membuat klaim JWT, tidak melakukan serialisasi JSON, tidak melakukan Base64URL, dan tidak melakukan assembly compact JWS. Metrik ini dipakai sebagai baseline pure Falcon/FN-DSA signing di workflow k6.
 
 ### 4.3 Konfigurasi
 
 | Parameter | Nilai Default | Variabel Lingkungan | Keterangan |
 |-----------|--------------|---------------------|------------|
-| Jumlah iterasi | 100 | `ITERATIONS` | Jumlah generasi token yang diukur per algoritma |
+| Jumlah iterasi | 100 | `ITERATIONS` | Jumlah generasi token yang diukur per profil |
 | Iterasi warmup | 20 | `ISOLATED_WARMUP` | Iterasi yang dibuang sebelum pengukuran dimulai |
 | VU (pengguna virtual) | 1 | — | Selalu 1, tidak dapat diubah |
 | Timeout per skenario | ≥ 60 detik | — | Dihitung otomatis: `max(60, ceil(N×0.01)+30)` detik |
@@ -119,6 +123,14 @@ Cakupan timer:
 
 Dengan demikian, metrik ini mengukur **generasi JWT dari payload benchmark**, bukan hanya primitif kriptografi mentah.
 
+Endpoint `/api/benchmark/pure-signing` memakai timer terpisah:
+
+```
+[timerStart] → SigningMethod.Sign(fixedMessage) → [timerStop]
+```
+
+Metrik ini mengukur primitive signing saja, bukan JWT issuance.
+
 ### 4.6 Deteksi Kontaminasi GC
 
 Selama setiap iterasi, sistem memantau apakah *Garbage Collector* (GC) Go berjalan selama pemanggilan `Sign()` menggunakan `runtime.ReadMemStats().NumGC`. Iterasi yang terkena GC ditandai sebagai **GC-contaminated** karena GC menyebabkan jeda STW (*Stop-The-World*) yang dapat menggelembungkan latensi pengukuran.
@@ -127,6 +139,8 @@ Dua set statistik dilaporkan:
 
 | Set | Keterangan |
 |-----|------------|
+| `pure_signing_ms` | Primitive Falcon/FN-DSA signing, semua iterasi |
+| `pure_signing_gc_free_ms` | Primitive Falcon/FN-DSA signing, hanya iterasi bersih |
 | `token_generation_ms` | Access-token generation, semua iterasi, termasuk yang terkena GC |
 | `token_generation_gc_free_ms` | Access-token generation, hanya iterasi bersih (GC tidak terjadi) — **gunakan ini sebagai hasil primer skripsi** |
 | `refresh_token_generation_ms` | Refresh-token generation, semua iterasi |
@@ -163,12 +177,27 @@ Mengukur **degradasi performa dan throughput** ketika banyak pengguna mengakses 
 
 | Parameter | Nilai | Keterangan |
 |-----------|-------|------------|
-| Level konkurensi | 10, 30, 50 VU | Tiga skenario per algoritma |
-| Durasi per skenario | 30 detik | Setiap level VU berjalan selama 30 detik |
+| Level konkurensi | 10, 30, 50 VU | Tiga skenario per profil |
+| Executor k6 | `constant-vus` | Model beban **closed-loop**; VU berikutnya mulai iterasi baru setelah respons selesai dan think time lewat |
+| Ramp-up | 0 detik | k6 langsung menjalankan jumlah VU target pada awal skenario |
+| Steady state | 30 detik | Setiap level VU berjalan selama 30 detik |
+| Ramp-down | 0 detik | Tidak ada penurunan bertahap; `gracefulStop` 15 detik hanya memberi waktu iterasi aktif selesai |
 | Jeda antar skenario | 20 detik | Memberi waktu server pulih sebelum level VU berikutnya |
 | Jeda antar fase | 30 detik | Jeda antara Fase 1 dan Fase 2 |
 | Warmup per VU | 3 permintaan | Setiap VU mengirim 3 permintaan di iterasi pertama untuk memanaskan connection pool |
 | Jeda per iterasi | 50 ms | `sleep(0.05)` setelah setiap iterasi |
+| Jumlah request | Tercatat di `benchmark_sign_result.json` | `benchmark_token_success`, `benchmark_token_failed`, `login_total`, `refresh_success`, `refresh_failed` |
+| Timeout request | Default k6 kecuali override per request | Registrasi setup memakai 10 detik; isolated/attack memakai `maxDuration` skenario |
+| Connection reuse | Aktif | `noConnectionReuse=false`, `noVUConnectionReuse=false` |
+| HTTP protocol | Negosiasi k6/server | HTTP/1.1 atau HTTP/2 bergantung endpoint dan server; lihat raw k6 output bila protocol tag tersedia |
+| TLS | Bergantung URL | `https://` berarti TLS aktif; `http://` berarti tidak aktif |
+| Error rate | `stress_error_rate`, `stress_refresh_error_rate` | Threshold overall `<1%`, per skenario benchmark-token `<5%`, refresh `<10%` |
+| Database pool | Harus dicatat dari env server | Gunakan `DB_POOL_IDLE`/`DB_POOL_OPEN` saat run; k6 tidak bisa menebak nilai server |
+| Rate limit | Harus dicatat dari konfigurasi deployment | Isi `RATE_LIMIT` saat run jika ada; jika tidak ada, tulis `not configured` |
+| CPU quota | Harus dicatat dari container/VPS | Isi `CPU_QUOTA` saat run; jangan infer dari jumlah core host |
+| Memory quota | Harus dicatat dari container/VPS | Isi `MEMORY_QUOTA` saat run; jangan pakai heap Go sebagai quota |
+
+Catatan: jumlah VU saja tidak mendeskripsikan beban. Laporan stress harus memuat model beban, stage, durasi, think time, request count, error rate, transport, dan batas resource server.
 
 ### 5.3 Urutan Eksekusi per Iterasi VU
 
@@ -184,15 +213,12 @@ Panggilan login dan refresh dieksekusi **di luar grup pengukuran benchmark token
 
 ### 5.4 Anggaran Latensi per Algoritma
 
-Ambang batas (*threshold*) p95 yang ditetapkan untuk setiap algoritma:
+Ambang batas (*threshold*) p95 yang ditetapkan untuk setiap profil:
 
 | Algoritma | p95 Dirty (ms) | p95 Actual (ms) |
 |-----------|---------------|-----------------|
 | Falcon-Precomputed-512 | 5.000 | 500 |
 | Falcon-512 | 10.000 | 1.000 |
-| ML-DSA-44 | 10.000 | 500 |
-| SLH-DSA-SHA2-128f | 90.000 | 30.000 |
-| SLH-DSA-SHA2-128s | 300.000 | 120.000 |
 
 Pengujian dinyatakan **gagal** (exit code non-zero) apabila nilai p95 melampaui anggaran yang ditetapkan.
 
@@ -239,10 +265,10 @@ Memverifikasi bahwa sistem **menolak token JWT yang telah dimanipulasi**. Ini me
 
 ### 6.2 Mekanisme
 
-Setiap iterasi melakukan dua langkah:
+Setiap iterasi melakukan empat langkah:
 
 1. **Dapatkan token valid** — `POST /api/benchmark/token` → token JWT asli
-2. **Manipulasi token** — Satu karakter di segmen tanda tangan (bagian ketiga JWT setelah titik kedua) diganti dengan karakter lain
+2. **Manipulasi token** — header, payload, signature, atau bentuk compact JWS diubah sesuai vektor serangan
 3. **Kirim token palsu** — `GET /api/profile` dengan header `Authorization: Bearer <token_palsu>`
 4. **Catat hasil** — HTTP 401/403 = diblokir ✓, HTTP 200 = lolos ✗
 
@@ -261,6 +287,40 @@ attack_block_rate > 99%
 ```
 
 Sistem harus memblokir setidaknya 99% dari token yang dimanipulasi. Kegagalan memblokir menunjukkan kelemahan kritis pada implementasi verifikasi tanda tangan.
+
+### 6.5 Cakupan Vektor Keamanan
+
+`backend/k6/adversarial_jwt.js` adalah pengujian black-box dari sisi HTTP. Vektor yang membutuhkan token bertanda tangan valid dengan klaim khusus diuji di unit test Go, karena k6 tidak memiliki private key dan tidak boleh membuat token valid arbitrer.
+
+| Vektor | Status | Lokasi |
+|--------|--------|--------|
+| Signature tampering | Covered | k6 + `pkg/jwt` |
+| Token forgery | Covered | k6 + `pkg/jwt` |
+| Algorithm confusion | Covered | k6 + `pkg/jwt` |
+| None algorithm | Covered | k6 + `pkg/jwt` |
+| Payload manipulation tanpa re-sign | Covered | k6 + `pkg/jwt` |
+| Expired token | Covered | k6 payload-tamper; signed case di `pkg/jwt` |
+| Unsigned compact token / signature kosong | Covered | k6 + `pkg/jwt` |
+| Cross-algorithm injection | Covered | k6 + `pkg/jwt` |
+| Issuer tidak valid / missing issuer | Covered | `pkg/utils/jwtutils` |
+| Audience tidak valid / missing audience | Gap | Parser mendukung `WithAudience`, tetapi aplikasi belum mengatur `aud` |
+| Subject kosong/tidak valid | Covered | `pkg/utils/jwtutils` |
+| `nbf` di masa depan | Covered | `pkg/utils/jwtutils` |
+| `iat` tidak logis | Covered | `pkg/utils/jwtutils` |
+| Duplicate claim / duplicate header | Covered | `pkg/jwt` parser |
+| Invalid Base64URL / malformed JSON | Covered | `pkg/jwt` parser |
+| Oversized token | Covered | `pkg/utils/jwtutils` |
+| Unknown `kid` / `kid` path traversal | Covered | `pkg/utils/jwtutils`, `kid` ditolak karena key-id belum didukung |
+| Token type confusion / altered `typ` | Covered | `pkg/utils/jwtutils`, middleware, auth-service refresh path |
+| Access token dipakai sebagai refresh token | Covered | Auth-service refresh path memerlukan `token_use=refresh` |
+| Refresh token dipakai sebagai access token | Covered | Gateway middleware memerlukan `token_use=access` |
+| Replay refresh token / refresh token reuse | Gap | Butuh stateful refresh-token store atau JTI blacklist |
+| Revoked key / rotated key | Gap | Butuh key registry, `kid`, dan rotasi kunci operasional |
+| Algorithm case variation | Covered | `pkg/utils/jwtutils` |
+| Invalid `crit` | Covered | `pkg/utils/jwtutils`, `crit` ditolak |
+| Signature valid tetapi konteks salah | Partially covered | `typ`, `token_use`, `sub=user_id`, issuer; audience/konteks resource belum ada |
+
+Istilah **Missing Signature Verification** tidak dipakai sebagai vektor input. Vektor input yang diuji adalah **unsigned compact token atau JWS dengan bagian signature kosong**. Missing signature verification adalah kelas kelemahan implementasi bila token tersebut diterima.
 
 ---
 
@@ -284,10 +344,10 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 
 | Variabel | Keterangan |
 |----------|------------|
-| Profil signer | Falcon-Precomputed-512, Falcon-512, ML-DSA-44, SLH-DSA-SHA2-128f, SLH-DSA-SHA2-128s |
-| JWS `alg` | `FN-DSA-512` untuk kedua profil Falcon; nama algoritma lain sesuai profil |
-| Ukuran kunci privat | Berbeda per algoritma |
-| Kompleksitas komputasi penandatanganan | Karakteristik matematis algoritma |
+| Profil signer | Falcon-Precomputed-512, Falcon-512 |
+| JWS `alg` | `FN-DSA-512` untuk kedua profil Falcon |
+| State signer | Original signer vs precomputed LDL tree |
+| Kompleksitas penandatanganan runtime | Berbeda karena precomputation |
 
 ### 7.3 Variabel Terikat (Diukur)
 
@@ -326,6 +386,7 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 
 | Istilah | Sumber | Mencakup | Tidak mencakup | Pemakaian |
 |---------|--------|----------|----------------|----------|
+| `pure_signing_gc_free_ms` | `/api/benchmark/pure-signing` | Primitive Falcon/FN-DSA signing atas pesan tetap | JWT serialization, Base64URL, compact assembly, DB, bcrypt, HTTP round-trip | Baseline pure signing |
 | `token_generation_clean` | Header HTTP dari server | Generasi JWT dari payload benchmark: klaim, signing string, signature, compact token | DB, bcrypt, auth-service, HTTP round-trip | Metrik utama skripsi saat isolated; metrik pendukung saat stress |
 | `clean` | `timings.waiting` k6 | Waktu tunggu sampai TTFB | Download body penuh | Diagnosa antrean/server |
 | `network` | `dirty - clean` | Estimasi overhead client/network | Server-side token timer | Diagnosa transport |
@@ -340,15 +401,12 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 ```
 t=0s       Fase 1 — Isolated Falcon-Precomputed-512 (≤ 60 detik)
 t=65s      Fase 1 — Isolated Falcon-512             (≤ 60 detik)
-t=130s     Fase 1 — Isolated ML-DSA-44              (≤ 60 detik)
-t=195s     Fase 1 — Isolated SLH-DSA-SHA2-128f      (≤ 60 detik)
-t=260s     Fase 1 — Isolated SLH-DSA-SHA2-128s      (≤ 60 detik)
-t=325s     [Jeda 30 detik antar fase]
-t=355s     Fase 2 — Stress FNP512 @ 10 VU (30 detik)
-t=405s     Fase 2 — Stress FNP512 @ 30 VU (30 detik)
-t=455s     Fase 2 — Stress FNP512 @ 50 VU (30 detik)
-...        [ulangi untuk setiap algoritma]
-t=N        Fase 3 — Attack per algoritma (25 iterasi masing-masing)
+t=130s     [Jeda 30 detik antar fase]
+t=160s     Fase 2 — Stress FNP512 @ 10 VU (30 detik)
+t=210s     Fase 2 — Stress FNP512 @ 30 VU (30 detik)
+t=260s     Fase 2 — Stress FNP512 @ 50 VU (30 detik)
+...        [ulangi untuk FN512]
+t=N        Fase 3 — Attack per profil (25 iterasi masing-masing)
 ```
 
 Jeda antar skenario stress (20 detik) dan antar fase (30 detik) memberi waktu server untuk memulihkan antrian koneksi dan melakukan GC sebelum skenario berikutnya dimulai.
@@ -362,7 +420,7 @@ k6 menghasilkan tiga berkas keluaran di akhir pengujian:
 | Berkas | Isi |
 |--------|-----|
 | `stdout` | Tabel ringkasan terformat untuk dibaca manusia |
-| `benchmark_sign_result.json` | Hasil akademik terstruktur per algoritma (isolated + stress + attack) |
+| `benchmark_sign_result.json` | Hasil akademik terstruktur per profil (isolated + stress + attack) |
 | `benchmark_sign_raw.json` | Seluruh metrik mentah k6 (untuk analisis lanjutan) |
 
 ### 10.1 Struktur `benchmark_sign_result.json`
@@ -464,22 +522,75 @@ go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -bench
 
 ---
 
-## 12. Perintah Eksekusi
+## 12. Correctness Test Falcon/FN-DSA
+
+Correctness tidak dinilai dari latensi. Jalankan test terpisah untuk memastikan dynamic signer, precomputed signer, dan verifier tetap benar.
+
+| Properti | Status | Lokasi |
+|----------|--------|--------|
+| Setiap signature diverifikasi | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Bit-flip signature gagal | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Bit-flip message gagal | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Dynamic verifier dan precomputed verifier interoperabel | Covered | `backend/pkg/jwt/falcon_optimize_test.go`, `backend/pkg/jwt/falcon_correctness_test.go` |
+| Signature untuk pesan sama tetap valid | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Known-answer test | Covered | `backend/pkg/fndsa/fndsa_test.go` dynamic + precomputed KAT |
+| Property test | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Concurrent verification | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Concurrent signing + race detector | Wajib dijalankan | `go test -race ./fndsa ./jwt ./utils/jwtutils` |
+
+---
+
+## 13. Checklist Perbaikan Ilmiah
+
+### 13.1 Prioritas 0 — Kritis
+
+| Item | Status | Tindakan |
+|------|--------|----------|
+| Ubah klaim kebaruan | Wajib redaksi | Klaim sebagai evaluasi implementasi dan benchmark, bukan penemuan algoritma baru |
+| Perbaiki status Falcon/FN-DSA | Wajib redaksi | Tulis Falcon/FN-DSA sebagai profil eksperimen; ikuti status standar resmi terbaru saat publikasi |
+| Jangan gunakan `Falcon-Precomputed-512` sebagai nilai `alg` | Covered | Nilai JWS `alg` tetap `FN-DSA-512`; precomputed hanya profil signer internal |
+| Jelaskan library, commit, modifikasi kode | Wajib catat saat run | Sertakan `git rev-parse HEAD`, `go list -m all`, dan ringkasan patch lokal |
+| Redaksi token, kredensial, IP, data server | Wajib sebelum publikasi | Jangan commit raw token, password, IP privat, host VPS sensitif |
+| Ukur persistent memory expanded key | Covered | `PrecomputedSigner.PersistentBytes()` dan benchmark precompute |
+| Ukur startup cost | Covered | `BenchmarkBuildPrecomputedSigner512` |
+| Uji race condition dan concurrent signing | Sebagian covered | Test concurrency ada; jalankan `go test -race` untuk klaim race-free |
+| Ulangi stress test 30 VU | Wajib rerun | Minimal beberapa independent run; jangan pakai satu run sebagai kesimpulan final |
+| Pisahkan k6 dari server | Wajib deployment | k6 harus berjalan di mesin klien terpisah atau container terisolasi dari service benchmark |
+
+### 13.2 Prioritas 1 — Penguatan Ilmiah
+
+| Item | Status | Tindakan |
+|------|--------|----------|
+| Pure signing benchmark | Covered | Gunakan `isolated.pure_signing_gc_free_ms` dari k6 atau `pkg/fndsa`; jangan samakan dengan JWT issuance |
+| Break-even analysis | Perlu analisis | Bandingkan startup/memory precompute vs penghematan runtime per token |
+| CI dan effect size | Ada script statistik | Jalankan `benchmark_stat_tests.py` dan laporkan CI/effect size |
+| Beberapa independent run | Wajib rerun | Simpan run ID, waktu, host, commit, dan env |
+| Acak urutan eksperimen | Perlu mode tambahan | Hindari bias urutan algoritma/cache/server |
+| p99 dan error rate | Covered | `benchmark_sign_result.json` menyimpan p99 dan error rate |
+| Threat model | Perlu dokumen | Definisikan attacker, aset, batas trust, dan asumsi key management |
+| Pengujian klaim JWT | Sebagian covered | Lihat bagian 6.5; audience/replay/key rotation masih gap |
+| Validity threats | Perlu bab pembahasan | Bahas single host, cold/warm cache, GC, network, dan external validity |
+| Token size aktual | Covered | k6 summary melaporkan ukuran header/body/token; kutip dari hasil terbaru |
+
+---
+
+## 14. Perintah Eksekusi
 
 ```bash
 cd backend
 
-# Mode standar (semua fase, single gateway):
-k6 run -e BASE_URL=http://localhost:8080 k6/benchmark_sign.js
+# Validasi otomatis sebelum benchmark:
+make falcon-check
+
+# Multi-gateway lokal, semua fase:
+make bench-sign
+make bench-down
 
 # Isolated saja (untuk pengambilan data skripsi):
-k6 run -e BASE_URL=http://localhost:8080 -e ISOLATED_ONLY=true k6/benchmark_sign.js
+make client-k6-isolated BASE_URL=http://localhost:8080
 
 # Dengan lebih banyak iterasi (rekomendasi: 500 untuk data final):
 k6 run -e BASE_URL=http://localhost:8080 -e ISOLATED_ONLY=true -e ITERATIONS=500 k6/benchmark_sign.js
-
-# Multi-gateway (docker-compose):
-k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
 ```
 
 ---

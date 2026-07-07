@@ -618,7 +618,7 @@ func TestVerification_ValidTokenAccepted(t *testing.T) {
 //	#5  Payload/Claim Manipulation→ TestAttack_JSONInjectionInClaims
 //	#6  Expired Token Abuse       → TestAttack_ExpiredToken
 //	#7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
-//	#8  Missing Sig Verification  → TestAttack_SignatureStripping (empty signature case)
+//	#8  Unsigned Compact Token    → TestAttack_SignatureStripping (empty signature case)
 //	#9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke Falcon verifier)
 //	#10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
 //
@@ -675,7 +675,7 @@ func TestConfusionAttackSummary(t *testing.T) {
 	fmt.Printf("  #5  Payload Manipulation      : no resign → 401/403\n")
 	fmt.Printf("  #6  Expired Token Abuse       : exp lama → 401/403\n")
 	fmt.Printf("  #7  Replay Attack             : stateless; JTI tracking at app layer\n")
-	fmt.Printf("  #8  Missing Sig Verification  : empty sig → 401/403\n")
+	fmt.Printf("  #8  Unsigned Compact Token    : empty sig → 401/403\n")
 	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→Falcon → 401/403\n")
 	fmt.Printf("  #10 Invalid Issuer Attack     : example.com → 401/403\n")
 	fmt.Printf("══════════════════════════════════════════════════════════════\n")

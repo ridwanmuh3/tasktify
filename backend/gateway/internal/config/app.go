@@ -30,15 +30,6 @@ type BootstrapConfig struct {
 var supportedAlgorithms = []string{
 	"Falcon-512",
 	"Falcon-Precomputed-512",
-	"ML-DSA-44",
-	"SLH-DSA-SHA2-128f",
-	"SLH-DSA-SHA2-128s",
-	"SLH-DSA-SHAKE-128f",
-	"SLH-DSA-SHAKE-128s",
-	"ES256",
-	"RS256",
-	"HS256",
-	"EdDSA",
 }
 
 func Bootstrap(config *BootstrapConfig) {
@@ -98,7 +89,7 @@ func Bootstrap(config *BootstrapConfig) {
 	authHandler := handler.NewAuthHandler(config.Log, authClient)
 	userHandler := handler.NewUserHandler(config.Log, userClient)
 	taskHandler := handler.NewTaskHandler(config.Log, taskClient)
-	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, benchmarkJWT)
+	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, benchmarkJWT, benchmarkAlgConfigs)
 
 	routeConfig := &route.RouteConfig{
 		App:              config.App,

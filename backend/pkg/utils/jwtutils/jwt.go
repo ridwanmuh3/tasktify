@@ -36,6 +36,8 @@ const (
 
 	TokenTypeAccess  = "at+jwt"
 	TokenTypeRefresh = "rt+jwt"
+
+	maxJWTCompactBytes = 64 * 1024
 )
 
 // AlgConfig holds the signing method, sign key, and verify key for a single algorithm.
@@ -166,6 +168,10 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 }
 
 func (j *jwtUtil) Parse(token string) (*JWTClaims, error) {
+	if len(token) > maxJWTCompactBytes {
+		return nil, errors.New("token exceeds maximum compact size")
+	}
+
 	parser := jwt.NewParser(
 		jwt.WithValidMethods(j.allowedAlgs),
 		jwt.WithIssuer(j.issuer),
@@ -254,6 +260,10 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 }
 
 func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
+	if len(tokenStr) > maxJWTCompactBytes {
+		return nil, errors.New("token exceeds maximum compact size")
+	}
+
 	allowedAlgs := m.allowedHeaderAlgs()
 
 	parser := jwt.NewParser(
@@ -319,6 +329,13 @@ func (m *multiAlgJwtUtil) allowedHeaderAlgs() []string {
 }
 
 func validateTokenTypeHeader(token *jwt.Token, tokenUse string) error {
+	if _, ok := token.Header["crit"]; ok {
+		return errors.New("crit header is not supported")
+	}
+	if _, ok := token.Header["kid"]; ok {
+		return errors.New("kid header is not supported")
+	}
+
 	expected := TokenTypeForUse(tokenUse)
 	if expected == "" {
 		return nil

@@ -474,14 +474,17 @@ Seluruh overhead gRPC (marshal/unmarshal, network, bcrypt, DB query) terjadi di 
 
 **Masalah:** Login nyata (`/api/auth/signin`) melibatkan: query database (PostgreSQL), `bcrypt.CompareHashAndPassword()` (~100–300 ms), dan overhead gRPC. Ini mendominasi latensi dan mengaburkan performa tanda tangan.
 
-**Solusi:** Dibuat dua endpoint benchmark khusus yang mem-bypass semua lapisan tersebut:
+**Solusi:** Dibuat endpoint benchmark khusus yang mem-bypass semua lapisan tersebut:
 
 | Endpoint                    | Jalur                                     | Digunakan untuk |
 | --------------------------- | ----------------------------------------- | --------------- |
-| `POST /api/benchmark/sign`  | Gateway → langsung ke fungsi `Sign()`     | Fase 1 Isolated |
+| `POST /api/benchmark/jwt-issuance` | Gateway → langsung ke JWT `Sign(payload)` | Fase 1 Isolated |
+| `POST /api/benchmark/pure-signing` | Gateway → langsung ke `SigningMethod.Sign(fixedMessage)` | Fase 1 pure signing |
+| `POST /api/benchmark/sign`  | Alias kompatibilitas untuk JWT issuance   | Fase 1 Isolated |
 | `POST /api/benchmark/token` | Gateway → fungsi `Sign()` tanpa DB/bcrypt | Fase 2 Stress   |
 
 Endpoint ini tidak melalui auth-service, tidak ada DB query, tidak ada bcrypt. Payload JWT dibuat dari email yang disuplai dan UUID deterministik (`uuid.NewSHA1`).
+Endpoint pure signing tidak membuat klaim JWT, tidak melakukan Base64URL, dan tidak melakukan compact JWS assembly.
 
 **Dampak pada bias:** Mengisolasi variabel bebas (algoritma kriptografi) dari variabel pengganggu (latensi DB, bcrypt cost).
 
