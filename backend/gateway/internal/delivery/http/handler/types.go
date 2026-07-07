@@ -54,6 +54,7 @@ type BenchmarkRuntimeStats struct {
 	MemoryAllocKB      float64
 	MemoryAllocDeltaKB float64
 	MemorySysKB        float64
+	MemoryRSSKB        float64
 	CPUTimeMs          float64
 	CPUPct             float64
 	GCOccurred         bool
@@ -117,6 +118,7 @@ type BenchmarkSignResult struct {
 	AuthMemoryAllocKB        []float64 `json:"auth_memory_alloc_kb"`
 	AuthMemoryAllocDeltaKB   []float64 `json:"auth_memory_alloc_delta_kb"`
 	AuthMemorySysKB          []float64 `json:"auth_memory_sys_kb"`
+	AuthMemoryRSSKB          []float64 `json:"auth_memory_rss_kb"`
 	Stats                    struct {
 		Sign                  TimingStats `json:"sign"`
 		TokenGeneration       TimingStats `json:"token_generation"`
@@ -131,6 +133,7 @@ type BenchmarkSignResult struct {
 			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
 			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
 			MemorySysKB        NumericStats `json:"memory_sys_kb"`
+			MemoryRSSKB        NumericStats `json:"memory_rss_kb"`
 		} `json:"resource"`
 	} `json:"stats"`
 }
@@ -153,6 +156,7 @@ type BenchmarkPureSigningResult struct {
 	AuthMemoryAllocKB      []float64 `json:"auth_memory_alloc_kb"`
 	AuthMemoryAllocDeltaKB []float64 `json:"auth_memory_alloc_delta_kb"`
 	AuthMemorySysKB        []float64 `json:"auth_memory_sys_kb"`
+	AuthMemoryRSSKB        []float64 `json:"auth_memory_rss_kb"`
 	Stats                  struct {
 		PureSigning       TimingStats `json:"pure_signing"`
 		PureSigningGCFree TimingStats `json:"pure_signing_gc_free"`
@@ -162,6 +166,7 @@ type BenchmarkPureSigningResult struct {
 			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
 			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
 			MemorySysKB        NumericStats `json:"memory_sys_kb"`
+			MemoryRSSKB        NumericStats `json:"memory_rss_kb"`
 		} `json:"resource"`
 	} `json:"stats"`
 }

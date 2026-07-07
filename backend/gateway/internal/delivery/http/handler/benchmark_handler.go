@@ -79,6 +79,28 @@ func readCPUTicks() int64 {
 	return utime + stime
 }
 
+func readMemoryRSSKB() float64 {
+	data, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return 0
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if !strings.HasPrefix(line, "VmRSS:") {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			return 0
+		}
+		kb, err := strconv.ParseFloat(fields[1], 64)
+		if err != nil {
+			return 0
+		}
+		return kb
+	}
+	return 0
+}
+
 func NewBenchmarkHandler(
 	log *zap.SugaredLogger,
 	benchmarkJWT jwtutils.JwtUtil,
@@ -126,6 +148,7 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
 	memSysSamples := make([]float64, 0, req.Iterations)
+	memRSSSamples := make([]float64, 0, req.Iterations)
 	warmupIterations := req.WarmupIterations
 	if warmupIterations < 0 {
 		warmupIterations = 0
@@ -154,6 +177,7 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 		memAllocSamples = append(memAllocSamples, stats.MemoryAllocKB)
 		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaKB)
 		memSysSamples = append(memSysSamples, stats.MemorySysKB)
+		memRSSSamples = append(memRSSSamples, stats.MemoryRSSKB)
 
 		if stats.GCOccurred {
 			gcContaminatedCount++
@@ -180,6 +204,7 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 		AuthMemoryAllocKB:      memAllocSamples,
 		AuthMemoryAllocDeltaKB: memAllocDeltaSamples,
 		AuthMemorySysKB:        memSysSamples,
+		AuthMemoryRSSKB:        memRSSSamples,
 	}
 	result.Stats.PureSigning = computeTimingStats(pureSigningTimings)
 	result.Stats.PureSigningGCFree = computeTimingStats(gcFreePureSigningTimings)
@@ -188,6 +213,7 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
 	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)
+	result.Stats.Resource.MemoryRSSKB = computeNumericStats(memRSSSamples)
 
 	c.Set("X-Bench-Pure-Signing-P95-Ms", fmt.Sprintf("%.3f", result.Stats.PureSigning.P95Ms))
 
@@ -214,6 +240,7 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 	memAllocSamples := make([]float64, 0, req.Iterations)
 	memAllocDeltaSamples := make([]float64, 0, req.Iterations)
 	memSysSamples := make([]float64, 0, req.Iterations)
+	memRSSSamples := make([]float64, 0, req.Iterations)
 	warmupIterations := req.WarmupIterations
 	if warmupIterations < 0 {
 		warmupIterations = 0
@@ -257,6 +284,7 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 		memAllocSamples = append(memAllocSamples, stats.MemoryAllocKB)
 		memAllocDeltaSamples = append(memAllocDeltaSamples, stats.MemoryAllocDeltaKB)
 		memSysSamples = append(memSysSamples, stats.MemorySysKB)
+		memRSSSamples = append(memRSSSamples, stats.MemoryRSSKB)
 
 		if stats.GCOccurred {
 			gcContaminatedCount++
@@ -287,6 +315,7 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 		AuthMemoryAllocKB:        memAllocSamples,
 		AuthMemoryAllocDeltaKB:   memAllocDeltaSamples,
 		AuthMemorySysKB:          memSysSamples,
+		AuthMemoryRSSKB:          memRSSSamples,
 	}
 	result.Stats.Sign = computeTimingStats(signTimings)
 	result.Stats.TokenGeneration = result.Stats.Sign
@@ -300,6 +329,7 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
 	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)
+	result.Stats.Resource.MemoryRSSKB = computeNumericStats(memRSSSamples)
 
 	c.Set("X-Bench-Sign-P95-Ms", fmt.Sprintf("%.3f", result.Stats.Sign.P95Ms))
 	c.Set("X-Bench-Token-Generation-P95-Ms", fmt.Sprintf("%.3f", result.Stats.TokenGeneration.P95Ms))
@@ -444,6 +474,7 @@ func benchmarkRuntimeStats(
 		MemoryAllocKB:      bytesToKB(memAfter.HeapAlloc),
 		MemoryAllocDeltaKB: bytesToKB(memAfter.TotalAlloc - memBefore.TotalAlloc),
 		MemorySysKB:        bytesToKB(memAfter.Sys),
+		MemoryRSSKB:        readMemoryRSSKB(),
 		CPUTimeMs:          float64(cpuDelta) * 10.0,
 		CPUPct:             cpuPct,
 		GCOccurred:         memAfter.NumGC > memBefore.NumGC,
@@ -460,6 +491,7 @@ func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) Benc
 		MemoryAllocKB:      refreshStats.MemoryAllocKB,
 		MemoryAllocDeltaKB: accessStats.MemoryAllocDeltaKB + refreshStats.MemoryAllocDeltaKB,
 		MemorySysKB:        refreshStats.MemorySysKB,
+		MemoryRSSKB:        refreshStats.MemoryRSSKB,
 		CPUTimeMs:          accessStats.CPUTimeMs + refreshStats.CPUTimeMs,
 		CPUPct:             cpuPct,
 		GCOccurred:         accessStats.GCOccurred || refreshStats.GCOccurred,

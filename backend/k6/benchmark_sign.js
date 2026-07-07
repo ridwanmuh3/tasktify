@@ -255,6 +255,7 @@ const benchAuthCPUTimePerTokenMsAvg = new Trend("bench_auth_cpu_time_per_token_m
 const benchAuthMemoryAllocKBAvg = new Trend("bench_auth_memory_alloc_kb_avg");
 const benchAuthMemoryAllocDeltaKBAvg = new Trend("bench_auth_memory_alloc_delta_kb_avg");
 const benchAuthMemorySysKBAvg = new Trend("bench_auth_memory_sys_kb_avg");
+const benchAuthMemoryRSSKBAvg = new Trend("bench_auth_memory_rss_kb_avg");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
@@ -376,6 +377,8 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_auth_cpu_time_per_token_ms_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_alloc_delta_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_sys_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>=0`];
     thresholds[`bench_pure_signing_success${ta}`] = [`count>=0`];
@@ -521,6 +524,7 @@ export function runIsolated(data) {
     benchAuthMemoryAllocKBAvg.add(s.resource?.memory_alloc_kb?.avg ?? 0, tags);
     benchAuthMemoryAllocDeltaKBAvg.add(s.resource?.memory_alloc_delta_kb?.avg ?? 0, tags);
     benchAuthMemorySysKBAvg.add(s.resource?.memory_sys_kb?.avg ?? 0, tags);
+    benchAuthMemoryRSSKBAvg.add(s.resource?.memory_rss_kb?.avg ?? 0, tags);
     benchGCContaminatedCount.add(result.gc_contaminated_count ?? 0, tags);
     addSamples(benchSignSample, result.sign_timings_ms, tags);
     addSamples(benchTokenGenerationSample, result.token_generation_timings_ms, tags);
@@ -1066,6 +1070,7 @@ export function handleSummary(data) {
         "avg",
       );
       const isolatedMemSysAvg = getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "avg");
+      const isolatedMemRSSAvg = getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "avg");
       const isolatedGCCnt = getCount("bench_gc_contaminated_count", alg.name, null);
 
       const item = {
@@ -1237,6 +1242,15 @@ export function handleSummary(data) {
                 min: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "min"),
                 max: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "max"),
               },
+              memory_rss_kb: {
+                avg: isolatedMemRSSAvg,
+                min: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "min"),
+                max: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(99)"),
+                sd: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "stdev"),
+              },
             }
           : null,
         stress: [],
@@ -1382,7 +1396,7 @@ export function handleSummary(data) {
     pad("Refresh p95", WI[7]),
     pad("E2E avg", WI[8]),
     pad("CPU avg", WI[9]),
-    pad("Mem avg", WI[10]),
+    pad("RSS avg", WI[10]),
   ].join("");
 
   const unitI = [
@@ -1447,7 +1461,7 @@ export function handleSummary(data) {
     );
     const ta = getVal("bench_total_avg", n, null, "avg");
     const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
-    const mem = getVal("bench_auth_memory_alloc_kb_avg", n, null, "avg");
+    const rss = getVal("bench_auth_memory_rss_kb_avg", n, null, "avg");
 
     const row =
       [
@@ -1461,7 +1475,7 @@ export function handleSummary(data) {
         pad(rp, WI[7]),
         pad(ta, WI[8]),
         pad(cpu, WI[9]),
-        pad(mem, WI[10]),
+        pad(rss, WI[10]),
       ].join("") + "\n";
 
     isolated = appendRow(isolated, row);
