@@ -163,7 +163,7 @@ func newPrecomputedSignerInner(lognMin uint, lognMax uint,
 	fpoly_gram_fft(logn, g00, g01, g11, gram[n*3:n*4])
 	tree := buildLDLTree(logn, logn, g00, g01, g11)
 
-	return &PrecomputedSigner{
+	ps := &PrecomputedSigner{
 		logn:     logn,
 		hashedVK: hashedVK,
 		b00:      b00,
@@ -171,14 +171,18 @@ func newPrecomputedSignerInner(lognMin uint, lognMax uint,
 		b10:      b10,
 		b11:      b11,
 		tree:     tree,
-	}, nil
+	}
+	if !ps.isValid() {
+		return nil, errors.New("Invalid precomputed signer")
+	}
+	return ps, nil
 }
 
 // Sign signs data with the precomputed key material.
 func (ps *PrecomputedSigner) Sign(rng io.Reader,
 	ctx DomainContext, id crypto.Hash, data []byte) ([]byte, error) {
 
-	if !ps.isValid() {
+	if !ps.isReadyForSign() {
 		return nil, errors.New("Invalid precomputed signer")
 	}
 	var seed [40]byte
@@ -218,6 +222,19 @@ func (ps *PrecomputedSigner) isValid() bool {
 		len(ps.b10) == n &&
 		len(ps.b11) == n &&
 		validateLDLTree(ps.logn, ps.tree)
+}
+
+func (ps *PrecomputedSigner) isReadyForSign() bool {
+	if ps == nil || ps.logn < 1 || ps.logn >= uint(len(inv_sigma)) {
+		return false
+	}
+	n := 1 << ps.logn
+	return len(ps.b00) == n &&
+		len(ps.b01) == n &&
+		len(ps.b10) == n &&
+		len(ps.b11) == n &&
+		ps.tree != nil &&
+		ps.tree.logn == ps.logn
 }
 
 func validateLDLTree(logn uint, tree *ldlTree) bool {

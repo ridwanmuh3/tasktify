@@ -26,6 +26,8 @@ DEFAULT_METRIC = "isolated.token_generation_gc_free_ms"
 DEFAULT_BASELINE = "Falcon-512"
 SAMPLE_KEYS = ("samples", "observations", "raw_values")
 K6_SAMPLE_METRICS = {
+    "isolated.pure_signing_ms": "bench_pure_signing_sample",
+    "isolated.pure_signing_gc_free_ms": "bench_pure_signing_gc_free_sample",
     "isolated.token_generation_ms": "bench_token_generation_sample",
     "isolated.token_generation_gc_free_ms": "bench_token_generation_gc_free_sample",
     "isolated.refresh_token_generation_ms": "bench_refresh_token_generation_sample",

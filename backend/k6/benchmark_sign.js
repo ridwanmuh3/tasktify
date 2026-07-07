@@ -407,8 +407,8 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_refresh_token_generation_gc_free_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
-    thresholds[`bench_success${ta}`] = [`count>=0`];
-    thresholds[`bench_pure_signing_success${ta}`] = [`count>=0`];
+    thresholds[`bench_success${ta}`] = [`count>0`];
+    thresholds[`bench_pure_signing_success${ta}`] = [`count>0`];
   }
   if (RUN_ATTACKS) {
     thresholds[`attack_block_rate${ta}`] = [`rate>0.99`];
@@ -500,7 +500,7 @@ export function runIsolated(data) {
     [`[isolated|${alg.name}] has stats`]: (r) => {
       try {
         const body = JSON.parse(r.body).data;
-        return body?.metric_scope === "jwt_issuance" && !!body?.stats;
+        return body?.metric_scope === "jwt_issuance" && body?.algorithm === alg.name && !!body?.stats;
       } catch {
         return false;
       }
@@ -617,7 +617,7 @@ export function runIsolated(data) {
     [`[pure-signing|${alg.name}] has stats`]: (r) => {
       try {
         const body = JSON.parse(r.body).data;
-        return body?.metric_scope === "pure_signing" && !!body?.stats;
+        return body?.metric_scope === "pure_signing" && body?.algorithm === alg.name && !!body?.stats;
       } catch {
         return false;
       }
@@ -1078,27 +1078,27 @@ export function handleSummary(data) {
         null,
         "avg",
       );
-      const isolatedPureAvg = getNumber("bench_pure_signing_avg", alg.name, null, "avg");
-      const isolatedPureP95 = getNumber("bench_pure_signing_p95", alg.name, null, "avg");
-      const isolatedPureStdev = getNumber("bench_pure_signing_stdev", alg.name, null, "avg");
-      const isolatedPureGCFreeAvg = getNumber(
-        "bench_pure_signing_gc_free_avg",
-        alg.name,
-        null,
-        "avg",
-      );
-      const isolatedPureGCFreeP95 = getNumber(
-        "bench_pure_signing_gc_free_p95",
-        alg.name,
-        null,
-        "avg",
-      );
-      const isolatedPureGCFreeStdev = getNumber(
-        "bench_pure_signing_gc_free_stdev",
-        alg.name,
-        null,
-        "avg",
-      );
+      const isolatedPureSuccess = getCount("bench_pure_signing_success", alg.name, null);
+      const isolatedPureFailed = getCount("bench_pure_signing_failed", alg.name, null);
+      const hasIsolatedPure = isolatedPureSuccess > 0;
+      const isolatedPureAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureP95 = hasIsolatedPure
+        ? getNumber("bench_pure_signing_p95", alg.name, null, "avg")
+        : null;
+      const isolatedPureStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_stdev", alg.name, null, "avg")
+        : null;
+      const isolatedPureGCFreeAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_gc_free_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureGCFreeP95 = hasIsolatedPure
+        ? getNumber("bench_pure_signing_gc_free_p95", alg.name, null, "avg")
+        : null;
+      const isolatedPureGCFreeStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_gc_free_stdev", alg.name, null, "avg")
+        : null;
       const isolatedRefreshGCFreeAvg = getNumber(
         "bench_refresh_token_generation_gc_free_avg",
         alg.name,
@@ -1187,17 +1187,21 @@ export function handleSummary(data) {
               pure_signing_endpoint: PURE_SIGNING_ENDPOINT,
               metric_scope: "jwt_issuance",
               pure_signing_metric_scope: "pure_signing",
+              pure_signing_success_count: isolatedPureSuccess,
+              pure_signing_failed_count: isolatedPureFailed,
               gc_contaminated_count: isolatedGCCnt || 0,
-              pure_signing_ms: {
-                avg: isolatedPureAvg,
-                min: getNumber("bench_pure_signing_sample", alg.name, null, "min"),
-                max: getNumber("bench_pure_signing_sample", alg.name, null, "max"),
-                p50: getNumber("bench_pure_signing_sample", alg.name, null, "med"),
-                p95: isolatedPureP95,
-                p99: getNumber("bench_pure_signing_sample", alg.name, null, "p(99)"),
-                sd: isolatedPureStdev,
-              },
-              pure_signing_gc_free_ms: isolatedPureGCFreeAvg != null
+              pure_signing_ms: hasIsolatedPure
+                ? {
+                    avg: isolatedPureAvg,
+                    min: getNumber("bench_pure_signing_sample", alg.name, null, "min"),
+                    max: getNumber("bench_pure_signing_sample", alg.name, null, "max"),
+                    p50: getNumber("bench_pure_signing_sample", alg.name, null, "med"),
+                    p95: isolatedPureP95,
+                    p99: getNumber("bench_pure_signing_sample", alg.name, null, "p(99)"),
+                    sd: isolatedPureStdev,
+                  }
+                : null,
+              pure_signing_gc_free_ms: hasIsolatedPure && isolatedPureGCFreeAvg != null
                 ? {
                     avg: isolatedPureGCFreeAvg,
                     min: getNumber("bench_pure_signing_gc_free_sample", alg.name, null, "min"),
@@ -1530,20 +1534,13 @@ export function handleSummary(data) {
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
-    const pa = getValFallback(
-      "bench_pure_signing_gc_free_avg",
-      "bench_pure_signing_avg",
-      n,
-      null,
-      "avg",
-    );
-    const pp = getValFallback(
-      "bench_pure_signing_gc_free_p95",
-      "bench_pure_signing_p95",
-      n,
-      null,
-      "avg",
-    );
+    const hasPure = getCount("bench_pure_signing_success", n, null) > 0;
+    const pa = hasPure
+      ? getValFallback("bench_pure_signing_gc_free_avg", "bench_pure_signing_avg", n, null, "avg")
+      : "—";
+    const pp = hasPure
+      ? getValFallback("bench_pure_signing_gc_free_p95", "bench_pure_signing_p95", n, null, "avg")
+      : "—";
     const sa = getValFallback(
       "bench_token_generation_gc_free_avg",
       "bench_token_generation_avg",
