@@ -249,13 +249,24 @@ const benchRefreshTokenGenerationGCFreeStdev = new Trend(
 );
 const benchTotalP95 = new Trend("bench_total_p95", true);
 const benchTotalAvg = new Trend("bench_total_avg", true);
+const benchTotalStdev = new Trend("bench_total_stdev", true);
 const benchAuthCPUAvg = new Trend("bench_auth_cpu_avg", true);
+const benchAuthCPUStdev = new Trend("bench_auth_cpu_stdev", true);
 const benchAuthCPUTimeMsAvg = new Trend("bench_auth_cpu_time_ms_avg", true);
+const benchAuthCPUTimeMsStdev = new Trend("bench_auth_cpu_time_ms_stdev", true);
 const benchAuthCPUTimePerTokenMsAvg = new Trend("bench_auth_cpu_time_per_token_ms_avg", true);
+const benchAuthCPUTimePerTokenMsStdev = new Trend(
+  "bench_auth_cpu_time_per_token_ms_stdev",
+  true,
+);
 const benchAuthMemoryAllocKBAvg = new Trend("bench_auth_memory_alloc_kb_avg");
+const benchAuthMemoryAllocKBStdev = new Trend("bench_auth_memory_alloc_kb_stdev");
 const benchAuthMemoryAllocDeltaKBAvg = new Trend("bench_auth_memory_alloc_delta_kb_avg");
+const benchAuthMemoryAllocDeltaKBStdev = new Trend("bench_auth_memory_alloc_delta_kb_stdev");
 const benchAuthMemorySysKBAvg = new Trend("bench_auth_memory_sys_kb_avg");
+const benchAuthMemorySysKBStdev = new Trend("bench_auth_memory_sys_kb_stdev");
 const benchAuthMemoryRSSKBAvg = new Trend("bench_auth_memory_rss_kb_avg");
+const benchAuthMemoryRSSKBStdev = new Trend("bench_auth_memory_rss_kb_stdev");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
@@ -372,13 +383,29 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_refresh_token_generation_gc_free_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_total_p95${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_avg${ta}`] = [`avg>=0`];
+    thresholds[`bench_total_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_cpu_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_time_ms_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_cpu_time_ms_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_cpu_time_per_token_ms_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_cpu_time_per_token_ms_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_alloc_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_alloc_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_alloc_delta_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_alloc_delta_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_sys_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_sys_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_auth_memory_rss_kb_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_sign_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_token_generation_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_token_generation_gc_free_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_gc_free_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_refresh_token_generation_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_refresh_token_generation_gc_free_sample${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_total_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>=0`];
     thresholds[`bench_pure_signing_success${ta}`] = [`count>=0`];
@@ -391,6 +418,7 @@ for (const alg of ALGORITHMS) {
 export const options = {
   scenarios,
   thresholds,
+  summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   noConnectionReuse: false,
   noVUConnectionReuse: false,
   setupTimeout: "180s",
@@ -487,44 +515,62 @@ export function runIsolated(data) {
     return;
   }
 
-  benchSuccess.add(1, tags);
-
   try {
     const result = JSON.parse(res.body).data;
+    if ((result?.success_count ?? 0) <= 0) {
+      benchFailed.add(1, tags);
+      console.error(`[isolated|${alg.name}] no successful iterations`);
+      return;
+    }
+    benchSuccess.add(1, tags);
     const s = result.stats;
+    const hasTokenGCFree =
+      Array.isArray(result.token_generation_gc_free_timings_ms) &&
+      result.token_generation_gc_free_timings_ms.length > 0;
+    const hasRefreshGCFree =
+      Array.isArray(result.refresh_token_generation_gc_free_timings_ms) &&
+      result.refresh_token_generation_gc_free_timings_ms.length > 0;
 
-    benchSignP95.add(s.sign.p95_ms, tags);
-    benchSignAvg.add(s.sign.avg_ms, tags);
-    benchSignMin.add(s.sign.min_ms, tags);
-    benchSignMax.add(s.sign.max_ms, tags);
-    benchSignStdev.add(s.sign.stdev_ms, tags);
-    benchTokenGenerationP95.add(s.token_generation?.p95_ms ?? s.sign.p95_ms, tags);
-    benchTokenGenerationAvg.add(s.token_generation?.avg_ms ?? s.sign.avg_ms, tags);
-    benchTokenGenerationStdev.add(s.token_generation?.stdev_ms ?? s.sign.stdev_ms, tags);
-    if (s.token_generation_gc_free?.avg_ms != null) {
-      benchTokenGenerationGCFreeP95.add(s.token_generation_gc_free.p95_ms, tags);
-      benchTokenGenerationGCFreeAvg.add(s.token_generation_gc_free.avg_ms, tags);
-      benchTokenGenerationGCFreeStdev.add(s.token_generation_gc_free.stdev_ms, tags);
+    addNumber(benchSignP95, s.sign.p95_ms, tags);
+    addNumber(benchSignAvg, s.sign.avg_ms, tags);
+    addNumber(benchSignMin, s.sign.min_ms, tags);
+    addNumber(benchSignMax, s.sign.max_ms, tags);
+    addNumber(benchSignStdev, s.sign.stdev_ms, tags);
+    addNumber(benchTokenGenerationP95, s.token_generation?.p95_ms ?? s.sign.p95_ms, tags);
+    addNumber(benchTokenGenerationAvg, s.token_generation?.avg_ms ?? s.sign.avg_ms, tags);
+    addNumber(benchTokenGenerationStdev, s.token_generation?.stdev_ms ?? s.sign.stdev_ms, tags);
+    if (hasTokenGCFree) {
+      addNumber(benchTokenGenerationGCFreeP95, s.token_generation_gc_free.p95_ms, tags);
+      addNumber(benchTokenGenerationGCFreeAvg, s.token_generation_gc_free.avg_ms, tags);
+      addNumber(benchTokenGenerationGCFreeStdev, s.token_generation_gc_free.stdev_ms, tags);
     }
     if (s.refresh_token_generation?.avg_ms != null) {
-      benchRefreshTokenGenerationP95.add(s.refresh_token_generation.p95_ms, tags);
-      benchRefreshTokenGenerationAvg.add(s.refresh_token_generation.avg_ms, tags);
-      benchRefreshTokenGenerationStdev.add(s.refresh_token_generation.stdev_ms, tags);
+      addNumber(benchRefreshTokenGenerationP95, s.refresh_token_generation.p95_ms, tags);
+      addNumber(benchRefreshTokenGenerationAvg, s.refresh_token_generation.avg_ms, tags);
+      addNumber(benchRefreshTokenGenerationStdev, s.refresh_token_generation.stdev_ms, tags);
     }
-    if (s.refresh_token_generation_gc_free?.avg_ms != null) {
-      benchRefreshTokenGenerationGCFreeP95.add(s.refresh_token_generation_gc_free.p95_ms, tags);
-      benchRefreshTokenGenerationGCFreeAvg.add(s.refresh_token_generation_gc_free.avg_ms, tags);
-      benchRefreshTokenGenerationGCFreeStdev.add(s.refresh_token_generation_gc_free.stdev_ms, tags);
+    if (hasRefreshGCFree) {
+      addNumber(benchRefreshTokenGenerationGCFreeP95, s.refresh_token_generation_gc_free.p95_ms, tags);
+      addNumber(benchRefreshTokenGenerationGCFreeAvg, s.refresh_token_generation_gc_free.avg_ms, tags);
+      addNumber(benchRefreshTokenGenerationGCFreeStdev, s.refresh_token_generation_gc_free.stdev_ms, tags);
     }
-    benchTotalP95.add(s.total.p95_ms, tags);
-    benchTotalAvg.add(s.total.avg_ms, tags);
-    benchAuthCPUAvg.add(s.resource?.cpu_utilization_pct?.avg ?? 0, tags);
-    benchAuthCPUTimeMsAvg.add(s.resource?.cpu_time_ms?.avg ?? 0, tags);
-    benchAuthCPUTimePerTokenMsAvg.add(s.resource?.cpu_time_per_token_ms?.avg ?? 0, tags);
-    benchAuthMemoryAllocKBAvg.add(s.resource?.memory_alloc_kb?.avg ?? 0, tags);
-    benchAuthMemoryAllocDeltaKBAvg.add(s.resource?.memory_alloc_delta_kb?.avg ?? 0, tags);
-    benchAuthMemorySysKBAvg.add(s.resource?.memory_sys_kb?.avg ?? 0, tags);
-    benchAuthMemoryRSSKBAvg.add(s.resource?.memory_rss_kb?.avg ?? 0, tags);
+    addNumber(benchTotalP95, s.total.p95_ms, tags);
+    addNumber(benchTotalAvg, s.total.avg_ms, tags);
+    addNumber(benchTotalStdev, s.total.stdev_ms, tags);
+    addStat(benchAuthCPUAvg, s.resource?.cpu_utilization_pct, "avg", tags);
+    addStat(benchAuthCPUStdev, s.resource?.cpu_utilization_pct, "stdev", tags);
+    addStat(benchAuthCPUTimeMsAvg, s.resource?.cpu_time_ms, "avg", tags);
+    addStat(benchAuthCPUTimeMsStdev, s.resource?.cpu_time_ms, "stdev", tags);
+    addStat(benchAuthCPUTimePerTokenMsAvg, s.resource?.cpu_time_per_token_ms, "avg", tags);
+    addStat(benchAuthCPUTimePerTokenMsStdev, s.resource?.cpu_time_per_token_ms, "stdev", tags);
+    addStat(benchAuthMemoryAllocKBAvg, s.resource?.memory_alloc_kb, "avg", tags);
+    addStat(benchAuthMemoryAllocKBStdev, s.resource?.memory_alloc_kb, "stdev", tags);
+    addStat(benchAuthMemoryAllocDeltaKBAvg, s.resource?.memory_alloc_delta_kb, "avg", tags);
+    addStat(benchAuthMemoryAllocDeltaKBStdev, s.resource?.memory_alloc_delta_kb, "stdev", tags);
+    addStat(benchAuthMemorySysKBAvg, s.resource?.memory_sys_kb, "avg", tags);
+    addStat(benchAuthMemorySysKBStdev, s.resource?.memory_sys_kb, "stdev", tags);
+    addStat(benchAuthMemoryRSSKBAvg, s.resource?.memory_rss_kb, "avg", tags);
+    addStat(benchAuthMemoryRSSKBStdev, s.resource?.memory_rss_kb, "stdev", tags);
     benchGCContaminatedCount.add(result.gc_contaminated_count ?? 0, tags);
     addSamples(benchSignSample, result.sign_timings_ms, tags);
     addSamples(benchTokenGenerationSample, result.token_generation_timings_ms, tags);
@@ -551,12 +597,13 @@ export function runIsolated(data) {
         (s.refresh_token_generation?.avg_ms != null
           ? ` | refresh_generation(all): avg=${s.refresh_token_generation.avg_ms?.toFixed(3)} p95=${s.refresh_token_generation.p95_ms?.toFixed(3)} stdev=${s.refresh_token_generation.stdev_ms?.toFixed(3)} ms`
           : "") +
-        (gcFree && gcFree.avg_ms != null
+        (hasTokenGCFree
           ? ` | token_generation(gc_free): avg=${gcFree.avg_ms?.toFixed(3)} p95=${gcFree.p95_ms?.toFixed(3)} stdev=${gcFree.stdev_ms?.toFixed(3)} ms`
           : "") +
         ` | total: avg=${s.total.avg_ms?.toFixed(3)} p95=${s.total.p95_ms?.toFixed(3)} ms`,
     );
   } catch (e) {
+    benchFailed.add(1, tags);
     console.error(`[isolated|${alg.name}] parse error: ${e}`);
   }
 
@@ -586,19 +633,27 @@ export function runIsolated(data) {
     return;
   }
 
-  benchPureSigningSuccess.add(1, tags);
-
   try {
     const result = JSON.parse(pureRes.body).data;
+    if ((result?.success_count ?? 0) <= 0) {
+      benchPureSigningFailed.add(1, tags);
+      console.error(`[pure-signing|${alg.name}] no successful iterations`);
+      sleep(1);
+      return;
+    }
+    benchPureSigningSuccess.add(1, tags);
     const s = result.stats;
+    const hasPureGCFree =
+      Array.isArray(result.pure_signing_gc_free_timings_ms) &&
+      result.pure_signing_gc_free_timings_ms.length > 0;
 
-    benchPureSigningP95.add(s.pure_signing.p95_ms, tags);
-    benchPureSigningAvg.add(s.pure_signing.avg_ms, tags);
-    benchPureSigningStdev.add(s.pure_signing.stdev_ms, tags);
-    if (s.pure_signing_gc_free?.avg_ms != null) {
-      benchPureSigningGCFreeP95.add(s.pure_signing_gc_free.p95_ms, tags);
-      benchPureSigningGCFreeAvg.add(s.pure_signing_gc_free.avg_ms, tags);
-      benchPureSigningGCFreeStdev.add(s.pure_signing_gc_free.stdev_ms, tags);
+    addNumber(benchPureSigningP95, s.pure_signing.p95_ms, tags);
+    addNumber(benchPureSigningAvg, s.pure_signing.avg_ms, tags);
+    addNumber(benchPureSigningStdev, s.pure_signing.stdev_ms, tags);
+    if (hasPureGCFree) {
+      addNumber(benchPureSigningGCFreeP95, s.pure_signing_gc_free.p95_ms, tags);
+      addNumber(benchPureSigningGCFreeAvg, s.pure_signing_gc_free.avg_ms, tags);
+      addNumber(benchPureSigningGCFreeStdev, s.pure_signing_gc_free.stdev_ms, tags);
     }
     addSamples(benchPureSigningSample, result.pure_signing_timings_ms, tags);
     addSamples(benchPureSigningGCFreeSample, result.pure_signing_gc_free_timings_ms, tags);
@@ -610,11 +665,12 @@ export function runIsolated(data) {
         ` warmup=${result.warmup_iterations}` +
         ` gc_contaminated=${gcCount}` +
         ` | pure(all): avg=${s.pure_signing.avg_ms?.toFixed(3)} p95=${s.pure_signing.p95_ms?.toFixed(3)} stdev=${s.pure_signing.stdev_ms?.toFixed(3)} ms` +
-        (gcFree && gcFree.avg_ms != null
+        (hasPureGCFree
           ? ` | pure(gc_free): avg=${gcFree.avg_ms?.toFixed(3)} p95=${gcFree.p95_ms?.toFixed(3)} stdev=${gcFree.stdev_ms?.toFixed(3)} ms`
           : ""),
     );
   } catch (e) {
+    benchPureSigningFailed.add(1, tags);
     console.error(`[pure-signing|${alg.name}] parse error: ${e}`);
   }
 
@@ -636,10 +692,19 @@ function warmupBenchmarkToken(base, body, headers) {
   http.post(`${base}/api/benchmark/token`, body, { headers });
 }
 
+function addNumber(metric, value, tags) {
+  if (typeof value === "number" && !isNaN(value)) metric.add(value, tags);
+}
+
+function addStat(metric, stats, field, tags) {
+  if (!stats) return;
+  addNumber(metric, stats[field], tags);
+}
+
 function addSamples(metric, values, tags) {
   if (!Array.isArray(values)) return;
   for (const value of values) {
-    if (typeof value === "number") metric.add(value, tags);
+    addNumber(metric, value, tags);
   }
 }
 
@@ -1054,23 +1119,61 @@ export function handleSummary(data) {
       );
       const isolatedTotalAvg = getNumber("bench_total_avg", alg.name, null, "avg");
       const isolatedTotalP95 = getNumber("bench_total_p95", alg.name, null, "avg");
+      const isolatedTotalStdev = getNumber("bench_total_stdev", alg.name, null, "avg");
       const isolatedCPUAvg = getNumber("bench_auth_cpu_avg", alg.name, null, "avg");
+      const isolatedCPUStdev = getNumber("bench_auth_cpu_stdev", alg.name, null, "avg");
       const isolatedCPUTimeAvg = getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "avg");
+      const isolatedCPUTimeStdev = getNumber(
+        "bench_auth_cpu_time_ms_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedCPUTimePerTokenAvg = getNumber(
         "bench_auth_cpu_time_per_token_ms_avg",
         alg.name,
         null,
         "avg",
       );
+      const isolatedCPUTimePerTokenStdev = getNumber(
+        "bench_auth_cpu_time_per_token_ms_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedMemAvg = getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "avg");
+      const isolatedMemStdev = getNumber(
+        "bench_auth_memory_alloc_kb_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedMemDeltaAvg = getNumber(
         "bench_auth_memory_alloc_delta_kb_avg",
         alg.name,
         null,
         "avg",
       );
+      const isolatedMemDeltaStdev = getNumber(
+        "bench_auth_memory_alloc_delta_kb_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedMemSysAvg = getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "avg");
+      const isolatedMemSysStdev = getNumber(
+        "bench_auth_memory_sys_kb_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedMemRSSAvg = getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "avg");
+      const isolatedMemRSSStdev = getNumber(
+        "bench_auth_memory_rss_kb_stdev",
+        alg.name,
+        null,
+        "avg",
+      );
       const isolatedGCCnt = getCount("bench_gc_contaminated_count", alg.name, null);
 
       const item = {
@@ -1112,57 +1215,62 @@ export function handleSummary(data) {
                 : null,
               token_generation_ms: {
                 avg: isolatedTokenAvg,
-                min: getNumber("bench_token_generation_avg", alg.name, null, "min"),
-                max: getNumber("bench_token_generation_avg", alg.name, null, "max"),
-                p50: getNumber("bench_token_generation_avg", alg.name, null, "med"),
+                min: getNumber("bench_token_generation_sample", alg.name, null, "min"),
+                max: getNumber("bench_token_generation_sample", alg.name, null, "max"),
+                p50: getNumber("bench_token_generation_sample", alg.name, null, "med"),
                 p95: isolatedTokenP95,
-                p99: getNumber("bench_token_generation_avg", alg.name, null, "p(99)"),
+                p99: getNumber("bench_token_generation_sample", alg.name, null, "p(99)"),
                 sd: isolatedTokenStdev,
               },
               token_generation_gc_free_ms: isolatedTokenGCFreeAvg != null
                 ? {
                     avg: isolatedTokenGCFreeAvg,
-                    min: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "min"),
-                    max: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "max"),
-                    p50: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "med"),
+                    min: getNumber("bench_token_generation_gc_free_sample", alg.name, null, "min"),
+                    max: getNumber("bench_token_generation_gc_free_sample", alg.name, null, "max"),
+                    p50: getNumber("bench_token_generation_gc_free_sample", alg.name, null, "med"),
                     p95: isolatedTokenGCFreeP95,
-                    p99: getNumber("bench_token_generation_gc_free_avg", alg.name, null, "p(99)"),
+                    p99: getNumber(
+                      "bench_token_generation_gc_free_sample",
+                      alg.name,
+                      null,
+                      "p(99)",
+                    ),
                     sd: isolatedTokenGCFreeStdev,
                   }
                 : null,
               refresh_token_generation_ms: {
                 avg: isolatedRefreshAvg,
-                min: getNumber("bench_refresh_token_generation_avg", alg.name, null, "min"),
-                max: getNumber("bench_refresh_token_generation_avg", alg.name, null, "max"),
-                p50: getNumber("bench_refresh_token_generation_avg", alg.name, null, "med"),
+                min: getNumber("bench_refresh_token_generation_sample", alg.name, null, "min"),
+                max: getNumber("bench_refresh_token_generation_sample", alg.name, null, "max"),
+                p50: getNumber("bench_refresh_token_generation_sample", alg.name, null, "med"),
                 p95: isolatedRefreshP95,
-                p99: getNumber("bench_refresh_token_generation_avg", alg.name, null, "p(99)"),
+                p99: getNumber("bench_refresh_token_generation_sample", alg.name, null, "p(99)"),
                 sd: isolatedRefreshStdev,
               },
               refresh_token_generation_gc_free_ms: isolatedRefreshGCFreeAvg != null
                 ? {
                     avg: isolatedRefreshGCFreeAvg,
                     min: getNumber(
-                      "bench_refresh_token_generation_gc_free_avg",
+                      "bench_refresh_token_generation_gc_free_sample",
                       alg.name,
                       null,
                       "min",
                     ),
                     max: getNumber(
-                      "bench_refresh_token_generation_gc_free_avg",
+                      "bench_refresh_token_generation_gc_free_sample",
                       alg.name,
                       null,
                       "max",
                     ),
                     p50: getNumber(
-                      "bench_refresh_token_generation_gc_free_avg",
+                      "bench_refresh_token_generation_gc_free_sample",
                       alg.name,
                       null,
                       "med",
                     ),
                     p95: isolatedRefreshGCFreeP95,
                     p99: getNumber(
-                      "bench_refresh_token_generation_gc_free_avg",
+                      "bench_refresh_token_generation_gc_free_sample",
                       alg.name,
                       null,
                       "p(99)",
@@ -1172,11 +1280,12 @@ export function handleSummary(data) {
                 : null,
               total_ms: {
                 avg: isolatedTotalAvg,
-                min: getNumber("bench_total_avg", alg.name, null, "min"),
-                max: getNumber("bench_total_avg", alg.name, null, "max"),
+                min: getNumber("bench_total_sample", alg.name, null, "min"),
+                max: getNumber("bench_total_sample", alg.name, null, "max"),
+                p50: getNumber("bench_total_sample", alg.name, null, "med"),
                 p95: isolatedTotalP95,
-                p99: getNumber("bench_total_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_total_avg", alg.name, null, "stdev"),
+                p99: getNumber("bench_total_sample", alg.name, null, "p(99)"),
+                sd: isolatedTotalStdev,
               },
               overhead_avg_ms:
                 isolatedTokenAvg != null && isolatedTotalAvg != null
@@ -1199,7 +1308,7 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_cpu_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_cpu_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_cpu_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_cpu_avg", alg.name, null, "stdev"),
+                sd: isolatedCPUStdev,
               },
               cpu_time_ms: {
                 avg: isolatedCPUTimeAvg,
@@ -1208,7 +1317,7 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "stdev"),
+                sd: isolatedCPUTimeStdev,
               },
               cpu_time_per_token_ms: {
                 avg: isolatedCPUTimePerTokenAvg,
@@ -1217,7 +1326,7 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "stdev"),
+                sd: isolatedCPUTimePerTokenStdev,
               },
               memory_alloc_kb: {
                 avg: isolatedMemAvg,
@@ -1226,7 +1335,7 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "stdev"),
+                sd: isolatedMemStdev,
               },
               memory_alloc_delta_kb: {
                 avg: isolatedMemDeltaAvg,
@@ -1235,12 +1344,16 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "stdev"),
+                sd: isolatedMemDeltaStdev,
               },
               memory_sys_kb: {
                 avg: isolatedMemSysAvg,
                 min: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "min"),
                 max: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "max"),
+                p50: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "med"),
+                p95: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(95)"),
+                p99: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(99)"),
+                sd: isolatedMemSysStdev,
               },
               memory_rss_kb: {
                 avg: isolatedMemRSSAvg,
@@ -1249,7 +1362,7 @@ export function handleSummary(data) {
                 p50: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "med"),
                 p95: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(95)"),
                 p99: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(99)"),
-                sd: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "stdev"),
+                sd: isolatedMemRSSStdev,
               },
             }
           : null,

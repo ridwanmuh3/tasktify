@@ -1,0 +1,30 @@
+{
+  "source": "backend/benchmark_sign_result.json",
+  "samples": "backend/benchmark_sign_samples.ndjson",
+  "sample_count": 192,
+  "metric": "isolated.token_generation_gc_free_ms",
+  "baseline": "Falcon-512",
+  "direction": "lower_is_better",
+  "rows": [
+    {
+      "algorithm": "Falcon-Precomputed-512",
+      "baseline": "Falcon-512",
+      "n": "96",
+      "baseline_n": "96",
+      "mean": "0.2873",
+      "baseline_mean": "0.3089",
+      "sd": "0.04983",
+      "baseline_sd": "0.07614",
+      "normality": "not_normal",
+      "baseline_normality": "not_normal",
+      "test": "mann_whitney_u",
+      "statistic": "3524.00",
+      "p_value": "0.004888",
+      "effect_size": "0.2352",
+      "effect_type": "rank_biserial",
+      "effect_label": "small",
+      "improvement_pct": "6.984",
+      "detail": "z=-2.814"
+    }
+  ]
+}

@@ -224,12 +224,9 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 		alg = m.defaultAlg
 	}
 
-	cfg, ok := m.configs[alg]
+	cfg, ok := m.configForSignAlg(alg)
 	if !ok {
-		cfg, ok = m.configForSignAlg(alg)
-		if !ok {
-			return "", fmt.Errorf("unsupported algorithm: %s", alg)
-		}
+		return "", fmt.Errorf("unsupported algorithm: %s", alg)
 	}
 
 	currentTime := time.Now()
@@ -295,11 +292,13 @@ func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
 }
 
 func (m *multiAlgJwtUtil) configForSignAlg(alg string) (*AlgConfig, bool) {
-	headerAlg := HeaderAlgForConfigAlg(alg)
-	if cfg, ok := m.configs[m.defaultAlg]; ok && cfg.Method.Alg() == headerAlg {
+	if cfg, ok := m.configs[alg]; ok {
 		return cfg, true
 	}
-	return m.configForHeaderAlg(headerAlg)
+	if alg == HeaderAlgForConfigAlg(alg) {
+		return m.configForHeaderAlg(alg)
+	}
+	return nil, false
 }
 
 func (m *multiAlgJwtUtil) configForHeaderAlg(headerAlg string) (*AlgConfig, bool) {

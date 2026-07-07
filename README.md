@@ -262,6 +262,11 @@ cd backend
 make client-k6 BASE_URL=https://example.com
 ```
 
+Remote single-gateway runs must load every benchmarked signing profile in
+`JWT_ALLOWED_ALGS`, for example `Falcon-Precomputed-512,Falcon-512`.
+Otherwise the unconfigured profile fails instead of being silently measured with
+the wrong signer.
+
 Useful k6 flags:
 
 | Variable | Meaning |

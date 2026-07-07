@@ -1,12 +1,7 @@
 {
   "root_group": {
-    "name": "",
-    "path": "",
-    "id": "d41d8cd98f00b204e9800998ecf8427e",
     "groups": [
       {
-        "name": "stress Falcon-Precomputed-512 10VU",
-        "path": "::stress Falcon-Precomputed-512 10VU",
         "id": "72a9ec21788de8e89edb71f2b7cd772e",
         "groups": [],
         "checks": [
@@ -14,178 +9,180 @@
               "name": "[stress|Falcon-Precomputed-512|10VU] sign 200",
               "path": "::stress Falcon-Precomputed-512 10VU::[stress|Falcon-Precomputed-512|10VU] sign 200",
               "id": "ab437460f3b448415ce6b08fb98b4db1",
-              "passes": 184,
+              "passes": 490,
               "fails": 0
             },
             {
+              "name": "[stress|Falcon-Precomputed-512|10VU] has token",
               "path": "::stress Falcon-Precomputed-512 10VU::[stress|Falcon-Precomputed-512|10VU] has token",
               "id": "56b1a15cd62bb74235c2569fd01785e3",
-              "passes": 184,
-              "fails": 0,
-              "name": "[stress|Falcon-Precomputed-512|10VU] has token"
+              "passes": 490,
+              "fails": 0
             }
-          ]
+          ],
+        "name": "stress Falcon-Precomputed-512 10VU",
+        "path": "::stress Falcon-Precomputed-512 10VU"
       },
       {
+        "path": "::stress Falcon-Precomputed-512 30VU",
+        "id": "0e71fcb1c45b5cd67d03396b8fab76c2",
         "groups": [],
         "checks": [
             {
+              "fails": 0,
               "name": "[stress|Falcon-Precomputed-512|30VU] sign 200",
               "path": "::stress Falcon-Precomputed-512 30VU::[stress|Falcon-Precomputed-512|30VU] sign 200",
               "id": "173d0b893dcf41e92ec36868851567f6",
-              "passes": 348,
-              "fails": 0
+              "passes": 392
             },
             {
-              "fails": 0,
               "name": "[stress|Falcon-Precomputed-512|30VU] has token",
               "path": "::stress Falcon-Precomputed-512 30VU::[stress|Falcon-Precomputed-512|30VU] has token",
               "id": "9fb75b73e49e01c8eb0cace30c59ffb8",
-              "passes": 348
+              "passes": 392,
+              "fails": 0
             }
           ],
-        "name": "stress Falcon-Precomputed-512 30VU",
-        "path": "::stress Falcon-Precomputed-512 30VU",
-        "id": "0e71fcb1c45b5cd67d03396b8fab76c2"
+        "name": "stress Falcon-Precomputed-512 30VU"
       },
       {
-        "name": "stress Falcon-Precomputed-512 50VU",
-        "path": "::stress Falcon-Precomputed-512 50VU",
-        "id": "854266ed739519489cd557dd1dd9be42",
         "groups": [],
         "checks": [
             {
               "name": "[stress|Falcon-Precomputed-512|50VU] sign 200",
               "path": "::stress Falcon-Precomputed-512 50VU::[stress|Falcon-Precomputed-512|50VU] sign 200",
               "id": "b4c27e4c6107c019ccd0f218668c2d5a",
-              "passes": 254,
+              "passes": 408,
               "fails": 0
             },
             {
-              "name": "[stress|Falcon-Precomputed-512|50VU] has token",
               "path": "::stress Falcon-Precomputed-512 50VU::[stress|Falcon-Precomputed-512|50VU] has token",
               "id": "4b99f48c4b6b9a87be2aba283ee4c3ce",
-              "passes": 254,
-              "fails": 0
+              "passes": 408,
+              "fails": 0,
+              "name": "[stress|Falcon-Precomputed-512|50VU] has token"
             }
-          ]
+          ],
+        "name": "stress Falcon-Precomputed-512 50VU",
+        "path": "::stress Falcon-Precomputed-512 50VU",
+        "id": "854266ed739519489cd557dd1dd9be42"
       },
       {
-        "id": "ba1ec6f00a481150ba82502be9e0bb85",
         "groups": [],
         "checks": [
             {
+              "name": "[stress|Falcon-512|10VU] sign 200",
               "path": "::stress Falcon-512 10VU::[stress|Falcon-512|10VU] sign 200",
               "id": "9dd40cd0e94b405e906e6ab1682d4f9b",
-              "passes": 468,
-              "fails": 0,
-              "name": "[stress|Falcon-512|10VU] sign 200"
+              "passes": 540,
+              "fails": 0
             },
             {
+              "fails": 0,
               "name": "[stress|Falcon-512|10VU] has token",
               "path": "::stress Falcon-512 10VU::[stress|Falcon-512|10VU] has token",
               "id": "6f9556425bf31dcb063f8b9071e6b430",
-              "passes": 468,
-              "fails": 0
+              "passes": 540
             }
           ],
         "name": "stress Falcon-512 10VU",
-        "path": "::stress Falcon-512 10VU"
+        "path": "::stress Falcon-512 10VU",
+        "id": "ba1ec6f00a481150ba82502be9e0bb85"
       },
       {
-        "name": "stress Falcon-512 30VU",
-        "path": "::stress Falcon-512 30VU",
-        "id": "bf225816ffe7124f0e6451794c93b0e3",
         "groups": [],
         "checks": [
             {
-              "fails": 0,
-              "name": "[stress|Falcon-512|30VU] sign 200",
               "path": "::stress Falcon-512 30VU::[stress|Falcon-512|30VU] sign 200",
               "id": "99a0583e0b485c66ba1c6302c97652a8",
-              "passes": 277
+              "passes": 412,
+              "fails": 0,
+              "name": "[stress|Falcon-512|30VU] sign 200"
             },
             {
-              "passes": 277,
-              "fails": 0,
               "name": "[stress|Falcon-512|30VU] has token",
               "path": "::stress Falcon-512 30VU::[stress|Falcon-512|30VU] has token",
-              "id": "891fb878a59ad920ab41b2f2c3975ad3"
+              "id": "891fb878a59ad920ab41b2f2c3975ad3",
+              "passes": 412,
+              "fails": 0
             }
-          ]
+          ],
+        "name": "stress Falcon-512 30VU",
+        "path": "::stress Falcon-512 30VU",
+        "id": "bf225816ffe7124f0e6451794c93b0e3"
       },
       {
+        "name": "stress Falcon-512 50VU",
+        "path": "::stress Falcon-512 50VU",
+        "id": "5a9b409e81928e837a55d0398f7b8b33",
         "groups": [],
         "checks": [
             {
               "name": "[stress|Falcon-512|50VU] sign 200",
               "path": "::stress Falcon-512 50VU::[stress|Falcon-512|50VU] sign 200",
               "id": "ea3a9105c852226eb3161c631868ffb0",
-              "passes": 429,
+              "passes": 427,
               "fails": 0
             },
             {
+              "fails": 0,
               "name": "[stress|Falcon-512|50VU] has token",
               "path": "::stress Falcon-512 50VU::[stress|Falcon-512|50VU] has token",
               "id": "d982415ac4eddde753d61e2e946dbafe",
-              "passes": 429,
-              "fails": 0
+              "passes": 427
             }
-          ],
-        "name": "stress Falcon-512 50VU",
-        "path": "::stress Falcon-512 50VU",
-        "id": "5a9b409e81928e837a55d0398f7b8b33"
+          ]
       }
     ],
     "checks": [
       {
-        "passes": 1,
-        "fails": 0,
         "name": "[isolated|Falcon-Precomputed-512] 200",
         "path": "::[isolated|Falcon-Precomputed-512] 200",
-        "id": "2e27b34a00e77e497f9d91da9007f929"
+        "id": "2e27b34a00e77e497f9d91da9007f929",
+        "passes": 1,
+        "fails": 0
       },
       {
-        "name": "[isolated|Falcon-Precomputed-512] has stats",
         "path": "::[isolated|Falcon-Precomputed-512] has stats",
         "id": "f3c15783d1faec19c3917c8af74948e7",
         "passes": 1,
-        "fails": 0
+        "fails": 0,
+        "name": "[isolated|Falcon-Precomputed-512] has stats"
       },
       {
+        "name": "[pure-signing|Falcon-Precomputed-512] 200",
         "path": "::[pure-signing|Falcon-Precomputed-512] 200",
         "id": "6f1445079ed7db65723e84bd4e15a9b0",
         "passes": 1,
-        "fails": 0,
-        "name": "[pure-signing|Falcon-Precomputed-512] 200"
-      },
-      {
-        "name": "[pure-signing|Falcon-Precomputed-512] has stats",
-        "path": "::[pure-signing|Falcon-Precomputed-512] has stats",
-        "id": "f10fd4beeb22910b84a0e210d31fc8bb",
-        "passes": 1,
         "fails": 0
       },
       {
+        "passes": 1,
+        "fails": 0,
+        "name": "[pure-signing|Falcon-Precomputed-512] has stats",
+        "path": "::[pure-signing|Falcon-Precomputed-512] has stats",
+        "id": "f10fd4beeb22910b84a0e210d31fc8bb"
+      },
+      {
+        "fails": 0,
         "name": "[isolated|Falcon-512] 200",
         "path": "::[isolated|Falcon-512] 200",
         "id": "314fc529d7abe88403efd0ceba73d1b0",
+        "passes": 1
+      },
+      {
+        "name": "[isolated|Falcon-512] has stats",
+        "path": "::[isolated|Falcon-512] has stats",
+        "id": "74f2812ae25526dc456357e3622497d4",
         "passes": 1,
         "fails": 0
       },
       {
-        "path": "::[isolated|Falcon-512] has stats",
-        "id": "74f2812ae25526dc456357e3622497d4",
-        "passes": 1,
-        "fails": 0,
-        "name": "[isolated|Falcon-512] has stats"
-      },
-      {
-        "fails": 0,
-        "name": "[pure-signing|Falcon-512] 200",
         "path": "::[pure-signing|Falcon-512] 200",
         "id": "7dfd7ba5e886ad2cc483ef05e00b292b",
-        "passes": 1
+        "passes": 1,
+        "fails": 0,
+        "name": "[pure-signing|Falcon-512] 200"
       },
       {
         "fails": 0,
@@ -195,95 +192,95 @@
         "passes": 1
       },
       {
-        "fails": 0,
         "name": "[refresh|Falcon-Precomputed-512|10VU] 200",
         "path": "::[refresh|Falcon-Precomputed-512|10VU] 200",
         "id": "73555d54c585b970e3bc68109ded424e",
-        "passes": 182
+        "passes": 490,
+        "fails": 0
       },
       {
         "name": "[refresh|Falcon-Precomputed-512|10VU] has token pair",
         "path": "::[refresh|Falcon-Precomputed-512|10VU] has token pair",
         "id": "c42da332382242bfc01a012c1f4b4b81",
-        "passes": 182,
+        "passes": 490,
         "fails": 0
       },
       {
-        "id": "a7573164c53390e84f5776f5ac2df4b8",
-        "passes": 348,
-        "fails": 0,
         "name": "[refresh|Falcon-Precomputed-512|30VU] 200",
-        "path": "::[refresh|Falcon-Precomputed-512|30VU] 200"
+        "path": "::[refresh|Falcon-Precomputed-512|30VU] 200",
+        "id": "a7573164c53390e84f5776f5ac2df4b8",
+        "passes": 392,
+        "fails": 0
       },
       {
+        "fails": 0,
         "name": "[refresh|Falcon-Precomputed-512|30VU] has token pair",
         "path": "::[refresh|Falcon-Precomputed-512|30VU] has token pair",
         "id": "762669fa463e1597f33b106c6660597d",
-        "passes": 348,
+        "passes": 392
+      },
+      {
+        "name": "[refresh|Falcon-Precomputed-512|50VU] 200",
+        "path": "::[refresh|Falcon-Precomputed-512|50VU] 200",
+        "id": "0db5d5851c8c41b9becf7a5ffe9978e0",
+        "passes": 408,
         "fails": 0
       },
       {
-        "id": "0db5d5851c8c41b9becf7a5ffe9978e0",
-        "passes": 254,
-        "fails": 0,
-        "name": "[refresh|Falcon-Precomputed-512|50VU] 200",
-        "path": "::[refresh|Falcon-Precomputed-512|50VU] 200"
-      },
-      {
         "id": "7306cba60ba411516d49c6dddf06b985",
-        "passes": 254,
+        "passes": 408,
         "fails": 0,
         "name": "[refresh|Falcon-Precomputed-512|50VU] has token pair",
         "path": "::[refresh|Falcon-Precomputed-512|50VU] has token pair"
       },
       {
-        "name": "[refresh|Falcon-512|10VU] 200",
-        "path": "::[refresh|Falcon-512|10VU] 200",
         "id": "11b223904835ac5dc82f300215c37fff",
-        "passes": 458,
-        "fails": 0
+        "passes": 540,
+        "fails": 0,
+        "name": "[refresh|Falcon-512|10VU] 200",
+        "path": "::[refresh|Falcon-512|10VU] 200"
       },
       {
+        "name": "[refresh|Falcon-512|10VU] has token pair",
         "path": "::[refresh|Falcon-512|10VU] has token pair",
         "id": "57f68f7fd20eb2ee0744498bcec4fb10",
-        "passes": 458,
-        "fails": 0,
-        "name": "[refresh|Falcon-512|10VU] has token pair"
+        "passes": 540,
+        "fails": 0
       },
       {
+        "passes": 412,
+        "fails": 0,
         "name": "[refresh|Falcon-512|30VU] 200",
         "path": "::[refresh|Falcon-512|30VU] 200",
-        "id": "c08dbb424bce336082eb3e00e788ddc4",
-        "passes": 277,
-        "fails": 0
+        "id": "c08dbb424bce336082eb3e00e788ddc4"
       },
       {
         "name": "[refresh|Falcon-512|30VU] has token pair",
         "path": "::[refresh|Falcon-512|30VU] has token pair",
         "id": "d95b9560ae6b8a49177470c4526f547a",
-        "passes": 277,
+        "passes": 412,
         "fails": 0
       },
       {
+        "path": "::[refresh|Falcon-512|50VU] 200",
         "id": "5911cd7a99507e5f1b24912cd09a06d3",
-        "passes": 429,
+        "passes": 427,
         "fails": 0,
-        "name": "[refresh|Falcon-512|50VU] 200",
-        "path": "::[refresh|Falcon-512|50VU] 200"
+        "name": "[refresh|Falcon-512|50VU] 200"
       },
       {
-        "passes": 429,
         "fails": 0,
         "name": "[refresh|Falcon-512|50VU] has token pair",
         "path": "::[refresh|Falcon-512|50VU] has token pair",
-        "id": "a1bf0e5daae27037eaea290c2a347dbe"
+        "id": "a1bf0e5daae27037eaea290c2a347dbe",
+        "passes": 427
       },
       {
-        "passes": 25,
         "fails": 0,
         "name": "[attack|Falcon-Precomputed-512] tampered token blocked",
         "path": "::[attack|Falcon-Precomputed-512] tampered token blocked",
-        "id": "65be5f59f5b4e08098ab09431eb93387"
+        "id": "65be5f59f5b4e08098ab09431eb93387",
+        "passes": 25
       },
       {
         "name": "[attack|Falcon-512] tampered token blocked",
@@ -292,10 +289,12 @@
         "passes": 25,
         "fails": 0
       }
-    ]
+    ],
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "options": {
-    "noColor": true,
     "summaryTrendStats": [
       "avg",
       "min",
@@ -304,2618 +303,15 @@
       "p(90)",
       "p(95)"
     ],
-    "summaryTimeUnit": ""
+    "summaryTimeUnit": "",
+    "noColor": true
   },
   "state": {
     "isStdOutTTY": false,
     "isStdErrTTY": false,
-    "testRunDurationMs": 466143.178342
+    "testRunDurationMs": 466392.12979
   },
   "metrics": {
-    "bench_auth_cpu_avg{alg:Falcon-512}": {
-      "values": {
-        "p(90)": 70.04851253870278,
-        "p(95)": 70.04851253870278,
-        "avg": 70.04851253870278,
-        "min": 70.04851253870278,
-        "med": 70.04851253870278,
-        "max": 70.04851253870278
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "bench_token_generation_gc_free_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.31233298969072165,
-        "min": 0.31233298969072165,
-        "med": 0.31233298969072165,
-        "max": 0.31233298969072165,
-        "p(90)": 0.31233298969072165,
-        "p(95)": 0.31233298969072165
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "count": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_avg{alg:Falcon-512}": {
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.9704092600000003,
-        "max": 0.9704092600000003,
-        "p(90)": 0.9704092600000003,
-        "p(95)": 0.9704092600000003,
-        "avg": 0.9704092600000003,
-        "min": 0.9704092600000003
-      }
-    },
-    "stress_req_success{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 348,
-        "rate": 0.7465517381114163
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1.545108303249097,
-        "min": 0.23,
-        "med": 0.317,
-        "max": 78.493,
-        "p(90)": 1.3454000000000002,
-        "p(95)": 2.0109999999999952
-      },
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_clean{alg:Falcon-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 21.200287,
-        "max": 27905.981352,
-        "p(90)": 16393.4059686,
-        "p(95)": 19809.003513799995,
-        "avg": 2224.748591797832,
-        "min": 10.891025
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 2.05288,
-        "max": 2.05288,
-        "p(90)": 2.05288,
-        "p(95)": 2.05288,
-        "avg": 2.05288,
-        "min": 2.05288
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_failed{alg:Falcon-512,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_memory_sys_kb_avg": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "min": 26198.2578125,
-        "med": 26198.2578125,
-        "max": 26198.2578125,
-        "p(90)": 26198.2578125,
-        "p(95)": 26198.2578125,
-        "avg": 26198.2578125
-      }
-    },
-    "bench_refresh_token_generation_gc_free_p95": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.8632099,
-        "p(95)": 0.88903445,
-        "avg": 0.6566135,
-        "min": 0.3983679999999998,
-        "med": 0.6566135,
-        "max": 0.914859
-      }
-    },
-    "bench_sign_stdev{alg:Falcon-Precomputed-512}": {
-      "contains": "time",
-      "values": {
-        "med": 0.06761331831647963,
-        "max": 0.06761331831647963,
-        "p(90)": 0.06761331831647963,
-        "p(95)": 0.06761331831647963,
-        "avg": 0.06761331831647963,
-        "min": 0.06761331831647963
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "bench_refresh_token_generation_stdev{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.49926657822479603,
-        "min": 0.49926657822479603,
-        "med": 0.49926657822479603,
-        "max": 0.49926657822479603,
-        "p(90)": 0.49926657822479603,
-        "p(95)": 0.49926657822479603
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_cpu_time_per_token_ms_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.2,
-        "min": 0.2,
-        "med": 0.2,
-        "max": 0.2,
-        "p(90)": 0.2,
-        "p(95)": 0.2
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.4495,
-        "max": 3.08,
-        "p(90)": 1.1587000000000005,
-        "p(95)": 1.6599999999999997,
-        "avg": 0.6209510869565216,
-        "min": 0.255
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.8269930000000001,
-        "p(90)": 0.8269930000000001,
-        "p(95)": 0.8269930000000001,
-        "avg": 0.8269930000000001,
-        "min": 0.8269930000000001,
-        "med": 0.8269930000000001
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_gc_free_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.7279469999999999,
-        "med": 0.7279469999999999,
-        "max": 0.7279469999999999,
-        "p(90)": 0.7279469999999999,
-        "p(95)": 0.7279469999999999,
-        "avg": 0.7279469999999999
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_pure_signing_gc_free_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.28795602020202016,
-        "min": 0.28795602020202016,
-        "med": 0.28795602020202016,
-        "max": 0.28795602020202016,
-        "p(90)": 0.28795602020202016,
-        "p(95)": 0.28795602020202016
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_gc_free_stdev{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.07050194754314783,
-        "p(90)": 0.07050194754314783,
-        "p(95)": 0.07050194754314783,
-        "avg": 0.07050194754314783,
-        "min": 0.07050194754314783,
-        "med": 0.07050194754314783
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_avg": {
-      "contains": "time",
-      "values": {
-        "med": 0.40865581000000006,
-        "max": 0.4992820600000001,
-        "p(90)": 0.4811568100000001,
-        "p(95)": 0.4902194350000001,
-        "avg": 0.40865581000000006,
-        "min": 0.3180295600000001
-      },
-      "type": "trend"
-    },
-    "data_received": {
-      "values": {
-        "count": 14879316,
-        "rate": 31920.055234795997
-      },
-      "type": "counter",
-      "contains": "data"
-    },
-    "bench_pure_signing_stdev": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.03865024204979659,
-        "p(95)": 0.04079747771922973,
-        "avg": 0.021472356694331438,
-        "min": 0,
-        "med": 0.021472356694331438,
-        "max": 0.042944713388662875
-      }
-    },
-    "stress_req_failed{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_stdev": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.47829123675193486,
-        "avg": 0.2895131634961846,
-        "min": 0.07975974876757323,
-        "med": 0.2895131634961846,
-        "max": 0.49926657822479603,
-        "p(90)": 0.45731589527907374
-      }
-    },
-    "stress_sign_clean": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 24.994864,
-        "max": 27905.981352,
-        "p(90)": 497.8478423000002,
-        "p(95)": 1738.9482972,
-        "avg": 696.8954947627541,
-        "min": 6.291693
-      }
-    },
-    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 424.166143375,
-        "min": 12.222574,
-        "med": 34.6864675,
-        "max": 10246.131656,
-        "p(90)": 362.1333616000002,
-        "p(95)": 1053.2273001999997
-      },
-      "thresholds": {
-        "p(95)<5000": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_error_rate{alg:Falcon-512,vus:30}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 277
-      },
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      }
-    },
-    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 778.2660947923499,
-        "min": 117.083142,
-        "med": 302.945965,
-        "max": 17598.453705,
-        "p(90)": 928.339653400001,
-        "p(95)": 2304.256810700001
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_success{alg:Falcon-512,vus:30}": {
-      "contains": "default",
-      "values": {
-        "count": 277,
-        "rate": 0.5942380214277653
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter"
-    },
-    "stress_error_rate{alg:Falcon-512,vus:30}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 277
-      },
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      }
-    },
-    "stress_req_failed{alg:Falcon-512,vus:30}": {
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      }
-    },
-    "bench_token_generation_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.4216434499999999,
-        "avg": 0.4216434499999999,
-        "min": 0.4216434499999999,
-        "med": 0.4216434499999999,
-        "max": 0.4216434499999999,
-        "p(90)": 0.4216434499999999
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_network{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 21.714094320652183,
-        "min": 0.11002100000000148,
-        "med": 0.43651099999998877,
-        "max": 1060.104621999999,
-        "p(90)": 13.277249500000028,
-        "p(95)": 33.96338544999995
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_memory_alloc_kb_avg{alg:Falcon-Precomputed-512}": {
-      "contains": "default",
-      "values": {
-        "max": 2853.81234375,
-        "p(90)": 2853.81234375,
-        "p(95)": 2853.81234375,
-        "avg": 2853.81234375,
-        "min": 2853.81234375,
-        "med": 2853.81234375
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "bench_pure_signing_gc_free_p95": {
-      "values": {
-        "p(95)": 0.32842449999999995,
-        "avg": 0.17285499999999998,
-        "min": 0,
-        "med": 0.17285499999999998,
-        "max": 0.34570999999999996,
-        "p(90)": 0.311139
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "bench_pure_signing_gc_free_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_dirty{alg:Falcon-512,vus:10}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 137.88615381877742,
-        "min": 32.453207,
-        "med": 129.338051,
-        "max": 469.993908,
-        "p(90)": 220.2856435,
-        "p(95)": 245.78971494999993
-      }
-    },
-    "stress_req_success{alg:Falcon-512,vus:10}": {
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 468,
-        "rate": 1.0039833719429392
-      }
-    },
-    "stress_req_success{alg:Falcon-512,vus:30}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 277,
-        "rate": 0.5942380214277653
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_login_dirty{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1783.143498268066,
-        "min": 182.73154,
-        "med": 1601.645242,
-        "max": 6236.671385,
-        "p(90)": 3048.3927646,
-        "p(95)": 3699.5232783999995
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_pure_signing_success{alg:Falcon-Precomputed-512}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 1,
-        "rate": 0.0021452636152626903
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_dirty{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 3154.7417279999995,
-        "p(95)": 3645.4096417999995,
-        "avg": 1736.5571659300715,
-        "min": 68.53771,
-        "med": 1600.201699,
-        "max": 6606.769908
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_network{alg:Falcon-512,vus:50}": {
-      "values": {
-        "p(95)": 30.137849999999993,
-        "avg": 4.6633637389277345,
-        "min": 0.13213000000000008,
-        "med": 1.4612449999999981,
-        "max": 43.574047,
-        "p(90)": 13.039095199999995
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "bench_token_generation_gc_free_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.38683599999999996,
-        "avg": 0.38683599999999996,
-        "min": 0.38683599999999996,
-        "med": 0.38683599999999996,
-        "max": 0.38683599999999996,
-        "p(90)": 0.38683599999999996
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:10}": {
-      "values": {
-        "avg": 606.8716482857143,
-        "min": 29.841985,
-        "med": 165.955349,
-        "max": 14031.592861,
-        "p(90)": 734.5995425000002,
-        "p(95)": 4111.6517691499685
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "bench_refresh_token_generation_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.3180295600000001,
-        "min": 0.3180295600000001,
-        "med": 0.3180295600000001,
-        "max": 0.3180295600000001,
-        "p(90)": 0.3180295600000001,
-        "p(95)": 0.3180295600000001
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_gc_free_stdev{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.2315089522514577,
-        "min": 0.2315089522514577,
-        "med": 0.2315089522514577,
-        "max": 0.2315089522514577,
-        "p(90)": 0.2315089522514577,
-        "p(95)": 0.2315089522514577
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_sign_stdev{alg:Falcon-512}": {
-      "contains": "time",
-      "values": {
-        "p(90)": 0.3357502291267424,
-        "p(95)": 0.3357502291267424,
-        "avg": 0.3357502291267424,
-        "min": 0.3357502291267424,
-        "med": 0.3357502291267424,
-        "max": 0.3357502291267424
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "attack_block_rate{alg:Falcon-Precomputed-512}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "passes": 25,
-        "fails": 0,
-        "rate": 1
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "bench_gc_contaminated_count{alg:Falcon-Precomputed-512}": {
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 3,
-        "rate": 0.006435790845788072
-      }
-    },
-    "iteration_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 2759.3435937350046,
-        "min": 28.276442,
-        "med": 1534.9730865,
-        "max": 29792.245689,
-        "p(90)": 5249.099354500004,
-        "p(95)": 8388.678430549988
-      }
-    },
-    "stress_refresh_error_rate{alg:Falcon-512,vus:50}": {
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 429
-      },
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      },
-      "type": "rate"
-    },
-    "vus": {
-      "type": "gauge",
-      "contains": "default",
-      "values": {
-        "max": 50,
-        "value": 1,
-        "min": 0
-      }
-    },
-    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 7.564,
-        "p(90)": 1.1767,
-        "p(95)": 1.7121999999999975,
-        "avg": 0.6532902298850577,
-        "min": 0.239,
-        "med": 0.44
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      }
-    },
-    "data_sent": {
-      "type": "counter",
-      "contains": "data",
-      "values": {
-        "count": 3483468,
-        "rate": 7472.957155331894
-      }
-    },
-    "bench_pure_signing_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.29006883999999994,
-        "max": 0.29006883999999994,
-        "p(90)": 0.29006883999999994,
-        "p(95)": 0.29006883999999994,
-        "avg": 0.29006883999999994,
-        "min": 0.29006883999999994
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_cpu_time_per_token_ms_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.3,
-        "min": 0.3,
-        "med": 0.3,
-        "max": 0.3,
-        "p(90)": 0.3,
-        "p(95)": 0.3
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:50}": {
-      "contains": "time",
-      "values": {
-        "avg": 1905.9034906535426,
-        "min": 254.728137,
-        "med": 1646.7189210000001,
-        "max": 5620.910684,
-        "p(90)": 3530.8935216,
-        "p(95)": 3760.3048596999997
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_sign_network{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 7647.346328,
-        "p(90)": 7.120217600000024,
-        "p(95)": 10.579224649999984,
-        "avg": 37.49761895114938,
-        "min": 0.0764080000000007,
-        "med": 0.7502500000000003
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_success{alg:Falcon-512}": {
-      "values": {
-        "count": 1,
-        "rate": 0.0021452636152626903
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "bench_token_generation_gc_free_stdev{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.05515961393121902,
-        "p(90)": 0.05515961393121902,
-        "p(95)": 0.05515961393121902,
-        "avg": 0.05515961393121902,
-        "min": 0.05515961393121902,
-        "med": 0.05515961393121902
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_stdev{alg:Falcon-Precomputed-512}": {
-      "contains": "time",
-      "values": {
-        "avg": 0.06761331831647963,
-        "min": 0.06761331831647963,
-        "med": 0.06761331831647963,
-        "max": 0.06761331831647963,
-        "p(90)": 0.06761331831647963,
-        "p(95)": 0.06761331831647963
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_error_rate{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 184
-      },
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_failed{alg:Falcon-512,vus:30}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "iterations": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 2000,
-        "rate": 4.290527230525381
-      }
-    },
-    "http_req_waiting": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 27905.981352,
-        "p(90)": 1977.0626895999999,
-        "p(95)": 2863.9558225999995,
-        "avg": 841.5628529981985,
-        "min": 6.047265,
-        "med": 284.763837
-      }
-    },
-    "bench_pure_signing_gc_free_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.34570999999999996,
-        "p(95)": 0.34570999999999996,
-        "avg": 0.34570999999999996,
-        "min": 0.34570999999999996,
-        "med": 0.34570999999999996,
-        "max": 0.34570999999999996
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:30}": {
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "stress_req_failed{alg:Falcon-Precomputed-512,vus:50}": {
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter"
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:30}": {
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.5239080459770116,
-        "min": 0.231,
-        "med": 0.335,
-        "max": 4.811,
-        "p(90)": 1.2039000000000013,
-        "p(95)": 1.7091499999999984
-      }
-    },
-    "bench_pure_signing_gc_free_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_actual": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.6463515306122445,
-        "min": 0.239,
-        "med": 0.439,
-        "max": 14.738,
-        "p(90)": 1.0432000000000001,
-        "p(95)": 1.8101999999999998
-      }
-    },
-    "bench_pure_signing_stdev{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.042944713388662875,
-        "med": 0.042944713388662875,
-        "max": 0.042944713388662875,
-        "p(90)": 0.042944713388662875,
-        "p(95)": 0.042944713388662875,
-        "avg": 0.042944713388662875
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_gc_free_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.313331762886598,
-        "med": 0.313331762886598,
-        "max": 0.313331762886598,
-        "p(90)": 0.313331762886598,
-        "p(95)": 0.313331762886598,
-        "avg": 0.313331762886598
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_sign_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.4216434499999999,
-        "avg": 0.4216434499999999,
-        "min": 0.4216434499999999,
-        "med": 0.4216434499999999,
-        "max": 0.4216434499999999,
-        "p(90)": 0.4216434499999999
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_network": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 15.408549703061196,
-        "min": 0.0764080000000007,
-        "med": 0.7732199999999985,
-        "max": 7647.346328,
-        "p(90)": 12.018737300000003,
-        "p(95)": 32.93817434999998
-      }
-    },
-    "bench_auth_memory_alloc_delta_kb_avg": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "max": 93.530625,
-        "p(90)": 93.525671875,
-        "p(95)": 93.5281484375,
-        "avg": 93.505859375,
-        "min": 93.48109375,
-        "med": 93.505859375
-      }
-    },
-    "bench_refresh_token_generation_p95": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.7182482249999995,
-        "max": 1.0198424499999992,
-        "p(90)": 0.9595236049999993,
-        "p(95)": 0.989683027499999,
-        "avg": 0.7182482249999996,
-        "min": 0.416654
-      }
-    },
-    "stress_refresh_success{alg:Falcon-512,vus:10}": {
-      "values": {
-        "count": 458,
-        "rate": 0.9825307357903122
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:50}": {
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.241,
-        "med": 0.4765,
-        "max": 8.442,
-        "p(90)": 1.8544000000000003,
-        "p(95)": 3.1691,
-        "avg": 0.8723700787401577
-      }
-    },
-    "stress_login_dirty": {
-      "contains": "time",
-      "values": {
-        "max": 17598.453705,
-        "p(90)": 2470.9390862000014,
-        "p(95)": 3189.11932965,
-        "avg": 1101.5703146060466,
-        "min": 104.427441,
-        "med": 797.78981
-      },
-      "type": "trend"
-    },
-    "bench_refresh_token_generation_gc_free_sample": {
-      "values": {
-        "avg": 0.4047621139896376,
-        "min": 0.236279,
-        "med": 0.334649,
-        "max": 4.370671,
-        "p(90)": 0.48906200000000005,
-        "p(95)": 0.6172837999999995
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "stress_sign_dirty{alg:Falcon-512,vus:50}": {
-      "contains": "time",
-      "values": {
-        "max": 1876.283222,
-        "p(90)": 103.55995419999991,
-        "p(95)": 240.15657859999948,
-        "avg": 97.97582925174827,
-        "min": 13.136431,
-        "med": 26.035274
-      },
-      "thresholds": {
-        "p(95)<10000": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_sign_dirty{alg:Falcon-512,vus:10}": {
-      "contains": "time",
-      "values": {
-        "avg": 34.50740991025639,
-        "min": 11.476092,
-        "med": 22.79303,
-        "max": 305.290643,
-        "p(90)": 68.6696675,
-        "p(95)": 103.88615234999996
-      },
-      "thresholds": {
-        "p(95)<10000": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "bench_token_generation_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.31843212,
-        "med": 0.31843212,
-        "max": 0.31843212,
-        "p(90)": 0.31843212,
-        "p(95)": 0.31843212,
-        "avg": 0.31843212
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_cpu_time_per_token_ms_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.295,
-        "avg": 0.25,
-        "min": 0.2,
-        "med": 0.25,
-        "max": 0.3,
-        "p(90)": 0.29
-      }
-    },
-    "bench_sign_p95": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 1.04643805,
-        "p(90)": 0.98395859,
-        "p(95)": 1.0151983199999999,
-        "avg": 0.7340407499999999,
-        "min": 0.4216434499999999,
-        "med": 0.7340407499999999
-      }
-    },
-    "bench_auth_cpu_avg{alg:Falcon-Precomputed-512}": {
-      "contains": "time",
-      "values": {
-        "med": 58.92487419108681,
-        "max": 58.92487419108681,
-        "p(90)": 58.92487419108681,
-        "p(95)": 58.92487419108681,
-        "avg": 58.92487419108681,
-        "min": 58.92487419108681
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "bench_sign_stdev": {
-      "contains": "time",
-      "values": {
-        "p(95)": 0.32234338358622927,
-        "avg": 0.201681773721611,
-        "min": 0.06761331831647963,
-        "med": 0.20168177372161103,
-        "max": 0.3357502291267424,
-        "p(90)": 0.3089365380457162
-      },
-      "type": "trend"
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:50}": {
-      "contains": "time",
-      "values": {
-        "avg": 0.7996968503937003,
-        "min": 0.23,
-        "med": 0.3275,
-        "max": 80.708,
-        "p(90)": 1.1434000000000002,
-        "p(95)": 1.4859999999999998
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "fails": 348,
-        "rate": 0,
-        "passes": 0
-      },
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      }
-    },
-    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 1.1767,
-        "p(95)": 1.7121999999999975,
-        "avg": 0.6532902298850577,
-        "min": 0.239,
-        "med": 0.44,
-        "max": 7.564
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_memory_alloc_kb_avg": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "max": 2924.684296875,
-        "p(90)": 2917.5971015625,
-        "p(95)": 2921.1406992187503,
-        "avg": 2889.2483203125003,
-        "min": 2853.81234375,
-        "med": 2889.2483203125003
-      }
-    },
-    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 218.8859074195404,
-        "min": 10.905266,
-        "med": 27.8802525,
-        "max": 6536.553813,
-        "p(90)": 673.6253271,
-        "p(95)": 1689.68327565
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_memory_alloc_delta_kb_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "avg": 93.530625,
-        "min": 93.530625,
-        "med": 93.530625,
-        "max": 93.530625,
-        "p(90)": 93.530625,
-        "p(95)": 93.530625
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_stdev{alg:Falcon-512}": {
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.3357502291267424,
-        "p(90)": 0.3357502291267424,
-        "p(95)": 0.3357502291267424,
-        "avg": 0.3357502291267424,
-        "min": 0.3357502291267424,
-        "med": 0.3357502291267424
-      }
-    },
-    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1283.0301553678162,
-        "min": 225.008742,
-        "med": 970.282397,
-        "max": 9608.587116,
-        "p(90)": 1813.470025,
-        "p(95)": 3115.207228699991
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_success{alg:Falcon-Precomputed-512}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 1,
-        "rate": 0.0021452636152626903
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_pure_signing_stdev{alg:Falcon-512}": {
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0
-      }
-    },
-    "bench_sign_sample": {
-      "values": {
-        "avg": 0.39477966,
-        "min": 0.238507,
-        "med": 0.337473,
-        "max": 2.855718,
-        "p(90)": 0.534465,
-        "p(95)": 0.6821794499999999
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "stress_refresh_failed": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      }
-    },
-    "stress_refresh_dirty": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 442.43884049999997,
-        "max": 14031.592861,
-        "p(90)": 2153.8260053,
-        "p(95)": 2884.6319099999996,
-        "avg": 874.0330244840845,
-        "min": 29.841985
-      }
-    },
-    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:10}": {
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      },
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 182
-      }
-    },
-    "stress_sign_actual{alg:Falcon-512,vus:30}": {
-      "contains": "time",
-      "values": {
-        "min": 0.239,
-        "med": 0.418,
-        "max": 4.589,
-        "p(90)": 0.625,
-        "p(95)": 0.8069999999999998,
-        "avg": 0.4784512635379062
-      },
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_sign_actual{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.257,
-        "med": 0.423,
-        "max": 2.932,
-        "p(90)": 0.7482000000000001,
-        "p(95)": 0.9856999999999996,
-        "avg": 0.5020192307692308
-      },
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_token_generation_clean": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.7468732032854202,
-        "min": 0.23,
-        "med": 0.334,
-        "max": 80.708,
-        "p(90)": 1.3606,
-        "p(95)": 1.8182999999999996
-      }
-    },
-    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 2143.5428060393688,
-        "min": 11.518958,
-        "med": 349.5449715,
-        "max": 12703.349668,
-        "p(90)": 10730.5595943,
-        "p(95)": 11027.9090889
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_token_generation_clean{alg:Falcon-512,vus:30}": {
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 4.589,
-        "p(90)": 0.625,
-        "p(95)": 0.8069999999999998,
-        "avg": 0.4784512635379062,
-        "min": 0.239,
-        "med": 0.418
-      }
-    },
-    "bench_pure_signing_avg{alg:Falcon-512}": {
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0,
-        "max": 0,
-        "p(90)": 0
-      }
-    },
-    "http_req_duration": {
-      "contains": "time",
-      "values": {
-        "med": 291.299883,
-        "max": 27965.440445,
-        "p(90)": 2007.9648253999994,
-        "p(95)": 2907.6270975999987,
-        "avg": 864.6376433761656,
-        "min": 11.476092
-      },
-      "type": "trend"
-    },
-    "bench_sign_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.3947796600000001,
-        "min": 0.31843212,
-        "med": 0.3947796600000001,
-        "max": 0.47112720000000025,
-        "p(90)": 0.45585769200000026,
-        "p(95)": 0.4634924460000002
-      }
-    },
-    "attack_block_rate": {
-      "values": {
-        "fails": 0,
-        "rate": 1,
-        "passes": 50
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      },
-      "type": "rate",
-      "contains": "default"
-    },
-    "http_reqs": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 6109,
-        "rate": 13.105415425639777
-      }
-    },
-    "bench_sign_min": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.24989940000000002,
-        "avg": 0.24450300000000003,
-        "min": 0.238507,
-        "med": 0.24450300000000003,
-        "max": 0.250499,
-        "p(90)": 0.24929980000000002
-      }
-    },
-    "bench_sign_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.47112720000000025,
-        "max": 0.47112720000000025,
-        "p(90)": 0.47112720000000025,
-        "p(95)": 0.47112720000000025,
-        "avg": 0.47112720000000025,
-        "min": 0.47112720000000025
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_cpu_time_ms_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.6,
-        "p(90)": 0.6,
-        "p(95)": 0.6,
-        "avg": 0.6,
-        "min": 0.6,
-        "med": 0.6
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_clean{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 93.31246551282052,
-        "min": 6.291693,
-        "med": 23.713928,
-        "max": 1876.128112,
-        "p(90)": 102.20600419999998,
-        "p(95)": 239.8699873999995
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.6364616799999998,
-        "med": 0.80343547,
-        "max": 0.9704092600000003,
-        "p(90)": 0.9370145020000002,
-        "p(95)": 0.9537118810000003,
-        "avg": 0.80343547
-      }
-    },
-    "stress_sign_clean{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 31.93465076923078,
-        "min": 10.551245,
-        "med": 21.221680499999998,
-        "max": 305.053599,
-        "p(90)": 64.0750763,
-        "p(95)": 97.94878484999997
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.4495,
-        "max": 3.08,
-        "p(90)": 1.1587000000000005,
-        "p(95)": 1.6599999999999997,
-        "avg": 0.6209510869565216,
-        "min": 0.255
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      }
-    },
-    "stress_error_rate": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "fails": 1960,
-        "rate": 0,
-        "passes": 0
-      },
-      "thresholds": {
-        "rate<0.01": {
-          "ok": true
-        }
-      }
-    },
-    "stress_error_rate{alg:Falcon-512,vus:50}": {
-      "values": {
-        "passes": 0,
-        "fails": 429,
-        "rate": 0
-      },
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      },
-      "type": "rate",
-      "contains": "default"
-    },
-    "stress_refresh_dirty{alg:Falcon-512,vus:30}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 41.147078,
-        "med": 369.654864,
-        "max": 835.387036,
-        "p(90)": 544.7285994,
-        "p(95)": 608.9766678,
-        "avg": 361.3146171444043
-      }
-    },
-    "stress_sign_network{alg:Falcon-512,vus:30}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 8.503040848375525,
-        "min": 0.125729999999999,
-        "med": 0.79176,
-        "max": 138.83207100000072,
-        "p(90)": 18.260313799999864,
-        "p(95)": 67.71534080000195
-      }
-    },
-    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:10}": {
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 182,
-        "rate": 0.39043797797780966
-      }
-    },
-    "http_req_failed": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0.00818464560484531,
-        "passes": 50,
-        "fails": 6059
-      }
-    },
-    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 64.728191,
-        "med": 1324.9781090000001,
-        "max": 5168.334334,
-        "p(90)": 2512.4607431,
-        "p(95)": 2870.3276841,
-        "avg": 1453.042138137796
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_stdev": {
-      "contains": "time",
-      "values": {
-        "avg": 0.201681773721611,
-        "min": 0.06761331831647963,
-        "med": 0.20168177372161103,
-        "max": 0.3357502291267424,
-        "p(90)": 0.3089365380457162,
-        "p(95)": 0.32234338358622927
-      },
-      "type": "trend"
-    },
-    "stress_refresh_success": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 1948,
-        "rate": 4.178973522531721
-      }
-    },
-    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 254
-      },
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      }
-    },
-    "vus_max": {
-      "type": "gauge",
-      "contains": "default",
-      "values": {
-        "value": 50,
-        "min": 50,
-        "max": 50
-      }
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:10}": {
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 1.3523,
-        "p(95)": 1.9871499999999969,
-        "avg": 0.6040458515283847,
-        "min": 0.231,
-        "med": 0.3225,
-        "max": 17.76
-      }
-    },
-    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:50}": {
-      "values": {
-        "rate": 0,
-        "count": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "stress_token_generation_clean{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.7836620046620048,
-        "min": 0.273,
-        "med": 0.45,
-        "max": 14.738,
-        "p(90)": 1.1315999999999984,
-        "p(95)": 2.6623999999999954
-      },
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_p95": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.8269930000000001,
-        "med": 1.4399365,
-        "max": 2.05288,
-        "p(90)": 1.9302913000000002,
-        "p(95)": 1.99158565,
-        "avg": 1.4399365
-      }
-    },
-    "bench_token_generation_gc_free_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.4388126250000002,
-        "med": 0.4388126250000002,
-        "max": 0.4388126250000002,
-        "p(90)": 0.4388126250000002,
-        "p(95)": 0.4388126250000002,
-        "avg": 0.4388126250000002
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_error_rate{alg:Falcon-512,vus:10}": {
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      },
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 468
-      }
-    },
-    "stress_req_failed{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 1.0198424499999992,
-        "max": 1.0198424499999992,
-        "p(90)": 1.0198424499999992,
-        "p(95)": 1.0198424499999992,
-        "avg": 1.0198424499999992,
-        "min": 1.0198424499999992
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 12.170721,
-        "med": 30.4086015,
-        "max": 8967.103081,
-        "p(90)": 680.7028199000001,
-        "p(95)": 1694.3215546,
-        "avg": 256.3835263706897
-      },
-      "thresholds": {
-        "p(95)<5000": {
-          "ok": true
-        }
-      }
-    },
-    "bench_pure_signing_gc_free_stdev{alg:Falcon-512}": {
-      "values": {
-        "max": 0,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0,
-        "min": 0,
-        "med": 0
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "stress_login_dirty{alg:Falcon-512,vus:30}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 657.2837792021658,
-        "min": 104.427441,
-        "med": 688.949769,
-        "max": 1216.02157,
-        "p(90)": 952.4606448000001,
-        "p(95)": 1010.9424453999998
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_token_generation_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.47112720000000025,
-        "p(90)": 0.47112720000000025,
-        "p(95)": 0.47112720000000025,
-        "avg": 0.47112720000000025,
-        "min": 0.47112720000000025,
-        "med": 0.47112720000000025
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_gc_contaminated_count": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 7,
-        "rate": 0.015016845306838833
-      }
-    },
-    "stress_login_dirty{alg:Falcon-512,vus:10}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 412.002543,
-        "avg": 282.45642185249477,
-        "min": 106.767374,
-        "med": 285.285113,
-        "max": 714.72046,
-        "p(90)": 384.770448
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_success{alg:Falcon-512,vus:50}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "rate": 0.9203180909476942,
-        "count": 429
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_error_rate{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 254
-      },
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      }
-    },
-    "stress_req_success{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 254,
-        "rate": 0.5448969582767234
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_req_failed{alg:Falcon-512,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_sign_max": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 1.7529175000000001,
-        "max": 2.855718,
-        "p(90)": 2.6351579000000003,
-        "p(95)": 2.74543795,
-        "avg": 1.7529175,
-        "min": 0.650117
-      }
-    },
-    "bench_token_generation_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1.04643805,
-        "min": 1.04643805,
-        "med": 1.04643805,
-        "max": 1.04643805,
-        "p(90)": 1.04643805,
-        "p(95)": 1.04643805
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_error_rate{alg:Falcon-512,vus:10}": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 458
-      },
-      "thresholds": {
-        "rate<0.10": {
-          "ok": true
-        }
-      }
-    },
-    "bench_pure_signing_success": {
-      "values": {
-        "count": 2,
-        "rate": 0.004290527230525381
-      },
-      "thresholds": {
-        "count>0": {
-          "ok": true
-        }
-      },
-      "type": "counter",
-      "contains": "default"
-    },
-    "bench_token_generation_p95": {
-      "contains": "time",
-      "values": {
-        "med": 0.7340407499999999,
-        "max": 1.04643805,
-        "p(90)": 0.98395859,
-        "p(95)": 1.0151983199999999,
-        "avg": 0.7340407499999999,
-        "min": 0.4216434499999999
-      },
-      "type": "trend"
-    },
-    "bench_refresh_token_generation_gc_free_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.47876355441365986,
-        "p(95)": 0.48795420949849666,
-        "avg": 0.40523831373496566,
-        "min": 0.313331762886598,
-        "med": 0.40523831373496566,
-        "max": 0.4971448645833334
-      }
-    },
-    "bench_total_sample": {
-      "contains": "time",
-      "values": {
-        "avg": 0.8034354699999996,
-        "min": 0.499487,
-        "med": 0.670582,
-        "max": 4.897258,
-        "p(90)": 1.0692239,
-        "p(95)": 1.4486169499999957
-      },
-      "type": "trend"
-    },
-    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 10771.1268905,
-        "p(95)": 11029.2644983,
-        "avg": 2173.449168366141,
-        "min": 12.420135,
-        "med": 374.509672,
-        "max": 13568.99796
-      },
-      "thresholds": {
-        "p(95)<5000": {
-          "ok": false
-        }
-      }
-    },
-    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:30}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 348,
-        "rate": 0.7465517381114163
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_req_failed{alg:Falcon-512,vus:50}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.23,
-        "med": 0.348,
-        "max": 5.416,
-        "p(90)": 1.4011999999999998,
-        "p(95)": 2.1461999999999932,
-        "avg": 0.5797435897435894
-      },
-      "thresholds": {
-        "p(95)<1000": {
-          "ok": true
-        }
-      }
-    },
-    "stress_req_success{alg:Falcon-Precomputed-512,vus:10}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 184,
-        "rate": 0.394728505208335
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_blocked": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.0016442,
-        "p(95)": 0.002705,
-        "avg": 24.92566063070881,
-        "min": 0.000275,
-        "med": 0.000728,
-        "max": 16019.211042
-      }
-    },
-    "bench_pure_signing_p95": {
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0.17570224999999998,
-        "max": 0.35140449999999995,
-        "p(90)": 0.31626404999999996,
-        "p(95)": 0.33383427499999996,
-        "avg": 0.17570224999999998
-      },
-      "type": "trend"
-    },
-    "stress_req_failed": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 0,
-        "rate": 0
-      }
-    },
-    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "rate": 0.5448969582767234,
-        "count": 254
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_gc_free_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.3983679999999998,
-        "min": 0.3983679999999998,
-        "med": 0.3983679999999998,
-        "max": 0.3983679999999998,
-        "p(90)": 0.3983679999999998,
-        "p(95)": 0.3983679999999998
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_sample": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 4.370671,
-        "p(90)": 0.5106130999999999,
-        "p(95)": 0.650850049999999,
-        "avg": 0.4086558100000003,
-        "min": 0.236279,
-        "med": 0.3379635
-      }
-    },
-    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:30}": {
-      "values": {
-        "max": 9233.354779,
-        "p(90)": 1650.5306985000002,
-        "p(95)": 2330.7851876499994,
-        "avg": 904.8102213735639,
-        "min": 73.607783,
-        "med": 553.459567
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "stress_error_rate{alg:Falcon-Precomputed-512,vus:30}": {
-      "values": {
-        "rate": 0,
-        "passes": 0,
-        "fails": 348
-      },
-      "thresholds": {
-        "rate<0.05": {
-          "ok": true
-        }
-      },
-      "type": "rate",
-      "contains": "default"
-    },
-    "group_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 11.929792,
-        "med": 28.719856,
-        "max": 27966.257067,
-        "p(90)": 549.8595212000001,
-        "p(95)": 1761.7322684999983,
-        "avg": 713.2902232454072
-      }
-    },
-    "bench_pure_signing_gc_free_sample": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.28795602020202027,
-        "min": 0.232579,
-        "med": 0.284138,
-        "max": 0.517157,
-        "p(90)": 0.3291462,
-        "p(95)": 0.34570999999999996
-      }
-    },
-    "bench_token_generation_gc_free_sample": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.5059762000000001,
-        "p(95)": 0.6332933999999993,
-        "avg": 0.3752451398963731,
-        "min": 0.238507,
-        "med": 0.333169,
-        "max": 1.700244
-      }
-    },
-    "checks": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 7874,
-        "fails": 0
-      }
-    },
-    "bench_refresh_token_generation_stdev{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.07975974876757323,
-        "min": 0.07975974876757323,
-        "med": 0.07975974876757323,
-        "max": 0.07975974876757323,
-        "p(90)": 0.07975974876757323,
-        "p(95)": 0.07975974876757323
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_sign_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 1.04643805,
-        "min": 1.04643805,
-        "med": 1.04643805,
-        "max": 1.04643805,
-        "p(90)": 1.04643805,
-        "p(95)": 1.04643805
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_refresh_token_generation_gc_free_stdev{alg:Falcon-512}": {
-      "contains": "time",
-      "values": {
-        "avg": 0.5065895149575126,
-        "min": 0.5065895149575126,
-        "med": 0.5065895149575126,
-        "max": 0.5065895149575126,
-        "p(90)": 0.5065895149575126,
-        "p(95)": 0.5065895149575126
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "bench_refresh_token_generation_p95{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.416654,
-        "med": 0.416654,
-        "max": 0.416654,
-        "p(90)": 0.416654,
-        "p(95)": 0.416654,
-        "avg": 0.416654
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_sending": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.3532303524308381,
-        "min": 0.029533,
-        "med": 0.133627,
-        "max": 32.37559,
-        "p(90)": 0.4324289999999999,
-        "p(95)": 0.9131543999999994
-      }
-    },
-    "bench_sign_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.31843212,
-        "p(90)": 0.31843212,
-        "p(95)": 0.31843212,
-        "avg": 0.31843212,
-        "min": 0.31843212,
-        "med": 0.31843212
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_gc_contaminated_count{alg:Falcon-512}": {
-      "contains": "default",
-      "values": {
-        "count": 4,
-        "rate": 0.008581054461050761
-      },
-      "thresholds": {
-        "count>=0": {
-          "ok": true
-        }
-      },
-      "type": "counter"
-    },
     "bench_pure_signing_p95{alg:Falcon-512}": {
       "values": {
         "avg": 0,
@@ -2933,96 +329,183 @@
       "type": "trend",
       "contains": "time"
     },
-    "http_req_duration{expected_response:true}": {
+    "bench_auth_memory_alloc_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 2925.570546875,
+        "med": 2934.3748828125,
+        "max": 2943.17921875,
+        "p(90)": 2941.4183515625,
+        "p(95)": 2942.2987851562502,
+        "avg": 2934.3748828125
+      }
+    },
+    "stress_sign_actual": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 2028.900395,
-        "p(95)": 2919.0189853,
-        "avg": 871.6241726534076,
-        "min": 11.476092,
-        "med": 297.436704,
-        "max": 27965.440445
+        "max": 15.949,
+        "p(90)": 0.9938000000000025,
+        "p(95)": 1.6827999999999996,
+        "avg": 0.6400715623829148,
+        "min": 0.247,
+        "med": 0.458
       }
     },
-    "stress_req_success": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 1960,
-        "rate": 4.204716685914874
-      }
-    },
-    "stress_sign_dirty": {
+    "bench_sign_avg": {
       "contains": "time",
       "values": {
-        "max": 27965.440445,
-        "p(90)": 549.5611461000001,
-        "p(95)": 1760.8785967499985,
-        "avg": 712.3040444658161,
-        "min": 11.476092,
-        "med": 27.530872000000002
+        "med": 0.30447472499999995,
+        "max": 0.31837748999999993,
+        "p(90)": 0.3155969369999999,
+        "p(95)": 0.3169872134999999,
+        "avg": 0.30447472499999995,
+        "min": 0.2905719599999999
       },
       "type": "trend"
     },
-    "bench_refresh_token_generation_gc_free_stdev": {
+    "bench_refresh_token_generation_p95{alg:Falcon-Precomputed-512}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 0.28854573125033023,
-        "min": 0.07050194754314783,
-        "med": 0.28854573125033023,
-        "max": 0.5065895149575126,
-        "p(90)": 0.4629807582160761,
-        "p(95)": 0.48478513658679434
-      }
-    },
-    "bench_pure_signing_gc_free_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(90)": 0.2591604181818182,
-        "p(95)": 0.27355821919191914,
-        "avg": 0.14397801010101008,
-        "min": 0,
-        "med": 0.14397801010101008,
-        "max": 0.28795602020202016
-      }
-    },
-    "bench_token_generation_gc_free_p95": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0.38683599999999996,
-        "med": 0.5573914999999999,
-        "max": 0.7279469999999999,
-        "p(90)": 0.6938358999999998,
-        "p(95)": 0.7108914499999999,
-        "avg": 0.5573914999999999
-      }
-    },
-    "stress_sign_dirty{alg:Falcon-512,vus:30}": {
+        "p(95)": 0.44294795,
+        "avg": 0.44294795,
+        "min": 0.44294795,
+        "med": 0.44294795,
+        "max": 0.44294795,
+        "p(90)": 0.44294795
+      },
       "thresholds": {
-        "p(95)<10000": {
-          "ok": false
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_p95{alg:Falcon-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.8459633999999998,
+        "avg": 0.8459633999999998,
+        "min": 0.8459633999999998,
+        "med": 0.8459633999999998,
+        "max": 0.8459633999999998,
+        "p(90)": 0.8459633999999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:50}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 1.4904999999999993,
+        "avg": 0.6295441176470588,
+        "min": 0.253,
+        "med": 0.461,
+        "max": 6.718,
+        "p(90)": 1.0263
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_refresh_dirty{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1566.0606833278712,
+        "min": 355.002899,
+        "med": 1364.799878,
+        "max": 5039.557681,
+        "p(90)": 2826.4739780000014,
+        "p(95)": 3360.0766897999993
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.3730849,
+        "p(95)": 0.4070156,
+        "avg": 0.3044747250000001,
+        "min": 0.233009,
+        "med": 0.282419,
+        "max": 0.892046
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 4698154,
+        "rate": 10073.398970337286
+      }
+    },
+    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 220.21581479999958,
+        "avg": 65.00529635510206,
+        "min": 11.976879,
+        "med": 26.9028695,
+        "max": 829.999726,
+        "p(90)": 134.86348550000002
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2669
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_rss_kb_avg{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
         }
       },
       "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 19832.093917599996,
-        "avg": 2233.2516326462082,
-        "min": 13.965516,
-        "med": 22.764777,
-        "max": 27965.440445,
-        "p(90)": 16475.149596
-      }
+      "contains": "default"
     },
-    "bench_pure_signing_success{alg:Falcon-512}": {
+    "bench_pure_signing_success{alg:Falcon-Precomputed-512}": {
       "contains": "default",
       "values": {
-        "count": 1,
-        "rate": 0.0021452636152626903
+        "rate": 0.0021441185134283137,
+        "count": 1
       },
       "thresholds": {
         "count>=0": {
@@ -3031,16 +514,40 @@
       },
       "type": "counter"
     },
-    "bench_auth_cpu_time_ms_avg{alg:Falcon-Precomputed-512}": {
+    "http_req_sending": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "min": 0.4,
-        "med": 0.4,
-        "max": 0.4,
-        "p(90)": 0.4,
-        "p(95)": 0.4,
-        "avg": 0.4
+        "p(90)": 0.504886,
+        "p(95)": 0.855141,
+        "avg": 0.349439747456396,
+        "min": 0.029647,
+        "med": 0.19397599999999998,
+        "max": 26.86474
+      }
+    },
+    "bench_refresh_token_generation_gc_free_sample": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.41410209999999975,
+        "avg": 0.30471999479166656,
+        "min": 0.23566,
+        "med": 0.2851435,
+        "max": 0.698076,
+        "p(90)": 0.38303709999999996
+      },
+      "type": "trend"
+    },
+    "stress_sign_network{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 42.79832774999995,
+        "avg": 10.54068810784313,
+        "min": 0.15771899999998595,
+        "med": 0.5606805000000072,
+        "max": 819.409307,
+        "p(90)": 26.331030899999973
       },
       "thresholds": {
         "p(95)<9999999": {
@@ -3048,12 +555,12 @@
         }
       }
     },
-    "stress_req_success{alg:Falcon-512,vus:50}": {
+    "stress_req_failed{alg:Falcon-Precomputed-512,vus:30}": {
       "type": "counter",
       "contains": "default",
       "values": {
-        "count": 429,
-        "rate": 0.9203180909476942
+        "count": 0,
+        "rate": 0
       },
       "thresholds": {
         "count>=0": {
@@ -3061,25 +568,183 @@
         }
       }
     },
-    "bench_auth_cpu_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 64.48669336489479,
-        "min": 58.92487419108681,
-        "med": 64.48669336489479,
-        "max": 70.04851253870278,
-        "p(90)": 68.93614870394119,
-        "p(95)": 69.49233062132198
-      }
-    },
-    "stress_refresh_error_rate": {
+    "stress_error_rate{alg:Falcon-512,vus:10}": {
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
       "type": "rate",
       "contains": "default",
       "values": {
+        "fails": 540,
+        "rate": 0,
+        "passes": 0
+      }
+    },
+    "bench_pure_signing_gc_free_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_p95{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.389853,
+        "p(90)": 0.389853,
+        "p(95)": 0.389853,
+        "avg": 0.389853,
+        "min": 0.389853,
+        "med": 0.389853
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:Falcon-512,vus:30}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
         "passes": 0,
-        "fails": 1948,
-        "rate": 0
+        "fails": 412
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_p95{alg:Falcon-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.4270156,
+        "p(95)": 0.4270156,
+        "avg": 0.4270156,
+        "min": 0.4270156,
+        "med": 0.4270156,
+        "max": 0.4270156
+      }
+    },
+    "bench_refresh_token_generation_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.31776438999999995,
+        "p(90)": 0.31592983899999993,
+        "p(95)": 0.31684711449999997,
+        "avg": 0.308591635,
+        "min": 0.29941887999999994,
+        "med": 0.308591635
+      }
+    },
+    "bench_pure_signing_gc_free_sample": {
+      "contains": "time",
+      "values": {
+        "min": 0.225639,
+        "med": 0.262449,
+        "max": 0.488538,
+        "p(90)": 0.300809,
+        "p(95)": 0.31540979999999996,
+        "avg": 0.26794765656565656
+      },
+      "type": "trend"
+    },
+    "stress_req_success{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 408,
+        "rate": 0.8748003534787521
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.223,
+        "med": 0.363,
+        "max": 102.96,
+        "p(90)": 1.416,
+        "p(95)": 2.1531999999999996,
+        "avg": 0.6807943049831413
+      }
+    },
+    "bench_token_generation_p95{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "max": 0.3967946499999999,
+        "p(90)": 0.3967946499999999,
+        "p(95)": 0.3967946499999999,
+        "avg": 0.3967946499999999,
+        "min": 0.3967946499999999,
+        "med": 0.3967946499999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_gc_contaminated_count": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 8,
+        "rate": 0.01715294810742651
+      }
+    },
+    "bench_token_generation_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.2905719599999999,
+        "min": 0.2905719599999999,
+        "med": 0.2905719599999999,
+        "max": 0.2905719599999999,
+        "p(90)": 0.2905719599999999,
+        "p(95)": 0.2905719599999999
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_error_rate{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 490
       },
       "thresholds": {
         "rate<0.05": {
@@ -3087,60 +752,1844 @@
         }
       }
     },
-    "stress_token_generation_clean{alg:Falcon-512,vus:10}": {
+    "stress_sign_dirty{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
       "values": {
-        "avg": 0.5020192307692308,
-        "min": 0.257,
-        "med": 0.423,
-        "max": 2.932,
-        "p(90)": 0.7482000000000001,
-        "p(95)": 0.9856999999999996
+        "max": 3989.737234,
+        "p(90)": 1480.5154620000008,
+        "p(95)": 1809.477615,
+        "avg": 714.4227060257615,
+        "min": 20.761381,
+        "med": 603.532329
       },
       "thresholds": {
-        "p(95)<1000": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 12.455816399999993,
+        "avg": 4.14353420157363,
+        "min": 0.07546099999999001,
+        "med": 0.619371000000001,
+        "max": 819.409307,
+        "p(90)": 7.747854199999994
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2721,
+        "rate": 5.834146475038442
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "count": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_sys_kb_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 26198.2578125,
+        "avg": 26198.2578125,
+        "min": 26198.2578125,
+        "med": 26198.2578125,
+        "max": 26198.2578125,
+        "p(90)": 26198.2578125
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:10}": {
+      "contains": "time",
+      "values": {
+        "med": 0.4535,
+        "max": 4.155,
+        "p(90)": 0.992,
+        "p(95)": 1.6583499999999973,
+        "avg": 0.6036918367346945,
+        "min": 0.267
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_sign_p95{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "avg": 0.3967946499999999,
+        "min": 0.3967946499999999,
+        "med": 0.3967946499999999,
+        "max": 0.3967946499999999,
+        "p(90)": 0.3967946499999999,
+        "p(95)": 0.3967946499999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
           "ok": true
         }
       },
       "type": "trend",
       "contains": "time"
     },
-    "bench_auth_cpu_time_ms_avg": {
+    "stress_req_success{alg:Falcon-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
       "values": {
-        "min": 0.4,
-        "med": 0.5,
-        "max": 0.6,
-        "p(90)": 0.58,
-        "p(95)": 0.59,
-        "avg": 0.5
+        "count": 540,
+        "rate": 1.1578239972512894
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 6.144,
+        "p(90)": 1.4448000000000003,
+        "p(95)": 1.8790999999999998,
+        "avg": 0.6095561224489793,
+        "min": 0.23,
+        "med": 0.371
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1799.5403988088221,
+        "min": 97.987926,
+        "med": 1623.2040025000001,
+        "max": 7194.97845,
+        "p(90)": 3020.6100575,
+        "p(95)": 3743.1834946499976
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_p95{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.42576795,
+        "p(90)": 0.42576795,
+        "p(95)": 0.42576795,
+        "avg": 0.42576795,
+        "min": 0.42576795,
+        "med": 0.42576795
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.5999464999999997,
+        "max": 45.485656,
+        "p(90)": 6.100961100000007,
+        "p(95)": 9.316672099999986,
+        "avg": 2.50848685102041,
+        "min": 0.13993499999999415
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_avg{alg:Falcon-512}": {
+      "contains": "default",
+      "values": {
+        "min": 93.4878125,
+        "med": 93.4878125,
+        "max": 93.4878125,
+        "p(90)": 93.4878125,
+        "p(95)": 93.4878125,
+        "avg": 93.4878125
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_refresh_token_generation_gc_free_stdev{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.06515642583709204,
+        "avg": 0.06515642583709204,
+        "min": 0.06515642583709204,
+        "med": 0.06515642583709204,
+        "max": 0.06515642583709204,
+        "p(90)": 0.06515642583709204
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 910.9416510000001,
+        "max": 4892.681563,
+        "p(90)": 1832.0550481000005,
+        "p(95)": 2186.04621965,
+        "avg": 1027.1686618349502,
+        "min": 93.862166
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "attack_blocked": {
+      "values": {
+        "count": 50,
+        "rate": 0.1072059256714157
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "stress_sign_actual{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 10.057,
+        "p(90)": 1.3120000000000003,
+        "p(95)": 2.0544,
+        "avg": 0.717932084309133,
+        "min": 0.247,
+        "med": 0.46
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.6583499999999973,
+        "avg": 0.6036918367346945,
+        "min": 0.267,
+        "med": 0.4535,
+        "max": 4.155,
+        "p(90)": 0.992
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:30}": {
+      "values": {
+        "avg": 0.6874948979591832,
+        "min": 0.269,
+        "med": 0.4635,
+        "max": 8.775,
+        "p(90)": 0.9470000000000021,
+        "p(95)": 1.7724999999999995
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
       },
       "type": "trend",
       "contains": "time"
     },
-    "http_req_connecting": {
+    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:30}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 19.891039502209853,
-        "min": 0,
-        "med": 0,
-        "max": 10729.658081,
-        "p(90)": 0,
-        "p(95)": 0
+        "p(90)": 0.9470000000000021,
+        "p(95)": 1.7724999999999995,
+        "avg": 0.6874948979591832,
+        "min": 0.269,
+        "med": 0.4635,
+        "max": 8.775
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
       }
     },
-    "bench_token_generation_gc_free_avg": {
+    "stress_login_dirty{alg:Falcon-512,vus:50}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 0.3755728073453609,
-        "min": 0.31233298969072165,
-        "med": 0.3755728073453609,
-        "max": 0.4388126250000002,
-        "p(90)": 0.42616466146907234,
-        "p(95)": 0.43248864323453623
+        "min": 228.750301,
+        "med": 1417.126821,
+        "max": 5999.481586,
+        "p(90)": 2579.8302654000004,
+        "p(95)": 3021.3133706999997,
+        "avg": 1593.721318852458
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.2940639895833332,
+        "p(95)": 0.2940639895833332,
+        "avg": 0.2940639895833332,
+        "min": 0.2940639895833332,
+        "med": 0.2940639895833332,
+        "max": 0.2940639895833332
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "vus_max": {
+      "values": {
+        "value": 50,
+        "min": 50,
+        "max": 50
+      },
+      "type": "gauge",
+      "contains": "default"
+    },
+    "bench_sign_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.0715331535350037,
+        "max": 0.09168426982099982,
+        "p(90)": 0.0876540465638006,
+        "p(95)": 0.0896691581924002,
+        "avg": 0.0715331535350037,
+        "min": 0.051382037249007556
+      }
+    },
+    "bench_token_generation_gc_free_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.3668729,
+        "p(95)": 0.389889,
+        "avg": 0.2980928125000001,
+        "min": 0.233009,
+        "med": 0.28091849999999996,
+        "max": 0.892046
+      }
+    },
+    "bench_auth_memory_rss_kb_avg": {
+      "contains": "default",
+      "values": {
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0
+      },
+      "type": "trend"
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.006056201550387597,
+        "passes": 50,
+        "fails": 8206
+      }
+    },
+    "stress_sign_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 3981.237571,
+        "p(90)": 495.46446400000195,
+        "p(95)": 916.8944437999999,
+        "avg": 167.99783776807803,
+        "min": 10.268158,
+        "med": 30.921088
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.475,
+        "min": 0.45,
+        "med": 0.475,
+        "max": 0.5,
+        "p(90)": 0.495,
+        "p(95)": 0.4975
+      }
+    },
+    "bench_sign_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.09168426982099982,
+        "med": 0.09168426982099982,
+        "max": 0.09168426982099982,
+        "p(90)": 0.09168426982099982,
+        "p(95)": 0.09168426982099982,
+        "avg": 0.09168426982099982
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.09927899999999568,
+        "med": 0.689836500000002,
+        "max": 322.59416600000003,
+        "p(90)": 7.555780000000003,
+        "p(95)": 9.104274549999996,
+        "avg": 3.86677830339806
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_stdev{alg:Falcon-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.06166986752959584,
+        "p(90)": 0.06166986752959584,
+        "p(95)": 0.06166986752959584,
+        "avg": 0.06166986752959584,
+        "min": 0.06166986752959584,
+        "med": 0.06166986752959584
+      }
+    },
+    "bench_token_generation_gc_free_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.07573885674635367,
+        "p(90)": 0.07573885674635367,
+        "p(95)": 0.07573885674635367,
+        "avg": 0.07573885674635367,
+        "min": 0.07573885674635367,
+        "med": 0.07573885674635367
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
       }
     },
     "attack_block_rate{alg:Falcon-512}": {
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 25,
+        "fails": 0
+      }
+    },
+    "bench_refresh_token_generation_avg{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "p(95)": 0.29941887999999994,
+        "avg": 0.29941887999999994,
+        "min": 0.29941887999999994,
+        "med": 0.29941887999999994,
+        "max": 0.29941887999999994,
+        "p(90)": 0.29941887999999994
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_token_generation_clean{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.5757037037037037,
+        "min": 0.258,
+        "med": 0.44,
+        "max": 15.949,
+        "p(90)": 0.8089000000000003,
+        "p(95)": 1.3064499999999997
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 1008.96428,
+        "max": 3306.291792,
+        "p(90)": 1875.063466500001,
+        "p(95)": 2154.2950198999997,
+        "avg": 1113.5536980922332,
+        "min": 157.453272
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_sample": {
+      "contains": "time",
+      "values": {
+        "avg": 0.3044747250000001,
+        "min": 0.233009,
+        "med": 0.282419,
+        "max": 0.892046,
+        "p(90)": 0.3730849,
+        "p(95)": 0.4070156
+      },
+      "type": "trend"
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 26.133123,
+        "med": 1865.154681,
+        "max": 9093.587535,
+        "p(90)": 4407.097889,
+        "p(95)": 5046.788719,
+        "avg": 2095.680135958839
+      }
+    },
+    "bench_auth_cpu_time_ms_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.9,
+        "p(90)": 0.9,
+        "p(95)": 0.9,
+        "avg": 0.9,
+        "min": 0.9,
+        "med": 0.9
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 29.010820000000002,
+        "max": 830.583141,
+        "p(90)": 135.42705800000002,
+        "p(95)": 225.13289309999996,
+        "avg": 67.51378320612241,
+        "min": 15.178904
+      },
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.476,
+        "max": 10.902,
+        "p(90)": 0.9139000000000007,
+        "p(95)": 1.5667499999999996,
+        "avg": 0.6523131067961166,
+        "min": 0.253
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_p95{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.3215915,
+        "avg": 0.3215915,
+        "min": 0.3215915,
+        "med": 0.3215915,
+        "max": 0.3215915,
+        "p(90)": 0.3215915
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_p95{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.79734255,
+        "p(90)": 0.79734255,
+        "p(95)": 0.79734255,
+        "avg": 0.79734255,
+        "min": 0.79734255,
+        "med": 0.79734255
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.05822099449403968,
+        "avg": 0.05822099449403968,
+        "min": 0.05822099449403968,
+        "med": 0.05822099449403968,
+        "max": 0.05822099449403968,
+        "p(90)": 0.05822099449403968
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_stdev{alg:Falcon-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "avg": 0.051382037249007556,
+        "min": 0.051382037249007556,
+        "med": 0.051382037249007556,
+        "max": 0.051382037249007556,
+        "p(90)": 0.051382037249007556,
+        "p(95)": 0.051382037249007556
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 819.228531,
+        "p(90)": 9.2090715,
+        "p(95)": 14.52511,
+        "avg": 4.791464528464173,
+        "min": 0.025383,
+        "med": 1.2735615
+      }
+    },
+    "bench_refresh_token_generation_gc_free_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.0644628827027868,
+        "p(95)": 0.06480965426993943,
+        "avg": 0.06168871016556586,
+        "min": 0.05822099449403968,
+        "med": 0.06168871016556586,
+        "max": 0.06515642583709204
+      }
+    },
+    "bench_total_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.8216529749999999,
+        "min": 0.79734255,
+        "med": 0.8216529749999999,
+        "max": 0.8459633999999998,
+        "p(90)": 0.8411013149999998,
+        "p(95)": 0.8435323574999998
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_sign_clean{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 170.50995329999992,
+        "avg": 46.72570043518519,
+        "min": 11.336323,
+        "med": 23.8425475,
+        "max": 427.885165,
+        "p(90)": 123.6747617
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:Falcon-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 427
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 17.70184244686416,
+        "count": 8256
+      }
+    },
+    "bench_total_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.5758415,
+        "max": 1.208585,
+        "p(90)": 0.767958,
+        "p(95)": 0.8256126499999996,
+        "avg": 0.6130663600000005,
+        "min": 0.477829
+      }
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 173.24348824241275,
+        "min": 12.806546,
+        "med": 34.567009,
+        "max": 3990.025889,
+        "p(90)": 511.8537516,
+        "p(95)": 927.6410621999993
+      }
+    },
+    "bench_auth_memory_alloc_kb_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 2943.17921875,
+        "max": 2943.17921875,
+        "p(90)": 2943.17921875,
+        "p(95)": 2943.17921875,
+        "avg": 2943.17921875,
+        "min": 2943.17921875
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:Falcon-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.13397382828282828,
+        "max": 0.26794765656565656,
+        "p(90)": 0.2411528909090909,
+        "p(95)": 0.2545502737373737,
+        "avg": 0.13397382828282828,
+        "min": 0
+      }
+    },
+    "bench_auth_memory_sys_kb_avg{alg:Falcon-512}": {
+      "contains": "default",
+      "values": {
+        "p(95)": 26198.2578125,
+        "avg": 26198.2578125,
+        "min": 26198.2578125,
+        "med": 26198.2578125,
+        "max": 26198.2578125,
+        "p(90)": 26198.2578125
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_token_generation_gc_free_p95{alg:Falcon-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 0.375536,
+        "p(95)": 0.375536,
+        "avg": 0.375536,
+        "min": 0.375536,
+        "med": 0.375536,
+        "max": 0.375536
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_auth_cpu_time_ms_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.9,
+        "med": 0.95,
+        "max": 1,
+        "p(90)": 0.99,
+        "p(95)": 0.995,
+        "avg": 0.95
+      }
+    },
+    "bench_pure_signing_gc_free_p95{alg:Falcon-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 0.31540979999999996,
+        "p(95)": 0.31540979999999996,
+        "avg": 0.31540979999999996,
+        "min": 0.31540979999999996,
+        "med": 0.31540979999999996,
+        "max": 0.31540979999999996
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_sign_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.31837748999999993,
+        "max": 0.31837748999999993,
+        "p(90)": 0.31837748999999993,
+        "p(95)": 0.31837748999999993,
+        "avg": 0.31837748999999993,
+        "min": 0.31837748999999993
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:Falcon-512,vus:10}": {
+      "contains": "time",
+      "values": {
+        "avg": 48.84980535925929,
+        "min": 12.968877,
+        "med": 25.3467665,
+        "max": 428.165992,
+        "p(90)": 127.2713853,
+        "p(95)": 181.74980494999986
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_error_rate{alg:Falcon-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 408
+      }
+    },
+    "bench_auth_memory_sys_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 26198.2578125,
+        "med": 26198.2578125,
+        "max": 26198.2578125,
+        "p(90)": 26198.2578125,
+        "p(95)": 26198.2578125,
+        "avg": 26198.2578125
+      }
+    },
+    "bench_sign_p95": {
+      "contains": "time",
+      "values": {
+        "med": 0.41128129999999996,
+        "max": 0.42576795,
+        "p(90)": 0.42287062,
+        "p(95)": 0.424319285,
+        "avg": 0.41128129999999996,
+        "min": 0.3967946499999999
+      },
+      "type": "trend"
+    },
+    "bench_refresh_token_generation_gc_free_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.40938945000000004,
+        "p(95)": 0.40941397500000004,
+        "avg": 0.40919325000000006,
+        "min": 0.40894800000000003,
+        "med": 0.40919325000000006,
+        "max": 0.40943850000000004
+      }
+    },
+    "bench_refresh_token_generation_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.698076,
+        "p(90)": 0.38815289999999997,
+        "p(95)": 0.43230894999999997,
+        "avg": 0.3085916349999999,
+        "min": 0.23566,
+        "med": 0.289323
+      }
+    },
+    "bench_pure_signing_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:30}": {
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 13.833884,
+        "med": 23.280162,
+        "max": 454.366668,
+        "p(90)": 70.1194419000001,
+        "p(95)": 152.62065205,
+        "avg": 42.580172739795906
+      }
+    },
+    "bench_refresh_token_generation_stdev": {
+      "values": {
+        "min": 0.06166986752959584,
+        "med": 0.06918933334054933,
+        "max": 0.07670879915150283,
+        "p(90)": 0.07520490598931213,
+        "p(95)": 0.07595685257040748,
+        "avg": 0.06918933334054933
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_token_generation_gc_free_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.07573885674635367,
+        "p(90)": 0.07312229226176914,
+        "p(95)": 0.0744305745040614,
+        "avg": 0.06265603432343102,
+        "min": 0.04957321190050837,
+        "med": 0.06265603432343102
+      }
+    },
+    "bench_pure_signing_success{alg:Falcon-512}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021441185134283137
+      }
+    },
+    "stress_error_rate{alg:Falcon-512,vus:50}": {
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 427
+      }
+    },
+    "bench_token_generation_gc_free_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.389853,
+        "p(90)": 0.3884213,
+        "p(95)": 0.38913715,
+        "avg": 0.3826945,
+        "min": 0.375536,
+        "med": 0.3826945
+      }
+    },
+    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:10}": {
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 0,
+        "fails": 490,
+        "rate": 0
+      }
+    },
+    "bench_refresh_token_generation_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.31431039947916667,
+        "avg": 0.30471999479166656,
+        "min": 0.2940639895833332,
+        "med": 0.30471999479166656,
+        "max": 0.315376,
+        "p(90)": 0.3132447989583333
+      }
+    },
+    "bench_token_generation_stdev{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.051382037249007556,
+        "med": 0.051382037249007556,
+        "max": 0.051382037249007556,
+        "p(90)": 0.051382037249007556,
+        "p(95)": 0.051382037249007556,
+        "avg": 0.051382037249007556
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 671.0922116170069,
+        "min": 11.872285,
+        "med": 318.9854975,
+        "max": 7194.97845,
+        "p(90)": 1808.103405,
+        "p(95)": 2303.965593
+      }
+    },
+    "stress_sign_network{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 125.26320100000004,
+        "p(90)": 5.186493399999999,
+        "p(95)": 6.787481199999999,
+        "avg": 2.312749186224491,
+        "min": 0.1187730000000009,
+        "med": 0.8006025000000001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:Falcon-512,vus:10}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 152.447291887037,
+        "min": 32.869882,
+        "med": 145.23942599999998,
+        "max": 466.465161,
+        "p(90)": 240.30494070000003,
+        "p(95)": 276.6337407
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-512,vus:50}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "bench_token_generation_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.424319285,
+        "avg": 0.41128129999999996,
+        "min": 0.3967946499999999,
+        "med": 0.41128129999999996,
+        "max": 0.42576795,
+        "p(90)": 0.42287062
+      }
+    },
+    "stress_req_failed": {
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "bench_auth_memory_alloc_delta_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 93.47355468750001,
+        "max": 93.4878125,
+        "p(90)": 93.4849609375,
+        "p(95)": 93.48638671875,
+        "avg": 93.47355468750001,
+        "min": 93.459296875
+      }
+    },
+    "bench_gc_contaminated_count{alg:Falcon-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 4,
+        "rate": 0.008576474053713255
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_avg{alg:Falcon-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.27267225,
+        "avg": 0.27267225,
+        "min": 0.27267225,
+        "med": 0.27267225,
+        "max": 0.27267225,
+        "p(90)": 0.27267225
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 13.064532,
+        "med": 44.886106,
+        "max": 720.979812,
+        "p(90)": 349.38632850000005,
+        "p(95)": 457.92926435,
+        "avg": 119.72511193872533
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.0715331535350037,
+        "min": 0.051382037249007556,
+        "med": 0.0715331535350037,
+        "max": 0.09168426982099982,
+        "p(90)": 0.0876540465638006,
+        "p(95)": 0.0896691581924002
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0,
+        "avg": 1.0808941687257752,
+        "min": 0,
+        "med": 0,
+        "max": 379.919284,
+        "p(90)": 0
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2.3726999999999987,
+        "avg": 0.6510808823529409,
+        "min": 0.233,
+        "med": 0.3705,
+        "max": 4.461,
+        "p(90)": 1.4389000000000003
+      }
+    },
+    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 408,
+        "rate": 0,
+        "passes": 0
+      }
+    },
+    "bench_token_generation_gc_free_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.2873063854166666,
+        "min": 0.2873063854166666,
+        "med": 0.2873063854166666,
+        "max": 0.2873063854166666,
+        "p(90)": 0.2873063854166666,
+        "p(95)": 0.2873063854166666
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_stdev{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "avg": 0.04957321190050837,
+        "min": 0.04957321190050837,
+        "med": 0.04957321190050837,
+        "max": 0.04957321190050837,
+        "p(90)": 0.04957321190050837,
+        "p(95)": 0.04957321190050837
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_sign_actual{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.4904999999999993,
+        "avg": 0.6295441176470588,
+        "min": 0.253,
+        "med": 0.461,
+        "max": 6.718,
+        "p(90)": 1.0263
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.434981775,
+        "min": 0.4270156,
+        "med": 0.434981775,
+        "max": 0.44294795,
+        "p(90)": 0.441354715,
+        "p(95)": 0.4421513325
+      }
+    },
+    "stress_sign_network{alg:Falcon-512,vus:10}": {
+      "values": {
+        "p(95)": 8.344610750000001,
+        "avg": 2.1241049240740737,
+        "min": 0.11791199999999691,
+        "med": 0.6051940000000009,
+        "max": 78.652501,
+        "p(90)": 4.9079331999999996
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_auth_memory_alloc_delta_kb_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 93.459296875,
+        "p(95)": 93.459296875,
+        "avg": 93.459296875,
+        "min": 93.459296875,
+        "med": 93.459296875,
+        "max": 93.459296875
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_error_rate{alg:Falcon-512,vus:30}": {
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 412
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:10}": {
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 6.702,
+        "p(90)": 1.4005000000000003,
+        "p(95)": 2.1341499999999987,
+        "avg": 0.6103857142857145,
+        "min": 0.223,
+        "med": 0.35
+      }
+    },
+    "bench_auth_cpu_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 152.46289800121218,
+        "min": 150.32226921310098,
+        "med": 152.46289800121218,
+        "max": 154.6035267893234,
+        "p(90)": 154.17540103170117,
+        "p(95)": 154.3894639105123
+      }
+    },
+    "bench_token_generation_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.31837748999999993,
+        "min": 0.31837748999999993,
+        "med": 0.31837748999999993,
+        "max": 0.31837748999999993,
+        "p(90)": 0.31837748999999993,
+        "p(95)": 0.31837748999999993
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 760.96247,
+        "max": 6211.615171,
+        "p(90)": 2109.655863800001,
+        "p(95)": 2617.9961353999997,
+        "avg": 992.9412417440984,
+        "min": 107.6815
+      }
+    },
+    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1030.8925401326528,
+        "min": 69.470397,
+        "med": 929.714305,
+        "max": 3757.385404,
+        "p(90)": 1807.9233137000003,
+        "p(95)": 2077.9946876999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_avg{alg:Falcon-512}": {
+      "contains": "time",
+      "values": {
+        "med": 0.5,
+        "max": 0.5,
+        "p(90)": 0.5,
+        "p(95)": 0.5,
+        "avg": 0.5,
+        "min": 0.5
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_pure_signing_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.3215914999999999,
+        "avg": 0.27267224999999995,
+        "min": 0.225639,
+        "med": 0.26303350000000003,
+        "max": 0.740407,
+        "p(90)": 0.30135399999999996
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.7849972080910825,
+        "min": 0.000237,
+        "med": 0.001103,
+        "max": 516.424414,
+        "p(90)": 0.002617,
+        "p(95)": 0.0029690000000000003
+      }
+    },
+    "stress_sign_actual{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.258,
+        "med": 0.44,
+        "max": 15.949,
+        "p(90)": 0.8089000000000003,
+        "p(95)": 1.3064499999999997,
+        "avg": 0.5757037037037037
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:Falcon-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_p95{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.40943850000000004,
+        "p(90)": 0.40943850000000004,
+        "p(95)": 0.40943850000000004,
+        "avg": 0.40943850000000004,
+        "min": 0.40943850000000004,
+        "med": 0.40943850000000004
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:Falcon-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 540,
+        "rate": 1.1578239972512894
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_p95{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.42576795,
+        "p(95)": 0.42576795,
+        "avg": 0.42576795,
+        "min": 0.42576795,
+        "med": 0.42576795,
+        "max": 0.42576795
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_avg{alg:Falcon-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.5899908399999999,
+        "max": 0.5899908399999999,
+        "p(90)": 0.5899908399999999,
+        "p(95)": 0.5899908399999999,
+        "avg": 0.5899908399999999,
+        "min": 0.5899908399999999
+      }
+    },
+    "http_req_connecting": {
+      "contains": "time",
+      "values": {
+        "avg": 0.69838193810562,
+        "min": 0,
+        "med": 0,
+        "max": 170.197788,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "type": "trend"
+    },
+    "stress_login_dirty{alg:Falcon-512,vus:10}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 301.0285253092592,
+        "min": 107.6815,
+        "med": 299.667802,
+        "max": 648.398578,
+        "p(90)": 404.7590151,
+        "p(95)": 443.01900644999995
+      }
+    },
+    "stress_refresh_dirty": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 29.589979,
+        "med": 618.249124,
+        "max": 7194.97845,
+        "p(90)": 2085.2398478000014,
+        "p(95)": 2636.9901888,
+        "avg": 898.1865177969248
+      }
+    },
+    "bench_pure_signing_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.28943235,
+        "p(95)": 0.30551192499999996,
+        "avg": 0.16079575,
+        "min": 0,
+        "med": 0.16079575,
+        "max": 0.3215915
+      }
+    },
+    "stress_refresh_success{alg:Falcon-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 427,
+        "rate": 0.91553860523389
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_token_generation_clean{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.717932084309133,
+        "min": 0.247,
+        "med": 0.46,
+        "max": 10.057,
+        "p(90)": 1.3120000000000003,
+        "p(95)": 2.0544
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.6130663599999999,
+        "min": 0.5899908399999999,
+        "med": 0.6130663599999999,
+        "max": 0.6361418799999998,
+        "p(90)": 0.6315267759999998,
+        "p(95)": 0.6338343279999998
+      }
+    },
+    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:10}": {
+      "contains": "default",
+      "values": {
+        "rate": 1.0506180715798736,
+        "count": 490
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "stress_error_rate{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 392
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate{alg:Falcon-Precomputed-512}": {
       "type": "rate",
       "contains": "default",
       "values": {
@@ -3154,36 +2603,274 @@
         }
       }
     },
-    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:10}": {
+    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:50}": {
+      "values": {
+        "avg": 0.9981170960187348,
+        "min": 0.234,
+        "med": 0.369,
+        "max": 102.96,
+        "p(90)": 1.616600000000002,
+        "p(95)": 2.3155
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_refresh_error_rate{alg:Falcon-512,vus:10}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 540
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_p95{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.40894800000000003,
+        "min": 0.40894800000000003,
+        "med": 0.40894800000000003,
+        "max": 0.40894800000000003,
+        "p(90)": 0.40894800000000003,
+        "p(95)": 0.40894800000000003
+      },
       "thresholds": {
         "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_clean{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 3981.237571,
+        "p(90)": 1476.1419604000007,
+        "p(95)": 1803.0762392000001,
+        "avg": 710.0137915573779,
+        "min": 20.073622,
+        "med": 603.32883
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_avg{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "p(95)": 0.26794765656565656,
+        "avg": 0.26794765656565656,
+        "min": 0.26794765656565656,
+        "med": 0.26794765656565656,
+        "max": 0.26794765656565656,
+        "p(90)": 0.26794765656565656
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_success{alg:Falcon-512}": {
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021441185134283137
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "bench_token_generation_gc_free_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.3088792395833333,
+        "max": 0.3088792395833333,
+        "p(90)": 0.3088792395833333,
+        "p(95)": 0.3088792395833333,
+        "avg": 0.3088792395833333,
+        "min": 0.3088792395833333
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2669,
+        "rate": 5.72265231234017
+      }
+    },
+    "bench_total_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.6361418799999998,
+        "min": 0.6361418799999998,
+        "med": 0.6361418799999998,
+        "max": 0.6361418799999998,
+        "p(90)": 0.6361418799999998,
+        "p(95)": 0.6361418799999998
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success{alg:Falcon-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.91553860523389,
+        "count": 427
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.972149999999998,
+        "avg": 0.6316518518518524,
+        "min": 0.233,
+        "med": 0.351,
+        "max": 18.887,
+        "p(90)": 1.2948000000000002
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_min": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.233009,
+        "med": 0.23320950000000001,
+        "max": 0.23341,
+        "p(90)": 0.23336990000000002,
+        "p(95)": 0.23338995,
+        "avg": 0.23320950000000001
+      }
+    },
+    "bench_pure_signing_gc_free_stdev{alg:Falcon-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
           "ok": true
         }
       },
       "type": "trend",
       "contains": "time",
       "values": {
-        "avg": 402.45204905434775,
-        "min": 10.181082,
-        "med": 27.955056499999998,
-        "max": 9186.027034,
-        "p(90)": 351.1683598,
-        "p(95)": 1008.8119144499981
+        "med": 0.03522630217224818,
+        "max": 0.03522630217224818,
+        "p(90)": 0.03522630217224818,
+        "p(95)": 0.03522630217224818,
+        "avg": 0.03522630217224818,
+        "min": 0.03522630217224818
       }
     },
-    "http_req_tls_handshaking": {
+    "stress_req_success{alg:Falcon-Precomputed-512,vus:10}": {
       "values": {
-        "med": 0,
-        "max": 5601.219115,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 5.020663208708463,
-        "min": 0
+        "count": 490,
+        "rate": 1.0506180715798736
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "attack_block_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 50,
+        "fails": 0,
+        "rate": 1
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 392
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success{alg:Falcon-Precomputed-512,vus:30}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 392,
+        "rate": 0.840494457263899
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:Falcon-512,vus:30}": {
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
       },
       "type": "trend",
-      "contains": "time"
+      "contains": "time",
+      "values": {
+        "avg": 0.5972718446601945,
+        "min": 0.233,
+        "med": 0.3655,
+        "max": 5.141,
+        "p(90)": 1.4108,
+        "p(95)": 1.9025999999999996
+      }
     },
-    "stress_refresh_failed{alg:Falcon-512,vus:50}": {
+    "stress_req_failed{alg:Falcon-Precomputed-512,vus:10}": {
       "type": "counter",
       "contains": "default",
       "values": {
@@ -3196,16 +2883,172 @@
         }
       }
     },
-    "http_req_receiving": {
+    "bench_sign_max": {
+      "values": {
+        "avg": 0.710662,
+        "min": 0.529278,
+        "med": 0.710662,
+        "max": 0.892046,
+        "p(90)": 0.8557692,
+        "p(95)": 0.8739076
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_auth_memory_rss_kb_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "data_received": {
+      "values": {
+        "count": 20080156,
+        "rate": 43054.234232128634
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "bench_auth_cpu_time_ms_avg{alg:Falcon-512}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "min": 0.031393,
-        "med": 1.367739,
-        "max": 10984.966716,
-        "p(90)": 10.3991694,
-        "p(95)": 21.41071179999997,
-        "avg": 22.721560025536203
+        "med": 1,
+        "max": 1,
+        "p(90)": 1,
+        "p(95)": 1,
+        "avg": 1,
+        "min": 1
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_success{alg:Falcon-Precomputed-512}": {
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021441185134283137
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "stress_sign_dirty{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 951.183211,
+        "p(90)": 388.0005805000002,
+        "p(95)": 495.78159715,
+        "avg": 130.26580004656867,
+        "min": 15.335075,
+        "med": 46.097225
+      },
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:Falcon-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 4.408914468384074,
+        "min": 0.07546099999999001,
+        "med": 0.31230399999998326,
+        "max": 65.43981199999996,
+        "p(90)": 13.672861400000002,
+        "p(95)": 19.126724499999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_p95": {
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0.15770489999999998,
+        "max": 0.31540979999999996,
+        "p(90)": 0.28386881999999997,
+        "p(95)": 0.29963930999999994,
+        "avg": 0.15770489999999998
+      },
+      "type": "trend"
+    },
+    "bench_pure_signing_success": {
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2,
+        "rate": 0.0042882370268566275
+      }
+    },
+    "bench_pure_signing_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.136336125,
+        "min": 0,
+        "med": 0.136336125,
+        "max": 0.27267225,
+        "p(90)": 0.245405025,
+        "p(95)": 0.2590386375
+      }
+    },
+    "bench_pure_signing_stdev{alg:Falcon-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.05863735984803119,
+        "avg": 0.05863735984803119,
+        "min": 0.05863735984803119,
+        "med": 0.05863735984803119,
+        "max": 0.05863735984803119,
+        "p(90)": 0.05863735984803119
       }
     },
     "bench_success": {
@@ -3213,7 +3056,7 @@
       "contains": "default",
       "values": {
         "count": 2,
-        "rate": 0.004290527230525381
+        "rate": 0.0042882370268566275
       },
       "thresholds": {
         "count>0": {
@@ -3221,282 +3064,52 @@
         }
       }
     },
-    "stress_token_generation_clean{alg:Falcon-Precomputed-512,vus:50}": {
+    "stress_req_success{alg:Falcon-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "rate": 0.8833768275324653,
+        "count": 412
+      },
       "thresholds": {
-        "p(95)<500": {
+        "count>=0": {
           "ok": true
         }
       },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 8.442,
-        "p(90)": 1.8544000000000003,
-        "p(95)": 3.1691,
-        "avg": 0.8723700787401577,
-        "min": 0.241,
-        "med": 0.4765
-      }
-    },
-    "bench_pure_signing_avg": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0.14503441999999997,
-        "max": 0.29006883999999994,
-        "p(90)": 0.26106195599999993,
-        "p(95)": 0.2755653979999999,
-        "avg": 0.14503441999999997
-      }
-    },
-    "bench_refresh_token_generation_gc_free_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.4971448645833334,
-        "max": 0.4971448645833334,
-        "p(90)": 0.4971448645833334,
-        "p(95)": 0.4971448645833334,
-        "avg": 0.4971448645833334,
-        "min": 0.4971448645833334
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "bench_total_avg{alg:Falcon-Precomputed-512}": {
-      "values": {
-        "avg": 0.6364616799999998,
-        "min": 0.6364616799999998,
-        "med": 0.6364616799999998,
-        "max": 0.6364616799999998,
-        "p(90)": 0.6364616799999998,
-        "p(95)": 0.6364616799999998
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "stress_sign_network{alg:Falcon-Precomputed-512,vus:50}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 29.906362326771674,
-        "min": 0.10623499999999808,
-        "med": 1.7120710000000088,
-        "max": 2539.672767,
-        "p(90)": 66.52554490000003,
-        "p(95)": 89.75049635000003
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
+      "type": "counter"
     },
     "bench_pure_signing_gc_free_stdev": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(95)": 0.035754300133524736,
-        "avg": 0.018818052701855124,
+        "avg": 0.01761315108612409,
         "min": 0,
-        "med": 0.018818052701855124,
-        "max": 0.03763610540371025,
-        "p(90)": 0.03387249486333922
-      }
-    },
-    "bench_token_generation_gc_free_stdev": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 0.2315089522514577,
-        "p(90)": 0.21387401841943385,
-        "p(95)": 0.22269148533544578,
-        "avg": 0.14333428309133836,
-        "min": 0.05515961393121902,
-        "med": 0.14333428309133836
-      }
-    },
-    "bench_refresh_token_generation_gc_free_p95{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.914859,
-        "min": 0.914859,
-        "med": 0.914859,
-        "max": 0.914859,
-        "p(90)": 0.914859,
-        "p(95)": 0.914859
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "bench_auth_memory_alloc_delta_kb_avg{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "avg": 93.48109375,
-        "min": 93.48109375,
-        "med": 93.48109375,
-        "max": 93.48109375,
-        "p(90)": 93.48109375,
-        "p(95)": 93.48109375
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      }
-    },
-    "stress_refresh_token_generation_clean{alg:Falcon-Precomputed-512,vus:10}": {
-      "contains": "time",
-      "values": {
-        "avg": 0.6379560439560445,
-        "min": 0.231,
-        "med": 0.357,
-        "max": 15.791,
-        "p(90)": 1.1718000000000004,
-        "p(95)": 1.655849999999998
-      },
-      "thresholds": {
-        "p(95)<500": {
-          "ok": true
-        }
-      },
-      "type": "trend"
-    },
-    "stress_token_generation_clean": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 14.738,
-        "p(90)": 1.0432000000000001,
-        "p(95)": 1.8101999999999998,
-        "avg": 0.6463515306122445,
-        "min": 0.239,
-        "med": 0.439
-      }
-    },
-    "attack_blocked": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 50,
-        "rate": 0.10726318076313453
-      }
-    },
-    "bench_auth_memory_alloc_kb_avg{alg:Falcon-512}": {
-      "type": "trend",
-      "contains": "default",
-      "values": {
-        "avg": 2924.684296875,
-        "min": 2924.684296875,
-        "med": 2924.684296875,
-        "max": 2924.684296875,
-        "p(90)": 2924.684296875,
-        "p(95)": 2924.684296875
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
+        "med": 0.01761315108612409,
+        "max": 0.03522630217224818,
+        "p(90)": 0.03170367195502336,
+        "p(95)": 0.03346498706363577
       }
     },
     "bench_token_generation_avg": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 0.45585769200000026,
-        "p(95)": 0.4634924460000002,
-        "avg": 0.3947796600000001,
-        "min": 0.31843212,
-        "med": 0.3947796600000001,
-        "max": 0.47112720000000025
+        "p(90)": 0.3155969369999999,
+        "p(95)": 0.3169872134999999,
+        "avg": 0.30447472499999995,
+        "min": 0.2905719599999999,
+        "med": 0.30447472499999995,
+        "max": 0.31837748999999993
       }
     },
-    "bench_pure_signing_gc_free_stdev{alg:Falcon-Precomputed-512}": {
-      "type": "trend",
+    "stress_token_generation_clean{alg:Falcon-512,vus:30}": {
       "contains": "time",
       "values": {
-        "p(95)": 0.03763610540371025,
-        "avg": 0.03763610540371025,
-        "min": 0.03763610540371025,
-        "med": 0.03763610540371025,
-        "max": 0.03763610540371025,
-        "p(90)": 0.03763610540371025
-      },
-      "thresholds": {
-        "avg>=0": {
-          "ok": true
-        }
-      }
-    },
-    "stress_sign_network{alg:Falcon-512,vus:10}": {
-      "values": {
-        "p(90)": 5.900006200000004,
-        "p(95)": 10.068884049999992,
-        "avg": 2.5727591410256436,
-        "min": 0.13941699999999457,
-        "med": 0.507571500000001,
-        "max": 122.018043
-      },
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "bench_pure_signing_p95{alg:Falcon-Precomputed-512}": {
-      "thresholds": {
-        "p(95)<9999999": {
-          "ok": true
-        }
-      },
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.35140449999999995,
-        "max": 0.35140449999999995,
-        "p(90)": 0.35140449999999995,
-        "p(95)": 0.35140449999999995,
-        "avg": 0.35140449999999995,
-        "min": 0.35140449999999995
-      }
-    },
-    "bench_token_generation_sample": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 0.6821794499999999,
-        "avg": 0.39477966,
-        "min": 0.238507,
-        "med": 0.337473,
-        "max": 2.855718,
-        "p(90)": 0.534465
-      }
-    },
-    "stress_sign_actual{alg:Falcon-512,vus:50}": {
-      "contains": "time",
-      "values": {
-        "p(95)": 2.6623999999999954,
-        "avg": 0.7836620046620048,
-        "min": 0.273,
-        "med": 0.45,
-        "max": 14.738,
-        "p(90)": 1.1315999999999984
+        "avg": 0.6523131067961166,
+        "min": 0.253,
+        "med": 0.476,
+        "max": 10.902,
+        "p(90)": 0.9139000000000007,
+        "p(95)": 1.5667499999999996
       },
       "thresholds": {
         "p(95)<1000": {
@@ -3505,31 +3118,498 @@
       },
       "type": "trend"
     },
-    "bench_pure_signing_sample": {
-      "values": {
-        "avg": 0.2900688400000001,
-        "min": 0.232579,
-        "med": 0.2844085,
-        "max": 0.517157,
-        "p(90)": 0.33003590000000005,
-        "p(95)": 0.3514045
-      },
+    "bench_auth_cpu_time_per_token_ms_avg{alg:Falcon-Precomputed-512}": {
       "type": "trend",
-      "contains": "time"
+      "contains": "time",
+      "values": {
+        "max": 0.45,
+        "p(90)": 0.45,
+        "p(95)": 0.45,
+        "avg": 0.45,
+        "min": 0.45,
+        "med": 0.45
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success": {
+      "values": {
+        "count": 2669,
+        "rate": 5.72265231234017
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "stress_sign_clean{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 21.3321865,
+        "max": 449.602522,
+        "p(90)": 65.72522790000001,
+        "p(95)": 151.7176413,
+        "avg": 40.26742355357139,
+        "min": 11.458366
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 172.8867744448978,
+        "min": 29.589979,
+        "med": 146.40842500000002,
+        "max": 875.532088,
+        "p(90)": 279.7900664,
+        "p(95)": 359.23784649999965
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1838.772859419115,
+        "min": 318.449905,
+        "med": 1662.0095935,
+        "max": 6211.615171,
+        "p(90)": 3116.0376763,
+        "p(95)": 3743.537190349999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2297.3133242500003,
+        "avg": 665.9513073410853,
+        "min": 10.268158,
+        "med": 313.9649105,
+        "max": 7192.627769,
+        "p(90)": 1802.9031465
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 10734,
+        "fails": 0
+      }
+    },
+    "bench_auth_cpu_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 154.6035267893234,
+        "min": 154.6035267893234,
+        "med": 154.6035267893234,
+        "max": 154.6035267893234,
+        "p(90)": 154.6035267893234,
+        "p(95)": 154.6035267893234
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 408,
+        "rate": 0.8748003534787521
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:Falcon-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "count": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 0,
+        "max": 50
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 11.872285,
+        "med": 322.134536,
+        "max": 7194.97845,
+        "p(90)": 1813.2915475,
+        "p(95)": 2309.5924175,
+        "avg": 674.9745453913007
+      }
     },
     "bench_refresh_token_generation_avg{alg:Falcon-512}": {
       "type": "trend",
       "contains": "time",
       "values": {
-        "p(90)": 0.4992820600000001,
-        "p(95)": 0.4992820600000001,
-        "avg": 0.4992820600000001,
-        "min": 0.4992820600000001,
-        "med": 0.4992820600000001,
-        "max": 0.4992820600000001
+        "max": 0.31776438999999995,
+        "p(90)": 0.31776438999999995,
+        "p(95)": 0.31776438999999995,
+        "avg": 0.31776438999999995,
+        "min": 0.31776438999999995,
+        "med": 0.31776438999999995
       },
       "thresholds": {
         "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_avg{alg:Falcon-Precomputed-512}": {
+      "values": {
+        "min": 150.32226921310098,
+        "med": 150.32226921310098,
+        "max": 150.32226921310098,
+        "p(90)": 150.32226921310098,
+        "p(95)": 150.32226921310098,
+        "avg": 150.32226921310098
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_refresh_token_generation_stdev{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.07670879915150283,
+        "p(90)": 0.07670879915150283,
+        "p(95)": 0.07670879915150283,
+        "avg": 0.07670879915150283,
+        "min": 0.07670879915150283,
+        "med": 0.07670879915150283
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_gc_contaminated_count{alg:Falcon-512}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 4,
+        "rate": 0.008576474053713255
+      }
+    },
+    "stress_token_generation_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.6827999999999996,
+        "avg": 0.6400715623829148,
+        "min": 0.247,
+        "med": 0.458,
+        "max": 15.949,
+        "p(90)": 0.9938000000000025
+      }
+    },
+    "bench_token_generation_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.2873063854166666,
+        "med": 0.29809281249999997,
+        "max": 0.3088792395833333,
+        "p(90)": 0.30672195416666664,
+        "p(95)": 0.30780059687499994,
+        "avg": 0.29809281249999997
+      }
+    },
+    "stress_sign_dirty": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 172.14137196965152,
+        "min": 11.872285,
+        "med": 33.224843,
+        "max": 3989.737234,
+        "p(90)": 510.5807538000003,
+        "p(95)": 927.1218403999993
+      }
+    },
+    "stress_sign_clean{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 829.623925,
+        "p(90)": 110.08741720000015,
+        "p(95)": 194.54741589999992,
+        "avg": 57.022307900485444,
+        "min": 10.268158,
+        "med": 29.866722
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:Falcon-512,vus:30}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 412,
+        "rate": 0.8833768275324653
+      }
+    },
+    "bench_pure_signing_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.05277362386322807,
+        "p(95)": 0.055705491855629626,
+        "avg": 0.029318679924015593,
+        "min": 0,
+        "med": 0.029318679924015593,
+        "max": 0.05863735984803119
+      }
+    },
+    "bench_sign_avg{alg:Falcon-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.2905719599999999,
+        "p(95)": 0.2905719599999999,
+        "avg": 0.2905719599999999,
+        "min": 0.2905719599999999,
+        "med": 0.2905719599999999,
+        "max": 0.2905719599999999
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:Falcon-Precomputed-512,vus:30}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 392,
+        "rate": 0.840494457263899
+      }
+    },
+    "bench_pure_signing_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_error_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2669
+      },
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 2925.570546875,
+        "med": 2925.570546875,
+        "max": 2925.570546875,
+        "p(90)": 2925.570546875,
+        "p(95)": 2925.570546875,
+        "avg": 2925.570546875
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_p95{alg:Falcon-512}": {
+      "values": {
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_sign_dirty{alg:Falcon-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 31.4945335,
+        "max": 948.511251,
+        "p(90)": 110.26098780000012,
+        "p(95)": 203.9264905999999,
+        "avg": 60.889086203883515,
+        "min": 11.872285
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:Falcon-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1131.1565298545916,
+        "min": 144.653419,
+        "med": 1039.455058,
+        "max": 4140.944359,
+        "p(90)": 1803.8830347,
+        "p(95)": 2218.90242035
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_avg{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.315376,
+        "min": 0.315376,
+        "med": 0.315376,
+        "max": 0.315376,
+        "p(90)": 0.315376,
+        "p(95)": 0.315376
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_stdev{alg:Falcon-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.09168426982099982,
+        "min": 0.09168426982099982,
+        "med": 0.09168426982099982,
+        "max": 0.09168426982099982,
+        "p(90)": 0.09168426982099982,
+        "p(95)": 0.09168426982099982
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty{alg:Falcon-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 315.650933546939,
+        "min": 112.396243,
+        "med": 314.0758565,
+        "max": 930.266287,
+        "p(90)": 425.5607362000002,
+        "p(95)": 474.6148962499997
+      },
+      "thresholds": {
+        "p(95)<9999999": {
           "ok": true
         }
       }
@@ -3537,8 +3617,8 @@
   },
   "setup_data": {
     "user": {
-      "email": "bench-gioyxvmx@bench.test",
-      "name": "bench-gioyxvmx",
+      "email": "bench-xyjytxoc@bench.test",
+      "name": "bench-xyjytxoc",
       "password": "BenchPass!123"
     }
   }

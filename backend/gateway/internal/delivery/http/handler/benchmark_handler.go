@@ -80,6 +80,13 @@ func readCPUTicks() int64 {
 }
 
 func readMemoryRSSKB() float64 {
+	if kb := readMemoryRSSFromStatusKB(); kb > 0 {
+		return kb
+	}
+	return readMemoryRSSFromStatmKB()
+}
+
+func readMemoryRSSFromStatusKB() float64 {
 	data, err := os.ReadFile("/proc/self/status")
 	if err != nil {
 		return 0
@@ -99,6 +106,22 @@ func readMemoryRSSKB() float64 {
 		return kb
 	}
 	return 0
+}
+
+func readMemoryRSSFromStatmKB() float64 {
+	data, err := os.ReadFile("/proc/self/statm")
+	if err != nil {
+		return 0
+	}
+	fields := strings.Fields(string(data))
+	if len(fields) < 2 {
+		return 0
+	}
+	pages, err := strconv.ParseFloat(fields[1], 64)
+	if err != nil {
+		return 0
+	}
+	return pages * float64(os.Getpagesize()) / bytesPerKB
 }
 
 func NewBenchmarkHandler(
@@ -164,9 +187,13 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 	runtime.GC()
 
 	gcContaminatedCount := 0
+	var firstErr error
 	for i := 0; i < req.Iterations; i++ {
 		signMs, stats, err := h.signPure(req.Algorithm, true)
 		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
 			h.log.Warnf("pure signing iter %d failed: %v", i, err)
 			continue
 		}
@@ -184,6 +211,13 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 		} else {
 			gcFreePureSigningTimings = append(gcFreePureSigningTimings, signMs)
 		}
+	}
+
+	if len(pureSigningTimings) == 0 {
+		if firstErr == nil {
+			firstErr = fmt.Errorf("no successful iterations")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("pure signing benchmark failed: %v", firstErr))
 	}
 
 	result := BenchmarkPureSigningResult{
@@ -261,14 +295,21 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 	runtime.GC()
 
 	gcContaminatedCount := 0
+	var firstErr error
 	for i := 0; i < req.Iterations; i++ {
 		_, signMs, accessStats, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseAccess, true)
 		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
 			h.log.Warnf("benchmark access iter %d failed: %v", i, err)
 			continue
 		}
 		_, refreshMs, refreshStats, err := h.signBenchmarkToken(req.Algorithm, req.Email, jwtutils.TokenUseRefresh, true)
 		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
 			h.log.Warnf("benchmark refresh iter %d failed: %v", i, err)
 			continue
 		}
@@ -292,6 +333,13 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 			gcFreeSignTimings = append(gcFreeSignTimings, signMs)
 			gcFreeRefreshTokenTimings = append(gcFreeRefreshTokenTimings, refreshMs)
 		}
+	}
+
+	if len(signTimings) == 0 {
+		if firstErr == nil {
+			firstErr = fmt.Errorf("no successful iterations")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("jwt issuance benchmark failed: %v", firstErr))
 	}
 
 	result := BenchmarkSignResult{
@@ -491,7 +539,7 @@ func combineBenchmarkStats(accessStats, refreshStats BenchmarkRuntimeStats) Benc
 		MemoryAllocKB:      refreshStats.MemoryAllocKB,
 		MemoryAllocDeltaKB: accessStats.MemoryAllocDeltaKB + refreshStats.MemoryAllocDeltaKB,
 		MemorySysKB:        refreshStats.MemorySysKB,
-		MemoryRSSKB:        refreshStats.MemoryRSSKB,
+		MemoryRSSKB:        math.Max(accessStats.MemoryRSSKB, refreshStats.MemoryRSSKB),
 		CPUTimeMs:          accessStats.CPUTimeMs + refreshStats.CPUTimeMs,
 		CPUPct:             cpuPct,
 		GCOccurred:         accessStats.GCOccurred || refreshStats.GCOccurred,

@@ -55,6 +55,43 @@ func TestMultiAlgJwtUtilUsesCanonicalFNDSAHeaderForPrecomputedProfile(t *testing
 	}
 }
 
+func TestMultiAlgJwtUtilRejectsUnconfiguredFalconSigningProfile(t *testing.T) {
+	util := newTestFNDSAJwtUtil(t, "tasktify")
+
+	_, err := util.Sign(&JWTPayload{
+		UserID:    uuid.New(),
+		Email:     "profile@example.com",
+		Algorithm: "Falcon-512",
+		TokenUse:  TokenUseAccess,
+	})
+	if err == nil || !strings.Contains(err.Error(), "unsupported algorithm: Falcon-512") {
+		t.Fatalf("Sign(Falcon-512) error = %v, want unsupported algorithm", err)
+	}
+}
+
+func TestMultiAlgJwtUtilAllowsCanonicalFNDSASigningProfile(t *testing.T) {
+	util := newTestFNDSAJwtUtil(t, "tasktify")
+	userID := uuid.New()
+
+	tokenString, err := util.Sign(&JWTPayload{
+		UserID:    userID,
+		Email:     "profile@example.com",
+		Algorithm: jwt.AlgFNDSA512,
+		TokenUse:  TokenUseAccess,
+	})
+	if err != nil {
+		t.Fatalf("sign failed: %v", err)
+	}
+
+	claims, err := util.Parse(tokenString)
+	if err != nil {
+		t.Fatalf("parse failed: %v", err)
+	}
+	if claims.UserID != userID {
+		t.Fatalf("wrong user_id: got %s, want %s", claims.UserID, userID)
+	}
+}
+
 func TestMultiAlgJwtUtilRejectsJWTProfileViolations(t *testing.T) {
 	util, method := newTestFNDSAJwtUtilWithMethod(t, "tasktify")
 	userID := uuid.New()
