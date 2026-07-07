@@ -22,7 +22,7 @@ BENCH_WELCH_OUT ?= benchmark_welch.md
 BENCH_ABLATION_OUT ?= fndsa_precompute_ablation.csv
 BENCH_PORTS ?= 5001 5002
 BASE_URL ?= https://poc-ridwanmuh3.my.id
-VPS_SSH ?=
+VPS_SSH ?= 
 VPS_REPO ?= ~/tasktify
 VPS_BACKEND ?= $(VPS_REPO)/backend
 SSH ?= ssh
@@ -67,7 +67,7 @@ help:
 	@echo "Split benchmark:"
 	@echo "  make hostinger-bench-up VPS_SSH=user@host  Start benchmark stack on VPS"
 	@echo "  make client-k6 BASE_URL=https://host       Run k6 from client"
-	@echo "  make hostinger-upload VPS_SSH=user@host    Upload k6 artifacts to VPS"
+	@echo "  make hostinger-upload VPS_SSH=root@    Upload k6 artifacts to VPS"
 	@echo "  make hostinger-calc VPS_SSH=user@host      Calculate stats on VPS"
 	@echo "  make hostinger-bench VPS_SSH=user@host     Run client k6 + VPS calc"
 
