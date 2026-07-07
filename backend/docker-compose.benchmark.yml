@@ -1,0 +1,179 @@
+services:
+  # =========================
+  # Shared Infrastructure
+  # =========================
+  bench-postgres:
+    image: postgres:18-alpine
+    container_name: bench-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tasktify_bench
+    volumes:
+      - bench_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bench-backend
+
+  bench-todo:
+    build:
+      context: .
+      dockerfile: todo-service/Dockerfile
+    container_name: bench-todo
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 10
+      DB_MAX_POOL: 100
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-todo
+      APP_MODE: production
+      GRPC_PORT: 3002
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  # =========================
+  # Falcon-Precomputed-512
+  # Gateway: :5001
+  # =========================
+  bench-auth-fnp512:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-fnp512
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-fnp512
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-fnp512:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-fnp512
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-fnp512
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-fnp512:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: Falcon-Precomputed-512
+      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys
+    ports:
+      - "5001:3000"
+    depends_on:
+      - bench-auth-fnp512
+      - bench-todo
+    networks:
+      - bench-backend
+
+  # =========================
+  # Falcon-512
+  # Gateway: :5002
+  # =========================
+  bench-auth-fn512:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: bench-auth-fn512
+    restart: unless-stopped
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tasktify_bench
+      DB_HOST: bench-postgres
+      DB_PORT: 5432
+      DB_SSL_MODE: disable
+      DB_POOL_IDLE: 5
+      DB_MAX_POOL: 50
+      DB_MAX_LIFETIME: 300
+      APP_NAME: bench-auth-fn512
+      APP_MODE: production
+      GRPC_PORT: 3001
+      JWT_DEFAULT_ALG: Falcon-512
+      JWT_ALLOWED_ALGS: Falcon-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys
+    depends_on:
+      bench-postgres:
+        condition: service_healthy
+    networks:
+      - bench-backend
+
+  bench-gw-fn512:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: bench-gw-fn512
+    restart: unless-stopped
+    environment:
+      APP_NAME: bench-gw-fn512
+      APP_PORT: 3000
+      APP_MODE: production
+      AUTH_SERVICE_ADDR: bench-auth-fn512:3001
+      TODO_SERVICE_ADDR: bench-todo:3002
+      JWT_DEFAULT_ALG: Falcon-512
+      JWT_ALLOWED_ALGS: Falcon-512
+      JWT_ISSUER: tasktify
+      JWT_TOKEN_DURATION: 60
+      KEYS_DIR: /app/keys
+    volumes:
+      - ./keys:/app/keys
+    ports:
+      - "5002:3000"
+    depends_on:
+      - bench-auth-fn512
+      - bench-todo
+    networks:
+      - bench-backend
+
+networks:
+  bench-backend:
+    driver: bridge
+
+volumes:
+  bench_postgres_data:
