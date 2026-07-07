@@ -17,9 +17,9 @@ BENCH_SAMPLE_OUT ?= benchmark_sign_samples.ndjson
 BENCH_RESULT_OUT ?= benchmark_sign_result.json
 BENCH_RAW_OUT ?= benchmark_sign_raw.json
 BENCH_STDOUT_OUT ?= result.txt
-BENCH_STAT_OUT ?= benchmark_stats.md
-BENCH_WELCH_OUT ?= benchmark_welch.md
-BENCH_ABLATION_OUT ?= fndsa_precompute_ablation.csv
+BENCH_STAT_OUT ?= benchmark_stats.json
+BENCH_WELCH_OUT ?= benchmark_welch.json
+BENCH_ABLATION_OUT ?= fndsa_precompute_ablation.json
 BENCH_PORTS ?= 5001 5002
 BASE_URL ?= https://poc-ridwanmuh3.my.id
 VPS_SSH ?= 
@@ -28,6 +28,7 @@ VPS_BACKEND ?= $(VPS_REPO)/backend
 SSH ?= ssh
 SCP ?= scp
 SSH_OPTS ?=
+SCP_OPTS ?=
 K6 ?= k6
 LOCAL_GO_ENV = env APP_MODE=dev GOCACHE=$(GOCACHE) CGO_ENABLED=0
 
@@ -303,17 +304,17 @@ hostinger-upload: require-vps
 	@test -f $(BENCH_RESULT_OUT) || (echo "Missing $(BENCH_RESULT_OUT). Run make client-k6 first."; exit 2)
 	@test -f $(BENCH_RAW_OUT) || (echo "Missing $(BENCH_RAW_OUT). Run make client-k6 first."; exit 2)
 	@test -f $(BENCH_SAMPLE_OUT) || (echo "Missing $(BENCH_SAMPLE_OUT). Run make client-k6 first."; exit 2)
-	$(SCP) $(SSH_OPTS) $(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_SAMPLE_OUT) $(BENCH_STDOUT_OUT) $(VPS_SSH):$(VPS_BACKEND)/
+	$(SCP) $(SCP_OPTS) $(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_SAMPLE_OUT) $(BENCH_STDOUT_OUT) $(VPS_SSH):$(VPS_BACKEND)/
 
 hostinger-calc: require-vps
-	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_stat_tests.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) > backend/$(BENCH_STAT_OUT)'
-	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_welch_all_baselines.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) > backend/$(BENCH_WELCH_OUT)'
-	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/fndsa_precompute_ablation.py --format csv > backend/$(BENCH_ABLATION_OUT)'
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_stat_tests.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) --format json > backend/$(BENCH_STAT_OUT)'
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/benchmark_welch_all_baselines.py --input backend/$(BENCH_RESULT_OUT) --samples backend/$(BENCH_SAMPLE_OUT) --format json > backend/$(BENCH_WELCH_OUT)'
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_REPO) && python3 scripts/fndsa_precompute_ablation.py --format json > backend/$(BENCH_ABLATION_OUT)'
 
 hostinger-fetch: require-vps
-	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_STAT_OUT) .
-	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_WELCH_OUT) .
-	$(SCP) $(SSH_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_ABLATION_OUT) .
+	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_STAT_OUT) .
+	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_WELCH_OUT) .
+	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_ABLATION_OUT) .
 
 hostinger-bench:
 	$(MAKE) client-k6

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import sys
 from pathlib import Path
 
@@ -72,7 +73,7 @@ def parse_args(
     )
     parser.add_argument(
         "--format",
-        choices=("markdown", "csv"),
+        choices=("markdown", "csv", "json"),
         default="markdown",
         help="Output format. Default: markdown",
     )
@@ -201,6 +202,28 @@ def print_csv(rows: list[dict[str, str]]) -> None:
     writer.writerows(rows)
 
 
+def print_json(
+    rows: list[dict[str, str]],
+    source: Path,
+    sample_source: Path | None,
+    sample_count: int,
+    metric: str,
+    target: str,
+    higher_is_better: bool,
+) -> None:
+    payload = {
+        "source": str(source),
+        "samples": str(sample_source) if sample_source else None,
+        "sample_count": sample_count,
+        "metric": metric,
+        "target": target,
+        "direction": "higher_is_better" if higher_is_better else "lower_is_better",
+        "rows": rows,
+    }
+    json.dump(payload, sys.stdout, indent=2)
+    print()
+
+
 def run(
     *,
     title: str = "Welch T-Test: All Baseline Algorithms",
@@ -217,7 +240,17 @@ def run(
     target = metrics[args.target]
     rows = [result_row(target, metrics[name], args.higher_is_better) for name in baselines]
 
-    if args.format == "csv":
+    if args.format == "json":
+        print_json(
+            rows,
+            source,
+            sample_source,
+            sample_count,
+            args.metric,
+            args.target,
+            args.higher_is_better,
+        )
+    elif args.format == "csv":
         print_csv(rows)
     else:
         print_markdown(

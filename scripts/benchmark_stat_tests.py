@@ -98,7 +98,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--format",
-        choices=("markdown", "csv"),
+        choices=("markdown", "csv", "json"),
         default="markdown",
         help="Output format. Default: markdown",
     )
@@ -637,6 +637,28 @@ def print_csv(rows: list[dict[str, str]]) -> None:
     writer.writerows(rows)
 
 
+def print_json(
+    rows: list[dict[str, str]],
+    source: Path,
+    sample_source: Path | None,
+    sample_count: int,
+    metric: str,
+    baseline: str,
+    higher_is_better: bool,
+) -> None:
+    payload = {
+        "source": str(source),
+        "samples": str(sample_source) if sample_source else None,
+        "sample_count": sample_count,
+        "metric": metric,
+        "baseline": baseline,
+        "direction": "higher_is_better" if higher_is_better else "lower_is_better",
+        "rows": rows,
+    }
+    json.dump(payload, sys.stdout, indent=2)
+    print()
+
+
 def main() -> int:
     args = parse_args()
     source, data = read_json(args.input)
@@ -646,7 +668,17 @@ def main() -> int:
     metrics = collect_metrics(data, args.metric, k6_samples)
     rows = result_rows(metrics, args.baseline, args.alpha, args.higher_is_better)
 
-    if args.format == "csv":
+    if args.format == "json":
+        print_json(
+            rows,
+            source,
+            sample_source,
+            sample_count,
+            args.metric,
+            args.baseline,
+            args.higher_is_better,
+        )
+    elif args.format == "csv":
         print_csv(rows)
     else:
         print_markdown(

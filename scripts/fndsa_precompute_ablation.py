@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import re
 import subprocess
@@ -74,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--format",
-        choices=("markdown", "csv"),
+        choices=("markdown", "csv", "json"),
         default="markdown",
         help="Output format. Default: markdown",
     )
@@ -278,6 +279,30 @@ def print_csv(rows: list[BenchRow]) -> None:
         )
 
 
+def row_to_dict(row: BenchRow) -> dict[str, object]:
+    return {
+        "variant": row.variant,
+        "iters": row.iters,
+        "ms_per_op": row.ms_per_op,
+        "kb_per_op": row.kb_per_op,
+        "allocs_per_op": row.allocs_per_op,
+        "vs_a0_percent": row.vs_a0_percent,
+        "vs_a0_direction": row.vs_a0_direction,
+        "step_percent": row.step_percent,
+        "step_direction": row.step_direction,
+        "note": row.note,
+    }
+
+
+def print_json(rows: list[BenchRow], source: str) -> None:
+    payload = {
+        "source": source.strip("`"),
+        "rows": [row_to_dict(row) for row in rows],
+    }
+    json.dump(payload, sys.stdout, indent=2)
+    print()
+
+
 def main() -> int:
     args = parse_args()
     if args.bench_output:
@@ -288,7 +313,9 @@ def main() -> int:
         source = "`go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem`"
 
     rows = parse_benchmarks(text)
-    if args.format == "csv":
+    if args.format == "json":
+        print_json(rows, source)
+    elif args.format == "csv":
         print_csv(rows)
     else:
         print_markdown(rows, source)
