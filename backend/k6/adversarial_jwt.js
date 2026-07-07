@@ -35,6 +35,11 @@ import { randomString } from "./k6-utils.js";
 const BASE_URL = "http://localhost:3000";
 const ITERATIONS = parseInt(__ENV.ITERATIONS || "10", 10);
 const ALGORITHM = "Falcon-Precomputed-512";
+const SUMMARY_DIR = (__ENV.BENCH_OUTPUT_DIR || "").replace(/\/+$/, "");
+
+function summaryFile(name) {
+  return SUMMARY_DIR ? `${SUMMARY_DIR}/${name}` : name;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // JWT Manipulation Helpers
@@ -501,7 +506,7 @@ ${SEP}
 
   return {
     stdout: table,
-    "adversarial_result.json": JSON.stringify(result, null, 2),
-    "adversarial_raw.json": JSON.stringify(data, null, 2),
+    [summaryFile("adversarial_result.json")]: JSON.stringify(result, null, 2),
+    [summaryFile("adversarial_raw.json")]: JSON.stringify(data, null, 2),
   };
 }

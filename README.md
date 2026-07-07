@@ -280,17 +280,18 @@ Useful k6 flags:
 | `ATTACK_ONLY=true` | Run adversarial phase only |
 | `ATTACK_ITERATIONS` | Attack attempts per profile, default `25` |
 
-Benchmark artifacts are written under `backend/`:
+Benchmark artifacts are written under `backend/benchmark-results/` by default.
+Override with `BENCH_OUTPUT_DIR=path`.
 
 | File | Purpose |
 | ---- | ------- |
-| `benchmark_sign_result.json` | Academic summary grouped by signer profile |
-| `benchmark_sign_raw.json` | Full k6 metric dump |
-| `benchmark_sign_samples.ndjson` | Per-sample k6 output for statistical tests |
-| `result.txt` | Human-readable k6 output |
-| `benchmark_stats.md` | Statistical summary |
-| `benchmark_welch.md` | Pairwise comparison summary |
-| `fndsa_precompute_ablation.csv` | FN-DSA precompute ablation output |
+| `benchmark-results/benchmark_sign_result.json` | Academic summary grouped by signer profile |
+| `benchmark-results/benchmark_sign_raw.json` | Full k6 metric dump |
+| `benchmark-results/benchmark_sign_samples.ndjson` | Per-sample k6 output for statistical tests |
+| `benchmark-results/result.txt` | Human-readable k6 output |
+| `benchmark-results/benchmark_stats.json` | Statistical summary |
+| `benchmark-results/benchmark_welch.json` | Pairwise comparison summary |
+| `benchmark-results/fndsa_precompute_ablation.json` | FN-DSA precompute ablation output |
 
 ## Benchmark Metrics
 
@@ -378,7 +379,7 @@ python3 scripts/benchmark_stat_tests.py --baseline Falcon-Precomputed-512
 python3 scripts/benchmark_stat_tests.py --format csv
 ```
 
-`benchmark_sign_samples.ndjson` enables normality checks and Mann-Whitney U tests. Without samples, the script falls back to summary statistics from `benchmark_sign_result.json`.
+`backend/benchmark-results/benchmark_sign_samples.ndjson` enables normality checks and Mann-Whitney U tests. Without samples, the script falls back to summary statistics from `benchmark_sign_result.json`.
 
 ## FN-DSA Precompute Ablation
 
@@ -436,7 +437,7 @@ Run from `backend/`.
 | `make bench-up` | Build and start benchmark Compose stack |
 | `make wait-bench` | Wait for benchmark gateways on ports `5001` and `5002` |
 | `make bench-down` | Stop benchmark stack and remove volumes |
-| `make bench-sign` | Run local benchmark workflow and write `result.txt` |
+| `make bench-sign` | Run local benchmark workflow and write `benchmark-results/result.txt` |
 | `make bench-sign-remote` | Run remote benchmark against configured URL |
 | `make attack-adversarial` | Run adversarial JWT test |
 

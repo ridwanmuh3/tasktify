@@ -15,10 +15,14 @@ from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUTS = (
+    ROOT / "benchmark-results" / "benchmark_sign_result.json",
+    ROOT / "backend" / "benchmark-results" / "benchmark_sign_result.json",
     ROOT / "benchmark_sign_result.json",
     ROOT / "backend" / "benchmark_sign_result.json",
 )
 DEFAULT_SAMPLE_FILES = (
+    ROOT / "benchmark-results" / "benchmark_sign_samples.ndjson",
+    ROOT / "backend" / "benchmark-results" / "benchmark_sign_samples.ndjson",
     ROOT / "benchmark_sign_samples.ndjson",
     ROOT / "backend" / "benchmark_sign_samples.ndjson",
 )

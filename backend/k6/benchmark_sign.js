@@ -68,11 +68,16 @@ import { randomString } from "./k6-utils.js";
 
 const _HOST = __ENV.BENCH_HOST;
 const _BASE_URL = __ENV.BASE_URL;
+const SUMMARY_DIR = (__ENV.BENCH_OUTPUT_DIR || "").replace(/\/+$/, "");
 
 function normalizeBase(url) {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return "http://" + url;
+}
+
+function summaryFile(name) {
+  return SUMMARY_DIR ? `${SUMMARY_DIR}/${name}` : name;
 }
 
 const HOST_BASE = normalizeBase(_HOST);
@@ -1735,7 +1740,7 @@ ${SEP}
 
   return {
     stdout: table,
-    "benchmark_sign_result.json": JSON.stringify(buildAcademicResult(), null, 2),
-    "benchmark_sign_raw.json": JSON.stringify(data, null, 2),
+    [summaryFile("benchmark_sign_result.json")]: JSON.stringify(buildAcademicResult(), null, 2),
+    [summaryFile("benchmark_sign_raw.json")]: JSON.stringify(data, null, 2),
   };
 }

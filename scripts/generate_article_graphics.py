@@ -14,10 +14,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_FILES = (
+    ROOT / "benchmark-results" / "benchmark_sign_result.json",
+    ROOT / "backend" / "benchmark-results" / "benchmark_sign_result.json",
     ROOT / "benchmark_sign_result.json",
     ROOT / "backend" / "benchmark_sign_result.json",
 )
 ADVERSARIAL_FILES = (
+    ROOT / "benchmark-results" / "adversarial_result.json",
+    ROOT / "backend" / "benchmark-results" / "adversarial_result.json",
     ROOT / "adversarial_result.json",
     ROOT / "backend" / "adversarial_result.json",
 )
