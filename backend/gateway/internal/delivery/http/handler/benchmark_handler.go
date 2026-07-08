@@ -13,8 +13,9 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 	"go.uber.org/zap"
+
+	"github.com/ridwanmuh3/tasktify/pkg/utils/jwtutils"
 
 	"github.com/ridwanmuh3/tasktify/gateway/internal/model"
 )
@@ -25,8 +26,10 @@ type BenchmarkHandler struct {
 	benchmarkConfigs map[string]*jwtutils.AlgConfig
 }
 
-const bytesPerKB = 1024.0
-const pureSigningInput = "tasktify-fndsa-pure-signing-benchmark-message-v1"
+const (
+	bytesPerKB       = 1024.0
+	pureSigningInput = "tasktify-fndsa-pure-signing-benchmark-message-v1"
+)
 
 // cpuMonitor samples process-wide CPU utilization every 100 ms via /proc/self/stat.
 // /proc/self/stat utime+stime always sums all threads — reliable in containers.
@@ -89,7 +92,7 @@ func readMemoryRSSKB() float64 {
 func readMemoryRSSFromStatusKB() float64 {
 	data, err := os.ReadFile("/proc/self/status")
 	if err != nil {
-		return 0
+		return readMemoryRSSFallbackKB()
 	}
 	for _, line := range strings.Split(string(data), "\n") {
 		if !strings.HasPrefix(line, "VmRSS:") {
@@ -97,31 +100,37 @@ func readMemoryRSSFromStatusKB() float64 {
 		}
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
-			return 0
+			return readMemoryRSSFallbackKB()
 		}
 		kb, err := strconv.ParseFloat(fields[1], 64)
 		if err != nil {
-			return 0
+			return readMemoryRSSFallbackKB()
 		}
 		return kb
 	}
-	return 0
+	return readMemoryRSSFallbackKB()
 }
 
 func readMemoryRSSFromStatmKB() float64 {
 	data, err := os.ReadFile("/proc/self/statm")
 	if err != nil {
-		return 0
+		return readMemoryRSSFallbackKB()
 	}
 	fields := strings.Fields(string(data))
 	if len(fields) < 2 {
-		return 0
+		return readMemoryRSSFallbackKB()
 	}
 	pages, err := strconv.ParseFloat(fields[1], 64)
 	if err != nil {
-		return 0
+		return readMemoryRSSFallbackKB()
 	}
 	return pages * float64(os.Getpagesize()) / bytesPerKB
+}
+
+func readMemoryRSSFallbackKB() float64 {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return float64(m.Sys) / bytesPerKB
 }
 
 func NewBenchmarkHandler(
