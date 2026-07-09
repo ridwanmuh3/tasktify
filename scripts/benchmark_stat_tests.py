@@ -223,8 +223,18 @@ def metric_n(algorithm: dict, metric_path: str, samples: tuple[float, ...]) -> i
         return None
 
     if "gc_free" in metric_path:
+        # isolated.gc_contaminated_count only counts GC events from the
+        # jwt-issuance phase; pure-signing runs its own isolated loop and
+        # reports its contamination separately. Using the wrong counter here
+        # silently understates/overstates n for whichever phase it's not
+        # measuring.
+        contaminated_key = (
+            "pure_signing_gc_contaminated_count"
+            if metric_path.startswith("isolated.pure_signing")
+            else "gc_contaminated_count"
+        )
         try:
-            return n - int(isolated.get("gc_contaminated_count", 0))
+            return n - int(isolated.get(contaminated_key, 0))
         except (TypeError, ValueError):
             return n
     return n
