@@ -272,6 +272,9 @@ func (h *BenchmarkHandler) jwtIssuance(c fiber.Ctx, endpoint string) error {
 	if err := c.Bind().JSON(&req); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
+	if req.Iterations <= 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "iterations must be positive")
+	}
 
 	signTimings := make([]float64, 0, req.Iterations)
 	gcFreeSignTimings := make([]float64, 0, req.Iterations)

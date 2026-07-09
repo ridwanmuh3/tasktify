@@ -273,6 +273,9 @@ const benchAuthMemorySysKBStdev = new Trend("bench_auth_memory_sys_kb_stdev");
 const benchAuthMemoryRSSKBAvg = new Trend("bench_auth_memory_rss_kb_avg");
 const benchAuthMemoryRSSKBStdev = new Trend("bench_auth_memory_rss_kb_stdev");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
+const benchPureSigningGCContaminatedCount = new Counter(
+  "bench_pure_signing_gc_contaminated_count",
+);
 const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
 const benchPureSigningSuccess = new Counter("bench_pure_signing_success");
@@ -412,6 +415,7 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_refresh_token_generation_gc_free_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_total_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_gc_contaminated_count${ta}`] = [`count>=0`];
+    thresholds[`bench_pure_signing_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>0`];
     thresholds[`bench_pure_signing_success${ta}`] = [`count>0`];
   }
@@ -667,6 +671,7 @@ export function runIsolated(data) {
 
     const gcFree = s.pure_signing_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
+    benchPureSigningGCContaminatedCount.add(gcCount, tags);
     console.log(
       `[pure-signing|${alg.name}] n=${successCount}/${result.iterations}` +
         ` warmup=${result.warmup_iterations}` +
@@ -1098,6 +1103,11 @@ export function handleSummary(data) {
       );
       const isolatedPureSuccess = getCount("bench_pure_signing_success", alg.name, null);
       const isolatedPureFailed = getCount("bench_pure_signing_failed", alg.name, null);
+      const isolatedPureGCCnt = getCount(
+        "bench_pure_signing_gc_contaminated_count",
+        alg.name,
+        null,
+      );
       const hasIsolatedPure = isolatedPureSuccess > 0;
       const isolatedPureAvg = hasIsolatedPure
         ? getNumber("bench_pure_signing_avg", alg.name, null, "avg")
@@ -1210,6 +1220,7 @@ export function handleSummary(data) {
               pure_signing_success_count: isolatedPureSuccess,
               pure_signing_failed_count: isolatedPureFailed,
               gc_contaminated_count: isolatedGCCnt || 0,
+              pure_signing_gc_contaminated_count: isolatedPureGCCnt || 0,
               pure_signing_ms: hasIsolatedPure
                 ? {
                     avg: isolatedPureAvg,

@@ -1,6 +1,9 @@
 # Binaries
 bin/
 *.exe
+backend/auth-service/main
+backend/gateway/main
+backend/todo-service/main
 
 # IDE
 .idea/
