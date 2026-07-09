@@ -86,6 +86,14 @@ func TestPrecomputedSignerPersistentBytes(t *testing.T) {
 	}
 }
 
+// TestPrecomputedSignRejectsTampering: bit-flip signature / bit-flip
+// message rejection for the precomputed signer path specifically.
+// Reference: Fouque et al., "Falcon: Fast-Fourier Lattice-based Compact
+// Signatures over NTRU" (NIST PQC Round 3 submission) — Verify algorithm,
+// https://falcon-sign.info/falcon.pdf; EUF-CMA (Goldwasser/Micali/Rivest,
+// 1988). See also TestAttack_BitFlipTampering in fndsa_adversarial_test.go,
+// which runs the same two checks against both the original (dynamic)
+// signer and this precomputed signer side by side for direct comparison.
 func TestPrecomputedSignRejectsTampering(t *testing.T) {
 	_, vkey, ps := newDeterministicPrecomputedSigner(t, 9, 1)
 	data := []byte("tamper-check message")

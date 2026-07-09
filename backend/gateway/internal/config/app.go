@@ -26,12 +26,18 @@ type BootstrapConfig struct {
 	TodoServiceConn *grpc.ClientConn
 }
 
-// Supported algorithms for multi-algorithm JWT verification
+// Supported algorithms for multi-algorithm JWT verification.
+// HS256/RS256/ES256 are classical baselines kept alongside the PQC profiles
+// for the adversarial + performance comparison (thesis defense requirement).
 var supportedAlgorithms = []string{
 	"FN-DSA-512",
 	"FN-DSA-Precomputed-512",
 	"Falcon-512",
 	"Falcon-Precomputed-512",
+	"HS256",
+	"RS256",
+	"ES256",
+	"EdDSA",
 }
 
 func Bootstrap(config *BootstrapConfig) {
@@ -67,7 +73,12 @@ func Bootstrap(config *BootstrapConfig) {
 	if err != nil {
 		config.Log.Fatalf("failed to load algorithm configs: %v", err)
 	}
-	benchmarkAlgConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, algsToLoad, true)
+	// Benchmark signing configs must cover every algorithm the benchmark client
+	// exercises, so they are loaded from the full supportedAlgorithms list rather
+	// than the JWT_ALLOWED_ALGS-narrowed set. Narrowing is meant for production
+	// verification; narrowing the benchmark signer makes /api/benchmark reject any
+	// algorithm not in the production allow-list (e.g. FN-DSA-Precomputed-512).
+	benchmarkAlgConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, true)
 	if err != nil {
 		config.Log.Fatalf("failed to load benchmark signing configs: %v", err)
 	}

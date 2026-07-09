@@ -21,7 +21,7 @@ BENCH_STDOUT_OUT ?= $(BENCH_OUTPUT_DIR)/result.txt
 BENCH_STAT_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_stats.json
 BENCH_WELCH_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_welch.json
 BENCH_ABLATION_OUT ?= $(BENCH_OUTPUT_DIR)/fndsa_precompute_ablation.json
-BENCH_PORTS ?= 5001 5002
+BENCH_PORTS ?= 5001 5002 5003 5004 5005 5006
 BASE_URL ?= https://poc-ridwanmuh3.my.id
 VPS_SSH ?= 
 VPS_REPO ?= ~/tasktify
@@ -99,7 +99,7 @@ ensure-keys:
 	fi
 
 ensure-bench-keys:
-	@if [ ! -f keys/FNDSA-512_sk.pem ]; then \
+	@if [ ! -f keys/FNDSA-512_sk.pem ] || [ ! -f keys/RS256_sk.pem ] || [ ! -f keys/ES256_sk.pem ] || [ ! -f keys/HS256_secret.pem ] || [ ! -f keys/EdDSA_sk.pem ]; then \
 		$(MAKE) keygen-all; \
 	else \
 		echo "Benchmark keys present"; \

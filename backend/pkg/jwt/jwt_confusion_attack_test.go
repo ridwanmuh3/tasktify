@@ -84,6 +84,8 @@ func parseWithProtection(tokenString string, vkey []byte) (*jwt.Token, error) {
 // ========================================================
 // ATTACK 1: Algorithm "none" Attack
 // Attacker mencoba mengganti alg ke "none" dan menghapus signature
+// Reference: RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1 Perform Algorithm
+// Verification, §3.2 Use Appropriate Algorithms
 // ========================================================
 func TestAttack_AlgorithmNone(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -107,10 +109,11 @@ func TestAttack_AlgorithmNone(t *testing.T) {
 }
 
 // ========================================================
-// ATTACK 2: Algorithm Switching (Precomputed-512 <-> FN-DSA-512)
-// Original and precomputed FN-DSA-512 share the same header alg.
-// A valid signature produced with fndsa.Sign verifies the same way.
-// This test verifies interoperability, not a vulnerability.
+// Interoperability check (not an adversarial vector): Precomputed-512 vs
+// FN-DSA-512 share the same header alg. A valid signature produced with
+// fndsa.Sign verifies the same way. No RFC attack reference applies here
+// — this proves correctness of the precomputation optimization, not
+// resistance to an attack.
 // ========================================================
 func TestAttack_AlgorithmSwitchToFNDSA512(t *testing.T) {
 	skey, vkey, signer := setupFNDSAKeys(t)
@@ -146,6 +149,7 @@ func TestAttack_AlgorithmSwitchToFNDSA512(t *testing.T) {
 // ========================================================
 // ATTACK 3: Algorithm Switching ke ML-DSA
 // Attacker mencoba switch ke ML-DSA algorithm
+// Reference: RFC 8725 §3.1 Perform Algorithm Verification
 // ========================================================
 func TestAttack_AlgorithmSwitchToMLDSA(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -175,6 +179,7 @@ func TestAttack_AlgorithmSwitchToMLDSA(t *testing.T) {
 // ========================================================
 // ATTACK 4: Algorithm Confusion ke FN-DSA-1024
 // Attacker mencoba switch ke FN-DSA-1024/FN-DSA-Precomputed-1024
+// Reference: RFC 8725 §3.1 Perform Algorithm Verification
 // ========================================================
 func TestAttack_AlgorithmSwitchToFNDSA1024(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -204,6 +209,7 @@ func TestAttack_AlgorithmSwitchToFNDSA1024(t *testing.T) {
 // ========================================================
 // ATTACK: Signature Tampering (Scenario 1)
 // Attacker flip byte pada signature yang valid tanpa private key
+// Reference: RFC 8725 §3.3 Validate All Cryptographic Operations
 // ========================================================
 func TestAttack_SignatureTampering(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -246,6 +252,7 @@ func TestAttack_SignatureTampering(t *testing.T) {
 // ========================================================
 // ATTACK 5: Signature Stripping
 // Attacker menghapus atau memanipulasi signature dari token
+// Reference: RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.3
 // ========================================================
 func TestAttack_SignatureStripping(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -277,6 +284,7 @@ func TestAttack_SignatureStripping(t *testing.T) {
 // ========================================================
 // ATTACK 6: Expired Token Replay
 // Attacker menggunakan token yang sudah expired
+// Reference: RFC 7519 §4.1.4 "exp" (Expiration Time) Claim
 // ========================================================
 func TestAttack_ExpiredToken(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -311,6 +319,8 @@ func TestAttack_ExpiredToken(t *testing.T) {
 // ========================================================
 // ATTACK 7: Issuer Spoofing (Scenario 10)
 // Attacker membuat token dengan issuer yang tidak dikenali server
+// Reference: RFC 7519 §4.1.1 "iss" (Issuer) Claim; RFC 8725 §3.8 Validate
+// Issuer and Subject
 // ========================================================
 func TestAttack_IssuerSpoofing(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -351,6 +361,8 @@ func TestAttack_IssuerSpoofing(t *testing.T) {
 // ========================================================
 // ATTACK 8: Cross-Key Verification
 // Attacker mencoba verifikasi dengan key pair yang berbeda
+// Reference: RFC 8725 §3.1 Perform Algorithm Verification (key resolution
+// must be tied to the correct registered key, not attacker-substitutable)
 // ========================================================
 func TestAttack_CrossKeyVerification(t *testing.T) {
 	_, _, signer := setupFNDSAKeys(t)
@@ -371,6 +383,9 @@ func TestAttack_CrossKeyVerification(t *testing.T) {
 // ========================================================
 // ATTACK 9: Algorithm yang Tidak Terdaftar (HS256, RS256, dll)
 // Attacker mencoba menggunakan algorithm klasik/tidak terdaftar
+// Reference: RFC 8725 §3.1 Perform Algorithm Verification ("Libraries
+// MUST enable the caller to specify a supported set of algorithms and
+// MUST NOT use any other algorithms"), §3.2 Use Appropriate Algorithms
 // ========================================================
 func TestAttack_UnknownAlgorithm(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -402,6 +417,10 @@ func TestAttack_UnknownAlgorithm(t *testing.T) {
 // ========================================================
 // ATTACK 10: Token Malformed
 // Attacker mengirim token yang malformed
+// Reference: RFC 7519 §3 JWT Format (three dot-separated base64url parts).
+// Deviating from this structure is malformed input, not a valid JWT;
+// RFC 8725 has no dedicated malformed-input section, so this vector's
+// grounding is the format definition itself plus fail-closed parsing.
 // ========================================================
 func TestAttack_MalformedTokens(t *testing.T) {
 	_, vkey, _ := setupFNDSAKeys(t)
@@ -433,6 +452,8 @@ func TestAttack_MalformedTokens(t *testing.T) {
 // ========================================================
 // ATTACK 11: Future IssuedAt Attack
 // Attacker membuat token dengan iat di masa depan
+// Reference: RFC 7519 §4.1.6 "iat" (Issued At) Claim; RFC 8725 §3.10 Do
+// Not Trust Received Claims (iat sanity-checked as untrusted input)
 // ========================================================
 func TestAttack_FutureIssuedAt(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -467,6 +488,7 @@ func TestAttack_FutureIssuedAt(t *testing.T) {
 // ========================================================
 // ATTACK 12: Algorithm Confusion - none dengan signature valid
 // Attacker menyisipkan alg=none tapi tetap menyertakan signature
+// Reference: RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.2
 // ========================================================
 func TestAttack_NoneWithSignature(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -492,6 +514,9 @@ func TestAttack_NoneWithSignature(t *testing.T) {
 // ========================================================
 // ATTACK 13: JSON Injection pada Claims
 // Attacker memodifikasi claims (tambah role admin) tanpa re-sign
+// Reference: RFC 8725 §3.3 Validate All Cryptographic Operations
+// ("the entire JWT MUST be rejected if any of them fail to validate");
+// §3.10 Do Not Trust Received Claims
 // ========================================================
 func TestAttack_JSONInjectionInClaims(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -520,6 +545,10 @@ func TestAttack_JSONInjectionInClaims(t *testing.T) {
 // ATTACK: Replay Attack (Scenario 7)
 // Attacker menggunakan ulang token valid yang sama berkali-kali
 // JWT library bersifat stateless — deteksi harus di app layer via JTI blacklist
+// Reference: RFC 7519 §4.1.7 "jti" (JWT ID) Claim ("This claim can be used
+// to prevent the JWT from being replayed"). Neither RFC 7519 nor RFC 8725
+// mandates stateful replay prevention — this test documents that gap
+// rather than closing it (see docs/skenario-pengujian.md §6.5 "Gap").
 // ========================================================
 func TestAttack_ReplayAttack(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)
@@ -611,18 +640,36 @@ func TestVerification_ValidTokenAccepted(t *testing.T) {
 // ========================================================
 // SUMMARY: Menjalankan semua attack test dan ringkasan
 //
+// Semua vektor di file ini menyerang lapisan JOSE/JWT envelope (header
+// alg, klaim, compact serialization) dan berpijak pada RFC 7519 / RFC
+// 8725 — lihat komentar "Reference:" di atas tiap fungsi Test di atas.
+// Vektor terhadap primitif tanda tangan FN-DSA murni (bukan JWT) ada di
+// backend/pkg/fndsa/fndsa_adversarial_test.go, berpijak pada spesifikasi
+// Falcon resmi dan definisi keamanan EUF-CMA — lihat header komentar file
+// tersebut.
+//
 // Mapping ke 10 Vektor Serangan Adversarial JWT:
 //
 //	#1  Signature Tampering       → TestAttack_SignatureTampering
+//	    RFC 8725 §3.3
 //	#2  Token Forgery             → TestAttack_SignatureStripping (empty/fake sig)
+//	    RFC 8725 §3.1, §3.3
 //	#3  Algorithm Confusion       → TestAttack_UnknownAlgorithm (HS256/RS256/ES256)
+//	    RFC 8725 §3.1, §3.2
 //	#4  None Algorithm Attack     → TestAttack_AlgorithmNone, TestAttack_NoneWithSignature
+//	    RFC 7519 §6; RFC 8725 §3.1, §3.2
 //	#5  Payload/Claim Manipulation→ TestAttack_JSONInjectionInClaims
+//	    RFC 8725 §3.3, §3.10
 //	#6  Expired Token Abuse       → TestAttack_ExpiredToken
+//	    RFC 7519 §4.1.4
 //	#7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
+//	    RFC 7519 §4.1.7 (documented gap, not closed by this test)
 //	#8  Unsigned Compact Token    → TestAttack_SignatureStripping (empty signature case)
+//	    RFC 7519 §6; RFC 8725 §3.1, §3.3
 //	#9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke FN-DSA verifier)
+//	    RFC 8725 §3.1
 //	#10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
+//	    RFC 7519 §4.1.1; RFC 8725 §3.8
 //
 // ========================================================
 func TestConfusionAttackSummary(t *testing.T) {
@@ -667,22 +714,26 @@ func TestConfusionAttackSummary(t *testing.T) {
 	}
 
 	fmt.Printf("\n")
-	fmt.Printf("══════════════════════════════════════════════════════════════\n")
-	fmt.Printf("  ADVERSARIAL JWT TEST SUMMARY (10 Attack Vectors)\n")
-	fmt.Printf("══════════════════════════════════════════════════════════════\n")
-	fmt.Printf("  #1  Signature Tampering       : flip byte → 401/403\n")
-	fmt.Printf("  #2  Token Forgery             : fake/empty sig → 401/403\n")
-	fmt.Printf("  #3  Algorithm Confusion       : HS256/RS256 → 401/403\n")
-	fmt.Printf("  #4  None Algorithm Attack     : alg=none → 401/403\n")
-	fmt.Printf("  #5  Payload Manipulation      : no resign → 401/403\n")
-	fmt.Printf("  #6  Expired Token Abuse       : exp lama → 401/403\n")
-	fmt.Printf("  #7  Replay Attack             : stateless; JTI tracking at app layer\n")
-	fmt.Printf("  #8  Unsigned Compact Token    : empty sig → 401/403\n")
-	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→FN-DSA → 401/403\n")
-	fmt.Printf("  #10 Invalid Issuer Attack     : example.com → 401/403\n")
-	fmt.Printf("══════════════════════════════════════════════════════════════\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════════════════════\n")
+	fmt.Printf("  ADVERSARIAL JWT TEST SUMMARY (10 Attack Vectors, JOSE/JWT envelope layer)\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════════════════════\n")
+	fmt.Printf("  #1  Signature Tampering       : flip byte → 401/403           RFC 8725 §3.3\n")
+	fmt.Printf("  #2  Token Forgery             : fake/empty sig → 401/403      RFC 8725 §3.1/§3.3\n")
+	fmt.Printf("  #3  Algorithm Confusion       : HS256/RS256 → 401/403         RFC 8725 §3.1/§3.2\n")
+	fmt.Printf("  #4  None Algorithm Attack     : alg=none → 401/403            RFC 7519 §6; 8725 §3.1\n")
+	fmt.Printf("  #5  Payload Manipulation      : no resign → 401/403           RFC 8725 §3.3/§3.10\n")
+	fmt.Printf("  #6  Expired Token Abuse       : exp lama → 401/403            RFC 7519 §4.1.4\n")
+	fmt.Printf("  #7  Replay Attack             : stateless; app-layer JTI      RFC 7519 §4.1.7 (gap)\n")
+	fmt.Printf("  #8  Unsigned Compact Token    : empty sig → 401/403           RFC 7519 §6; 8725 §3.1\n")
+	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→FN-DSA → 401/403        RFC 8725 §3.1\n")
+	fmt.Printf("  #10 Invalid Issuer Attack     : example.com → 401/403         RFC 7519 §4.1.1; 8725 §3.8\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════════════════════\n")
 	fmt.Printf("  Total Tests : %d\n", len(attacks))
 	fmt.Printf("  Protected   : %d\n", passed)
 	fmt.Printf("  Vulnerable  : %d\n", failed)
-	fmt.Printf("══════════════════════════════════════════════════════════════\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════════════════════\n")
+	fmt.Printf("  NOTE: pure FN-DSA signature primitive attacks (norm bound, cross-key,\n")
+	fmt.Printf("  domain-context, pre-hash confusion, truncation) are NOT covered here —\n")
+	fmt.Printf("  see pkg/fndsa/fndsa_adversarial_test.go (Falcon spec + EUF-CMA grounded).\n")
+	fmt.Printf("══════════════════════════════════════════════════════════════════════════════\n")
 }

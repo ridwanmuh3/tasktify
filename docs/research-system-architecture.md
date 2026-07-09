@@ -286,19 +286,21 @@ flowchart LR
   k6["k6 benchmark scripts<br/>backend/k6/benchmark_sign.js<br/>backend/k6/adversarial_jwt.js"]
 
   subgraph gateways["One gateway per algorithm"]
-    gw1["bench-gw-fnp512<br/>FN-DSA-Precomputed-512<br/>localhost:5001"]
-    gw2["bench-gw-fn512<br/>FN-DSA-512<br/>localhost:5002"]
-    gw3["bench-gw-mldsa44<br/>ML-DSA-44<br/>localhost:5003"]
-    gw4["bench-gw-slhdsa128f<br/>SLH-DSA-SHA2-128f<br/>localhost:5004"]
-    gw5["bench-gw-slhdsa128s<br/>SLH-DSA-SHA2-128s<br/>localhost:5005"]
+    gw1["bench-gw-fnp512<br/>FN-DSA-Precomputed-512 (proposed)<br/>localhost:5001"]
+    gw2["bench-gw-fn512<br/>FN-DSA-512 (baseline / Falcon-512)<br/>localhost:5002"]
+    gw3["bench-gw-hs256<br/>HS256 (classical)<br/>localhost:5003"]
+    gw4["bench-gw-rs256<br/>RS256 (classical)<br/>localhost:5004"]
+    gw5["bench-gw-es256<br/>ES256 (classical)<br/>localhost:5005"]
+    gw6["bench-gw-eddsa<br/>EdDSA (classical)<br/>localhost:5006"]
   end
 
   subgraph auth_pairs["Matching auth service per algorithm"]
     a1["bench-auth-fnp512<br/>JWT_DEFAULT_ALG=FN-DSA-Precomputed-512"]
     a2["bench-auth-fn512<br/>JWT_DEFAULT_ALG=FN-DSA-512"]
-    a3["bench-auth-mldsa44<br/>JWT_DEFAULT_ALG=ML-DSA-44"]
-    a4["bench-auth-slhdsa128f<br/>JWT_DEFAULT_ALG=SLH-DSA-SHA2-128f"]
-    a5["bench-auth-slhdsa128s<br/>JWT_DEFAULT_ALG=SLH-DSA-SHA2-128s"]
+    a3["bench-auth-hs256<br/>JWT_DEFAULT_ALG=HS256"]
+    a4["bench-auth-rs256<br/>JWT_DEFAULT_ALG=RS256"]
+    a5["bench-auth-es256<br/>JWT_DEFAULT_ALG=ES256"]
+    a6["bench-auth-eddsa<br/>JWT_DEFAULT_ALG=EdDSA"]
   end
 
   bench_todo["bench-todo<br/>shared TaskService"]
@@ -310,24 +312,28 @@ flowchart LR
   k6 -->|"HTTP benchmark traffic"| gw3
   k6 -->|"HTTP benchmark traffic"| gw4
   k6 -->|"HTTP benchmark traffic"| gw5
+  k6 -->|"HTTP benchmark traffic"| gw6
 
   gw1 -->|"gRPC signin / refresh / profile"| a1
   gw2 -->|"gRPC signin / refresh / profile"| a2
   gw3 -->|"gRPC signin / refresh / profile"| a3
   gw4 -->|"gRPC signin / refresh / profile"| a4
   gw5 -->|"gRPC signin / refresh / profile"| a5
+  gw6 -->|"gRPC signin / refresh / profile"| a6
 
   gw1 -->|"gRPC tasks"| bench_todo
   gw2 -->|"gRPC tasks"| bench_todo
   gw3 -->|"gRPC tasks"| bench_todo
   gw4 -->|"gRPC tasks"| bench_todo
   gw5 -->|"gRPC tasks"| bench_todo
+  gw6 -->|"gRPC tasks"| bench_todo
 
   a1 --> bench_db
   a2 --> bench_db
   a3 --> bench_db
   a4 --> bench_db
   a5 --> bench_db
+  a6 --> bench_db
   bench_todo --> bench_db
 
   bench_keys --> gw1
@@ -335,12 +341,16 @@ flowchart LR
   bench_keys --> gw3
   bench_keys --> gw4
   bench_keys --> gw5
+  bench_keys --> gw6
   bench_keys --> a1
   bench_keys --> a2
   bench_keys --> a3
   bench_keys --> a4
   bench_keys --> a5
+  bench_keys --> a6
 ```
+
+Note: `pkg/utils/jwtutils` also supports `ML-DSA-44/65/87` and `SLH-DSA-*` (see `loader.go`), but those profiles are not yet wired into `docker-compose.benchmark.yml` as separate gateway/auth pairs — they exist in the crypto library but aren't part of this benchmark topology.
 
 ## Request Flows
 

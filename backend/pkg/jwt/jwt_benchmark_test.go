@@ -1,7 +1,11 @@
 package jwt_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -27,15 +31,17 @@ type algSetup struct {
 	VerifyKey any
 }
 
-// benchResult holds the average benchmark metrics for each algorithm
+// benchResult holds the average benchmark metrics for each algorithm.
+// Signing-only: this table is the thesis's primary performance metric
+// (JWT issuance/signing cost), matching k6/benchmark_sign.js's isolated
+// phase. Verification cost is exercised separately by the confusion test
+// below for correctness, not measured here as a performance number.
 type benchResult struct {
 	AlgName       string
 	AvgGenTime    float64 // milliseconds
-	AvgVerifyTime float64 // milliseconds
 	AvgHeaderKB   float64 // kilobytes
 	AvgBodyKB     float64 // kilobytes
-	AvgRespTime   float64 // milliseconds (gen + verify)
-	Throughput    float64 // operations per second
+	Throughput    float64 // operations per second (signing only)
 	ConfusionPass bool
 }
 
@@ -98,6 +104,54 @@ func setupBenchmarkAlgorithms(t *testing.T) []algSetup {
 		VerifyKey: slhPk,
 	})
 
+	// 5. HS256 (classical baseline)
+	hsSecret := make([]byte, 32)
+	if _, err := rand.Read(hsSecret); err != nil {
+		t.Fatalf("HS256 secret generation failed: %v", err)
+	}
+	algs = append(algs, algSetup{
+		Name:      "HS256",
+		Method:    jwt.SigningMethodHS256,
+		SignKey:   hsSecret,
+		VerifyKey: hsSecret,
+	})
+
+	// 6. RS256 (classical baseline)
+	rsaSk, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("RS256 keygen failed: %v", err)
+	}
+	algs = append(algs, algSetup{
+		Name:      "RS256",
+		Method:    jwt.SigningMethodRS256,
+		SignKey:   rsaSk,
+		VerifyKey: &rsaSk.PublicKey,
+	})
+
+	// 7. ES256 (classical baseline)
+	ecSk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("ES256 keygen failed: %v", err)
+	}
+	algs = append(algs, algSetup{
+		Name:      "ES256",
+		Method:    jwt.SigningMethodES256,
+		SignKey:   ecSk,
+		VerifyKey: &ecSk.PublicKey,
+	})
+
+	// 8. EdDSA (classical baseline)
+	edPk, edSk, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("EdDSA keygen failed: %v", err)
+	}
+	algs = append(algs, algSetup{
+		Name:      "EdDSA",
+		Method:    jwt.SigningMethodEdDSA,
+		SignKey:   edSk,
+		VerifyKey: edPk,
+	})
+
 	return algs
 }
 
@@ -144,15 +198,15 @@ func buildResponseBody(accessToken, refreshToken string) []byte {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// BENCHMARK: Post-Quantum Cryptography JWT Performance
-// Metrics (average over 100 iterations):
-//   - Token Generation Time
-//   - Token Verification Time
+// BENCHMARK: Post-Quantum vs Classical JWT Signature Performance
+// Metrics (average over 100 iterations), signing only:
+//   - Token Generation (Signing) Time
 //   - Request Header Size (Authorization: Bearer <token>) in KB
 //   - Response Body Size (JSON sign-in response) in KB
-//   - Response Time (generation + verification)
-//   - Throughput (ops/sec)
-//   - JWT Confusion Test (cross-algorithm verification must fail)
+//   - Throughput (ops/sec, based on signing time)
+//   - JWT Confusion Test (cross-algorithm verification must fail —
+//     RFC 8725 §3.1 "Perform Algorithm Verification"; uses Verify()
+//     functionally to prove rejection, not measured as a perf metric)
 //
 // ══════════════════════════════════════════════════════════════════
 func TestBenchmarkPQCAlgorithms(t *testing.T) {
@@ -165,13 +219,12 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 		t.Run("Benchmark_"+alg.Name, func(t *testing.T) {
 			var (
 				totalGenTime    time.Duration
-				totalVerifyTime time.Duration
 				totalHeaderSize int
 				totalBodySize   int
 			)
 
 			for i := 0; i < benchmarkIterations; i++ {
-				// 1. Token Generation Time
+				// 1. Token Generation (Signing) Time
 				genStart := time.Now()
 				accessToken, err := signBenchToken(alg.Method, alg.SignKey)
 				genDuration := time.Since(genStart)
@@ -186,16 +239,7 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 					t.Fatalf("iteration %d: refresh sign failed: %v", i, err)
 				}
 
-				// 2. Token Verification Time
-				verifyStart := time.Now()
-				err = verifyBenchToken(accessToken, alg.VerifyKey, alg.Method.Alg())
-				verifyDuration := time.Since(verifyStart)
-				if err != nil {
-					t.Fatalf("iteration %d: verify failed: %v", i, err)
-				}
-				totalVerifyTime += verifyDuration
-
-				// 3. Request Header Size: "Authorization: Bearer <token>"
+				// 2. Request Header Size: "Authorization: Bearer <token>"
 				headerSize := len("Authorization: Bearer ") + len(accessToken)
 				totalHeaderSize += headerSize
 
@@ -205,27 +249,23 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 			}
 
 			avgGenMs := durationToMs(totalGenTime) / float64(benchmarkIterations)
-			avgVerifyMs := durationToMs(totalVerifyTime) / float64(benchmarkIterations)
-			avgRespMs := avgGenMs + avgVerifyMs
 			throughput := 0.0
-			if avgRespMs > 0 {
-				throughput = 1000.0 / avgRespMs
+			if avgGenMs > 0 {
+				throughput = 1000.0 / avgGenMs
 			}
 
 			results[idx] = benchResult{
-				AlgName:       alg.Name,
-				AvgGenTime:    avgGenMs,
-				AvgVerifyTime: avgVerifyMs,
-				AvgHeaderKB:   bytesToKB(totalHeaderSize) / float64(benchmarkIterations),
-				AvgBodyKB:     bytesToKB(totalBodySize) / float64(benchmarkIterations),
-				AvgRespTime:   avgRespMs,
-				Throughput:    throughput,
+				AlgName:     alg.Name,
+				AvgGenTime:  avgGenMs,
+				AvgHeaderKB: bytesToKB(totalHeaderSize) / float64(benchmarkIterations),
+				AvgBodyKB:   bytesToKB(totalBodySize) / float64(benchmarkIterations),
+				Throughput:  throughput,
 			}
 
-			t.Logf("%s: gen=%.4fms verify=%.4fms header=%.3fKB body=%.3fKB resp=%.4fms throughput=%.2f ops/s",
-				alg.Name, avgGenMs, avgVerifyMs,
+			t.Logf("%s: gen=%.4fms header=%.3fKB body=%.3fKB throughput=%.2f ops/s",
+				alg.Name, avgGenMs,
 				results[idx].AvgHeaderKB, results[idx].AvgBodyKB,
-				avgRespMs, throughput)
+				throughput)
 		})
 	}
 
@@ -260,17 +300,17 @@ func TestBenchmarkPQCAlgorithms(t *testing.T) {
 }
 
 func printBenchmarkSummary(results []benchResult) {
-	divider := strings.Repeat("═", 140)
-	rowDiv := strings.Repeat("─", 140)
+	divider := strings.Repeat("═", 110)
+	rowDiv := strings.Repeat("─", 110)
 
 	fmt.Println()
 	fmt.Println(divider)
-	fmt.Printf("  POST-QUANTUM CRYPTOGRAPHY JWT BENCHMARK RESULTS (Average of %d iterations)\n", benchmarkIterations)
+	fmt.Printf("  POST-QUANTUM vs CLASSICAL JWT SIGNING BENCHMARK (Average of %d iterations, signing only)\n", benchmarkIterations)
 	fmt.Println(divider)
-	fmt.Printf("  %-26s │ %12s │ %12s │ %14s │ %14s │ %12s │ %12s │ %9s\n",
-		"Algorithm", "Gen Time", "Verify Time", "Header Size", "Body Size", "Resp Time", "Throughput", "Confusion")
-	fmt.Printf("  %-26s │ %12s │ %12s │ %14s │ %14s │ %12s │ %12s │ %9s\n",
-		"", "(ms)", "(ms)", "(KB)", "(KB)", "(ms)", "(ops/s)", "Test")
+	fmt.Printf("  %-26s │ %12s │ %14s │ %14s │ %12s │ %9s\n",
+		"Algorithm", "Gen Time", "Header Size", "Body Size", "Throughput", "Confusion")
+	fmt.Printf("  %-26s │ %12s │ %14s │ %14s │ %12s │ %9s\n",
+		"", "(ms)", "(KB)", "(KB)", "(ops/s)", "Test")
 	fmt.Println(rowDiv)
 
 	for _, r := range results {
@@ -278,10 +318,10 @@ func printBenchmarkSummary(results []benchResult) {
 		if !r.ConfusionPass {
 			confusionStr = "FAIL"
 		}
-		fmt.Printf("  %-26s │ %12.4f │ %12.4f │ %14.3f │ %14.3f │ %12.4f │ %12.2f │ %9s\n",
-			r.AlgName, r.AvgGenTime, r.AvgVerifyTime,
+		fmt.Printf("  %-26s │ %12.4f │ %14.3f │ %14.3f │ %12.2f │ %9s\n",
+			r.AlgName, r.AvgGenTime,
 			r.AvgHeaderKB, r.AvgBodyKB,
-			r.AvgRespTime, r.Throughput, confusionStr)
+			r.Throughput, confusionStr)
 	}
 	fmt.Println(divider)
 }

@@ -115,6 +115,10 @@ const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_
 const ALGORITHMS = [
   { id: "FNP512", name: "FN-DSA-Precomputed-512", category: "PQC", port: 5001 },
   { id: "FN512", name: "FN-DSA-512", category: "PQC", port: 5002 },
+  { id: "HS256", name: "HS256", category: "Classical", port: 5003 },
+  { id: "RS256", name: "RS256", category: "Classical", port: 5004 },
+  { id: "ES256", name: "ES256", category: "Classical", port: 5005 },
+  { id: "EdDSA", name: "EdDSA", category: "Classical", port: 5006 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
@@ -122,6 +126,10 @@ const ALGORITHMS = [
 const STRESS_BUDGET = {
   "FN-DSA-Precomputed-512": { dirty: 5000, actual: 500 },
   "FN-DSA-512": { dirty: 10000, actual: 1000 },
+  HS256: { dirty: 3000, actual: 100 },
+  RS256: { dirty: 3000, actual: 200 },
+  ES256: { dirty: 3000, actual: 100 },
+  EdDSA: { dirty: 3000, actual: 100 },
 };
 const DEFAULT_STRESS_BUDGET = { dirty: 300000, actual: 120000 };
 

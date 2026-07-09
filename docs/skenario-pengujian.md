@@ -54,10 +54,18 @@ Pada mode multi-gateway, setiap profil FN-DSA mendapatkan proses gateway terpisa
 
 | ID Internal | Profil Benchmark | JWS `alg` | Kategori | Port (Multi-GW) |
 |-------------|-------------------|-----------|----------|-----------------|
-| `FNP512` | FN-DSA-Precomputed-512 | FN-DSA-512 | PQC | 5001 |
-| `FN512` | FN-DSA-512 | FN-DSA-512 | PQC | 5002 |
+| `FNP512` | FN-DSA-Precomputed-512 | FN-DSA-512 | PQC (proposed/optimized) | 5001 |
+| `FN512` | FN-DSA-512 | FN-DSA-512 | PQC (baseline / historically "Falcon-512") | 5002 |
+| `HS256` | HS256 | HS256 | Classical (symmetric) | 5003 |
+| `RS256` | RS256 | RS256 | Classical (RSA) | 5004 |
+| `ES256` | ES256 | ES256 | Classical (ECDSA P-256) | 5005 |
+| `EdDSA` | EdDSA | EdDSA | Classical (Ed25519) | 5006 |
 
 Kolom **Profil Benchmark** adalah konfigurasi signer internal untuk eksperimen. Untuk FN-DSA, token JWT tetap memakai JWS `alg` eksperimental `FN-DSA-512`; profil `FN-DSA-Precomputed-512` tidak muncul sebagai nilai `alg` karena precomputation hanya teknik implementasi signer. FN-DSA-512 adalah basis FN-DSA-512, sedangkan profil JOSE/FIPS final masih harus mengikuti spesifikasi resmi terbaru ketika tersedia.
+
+`Falcon-512`/`Falcon-Precomputed-512` di `supportedAlgorithms` adalah alias lama untuk profil FN-DSA yang sama (lihat commit "rewrite falcon to fndsa") — bukan implementasi terpisah. Ketika skripsi menyebut perbandingan terhadap "Falcon", baris `FN512` (FN-DSA-512, tanpa precomputation) adalah baris yang dimaksud: secara matematis identik dengan Falcon-512, hanya penamaan mengikuti standardisasi FIPS 206 [7].
+
+HS256, RS256, ES256, dan EdDSA adalah baseline klasik yang ditambahkan agar perbandingan performa dan ketahanan adversarial mencakup algoritma tanda tangan pra-kuantum yang umum dipakai di JWT produksi saat ini. Setiap profil memakai kunci masing-masing (`HS256_secret.pem`, `RS256_{sk,pk}.pem`, `ES256_{sk,pk}.pem`, `EdDSA_{sk,pk}.pem`) yang dibuat oleh `cmd/keygen` bersamaan dengan kunci FN-DSA-512.
 
 ---
 
@@ -219,6 +227,10 @@ Ambang batas (*threshold*) p95 yang ditetapkan untuk setiap profil:
 |-----------|---------------|-----------------|
 | FN-DSA-Precomputed-512 | 5.000 | 500 |
 | FN-DSA-512 | 10.000 | 1.000 |
+| HS256 | 3.000 | 100 |
+| RS256 | 3.000 | 200 |
+| ES256 | 3.000 | 100 |
+| EdDSA | 3.000 | 100 |
 
 Pengujian dinyatakan **gagal** (exit code non-zero) apabila nilai p95 melampaui anggaran yang ditetapkan.
 
@@ -292,35 +304,60 @@ Sistem harus memblokir setidaknya 99% dari token yang dimanipulasi. Kegagalan me
 
 `backend/k6/adversarial_jwt.js` adalah pengujian black-box dari sisi HTTP. Vektor yang membutuhkan token bertanda tangan valid dengan klaim khusus diuji di unit test Go, karena k6 tidak memiliki private key dan tidak boleh membuat token valid arbitrer.
 
-| Vektor | Status | Lokasi |
-|--------|--------|--------|
-| Signature tampering | Covered | k6 + `pkg/jwt` |
-| Token forgery | Covered | k6 + `pkg/jwt` |
-| Algorithm confusion | Covered | k6 + `pkg/jwt` |
-| None algorithm | Covered | k6 + `pkg/jwt` |
-| Payload manipulation tanpa re-sign | Covered | k6 + `pkg/jwt` |
-| Expired token | Covered | k6 payload-tamper; signed case di `pkg/jwt` |
-| Unsigned compact token / signature kosong | Covered | k6 + `pkg/jwt` |
-| Cross-algorithm injection | Covered | k6 + `pkg/jwt` |
-| Issuer tidak valid / missing issuer | Covered | `pkg/utils/jwtutils` |
-| Audience tidak valid / missing audience | Gap | Parser mendukung `WithAudience`, tetapi aplikasi belum mengatur `aud` |
-| Subject kosong/tidak valid | Covered | `pkg/utils/jwtutils` |
-| `nbf` di masa depan | Covered | `pkg/utils/jwtutils` |
-| `iat` tidak logis | Covered | `pkg/utils/jwtutils` |
-| Duplicate claim / duplicate header | Covered | `pkg/jwt` parser |
-| Invalid Base64URL / malformed JSON | Covered | `pkg/jwt` parser |
-| Oversized token | Covered | `pkg/utils/jwtutils` |
-| Unknown `kid` / `kid` path traversal | Covered | `pkg/utils/jwtutils`, `kid` ditolak karena key-id belum didukung |
-| Token type confusion / altered `typ` | Covered | `pkg/utils/jwtutils`, middleware, auth-service refresh path |
-| Access token dipakai sebagai refresh token | Covered | Auth-service refresh path memerlukan `token_use=refresh` |
-| Refresh token dipakai sebagai access token | Covered | Gateway middleware memerlukan `token_use=access` |
-| Replay refresh token / refresh token reuse | Gap | Butuh stateful refresh-token store atau JTI blacklist |
-| Revoked key / rotated key | Gap | Butuh key registry, `kid`, dan rotasi kunci operasional |
-| Algorithm case variation | Covered | `pkg/utils/jwtutils` |
-| Invalid `crit` | Covered | `pkg/utils/jwtutils`, `crit` ditolak |
-| Signature valid tetapi konteks salah | Partially covered | `typ`, `token_use`, `sub=user_id`, issuer; audience/konteks resource belum ada |
+Setiap baris di bawah dipetakan ke bagian spesifik RFC 7519 [1] (JSON Web Token), RFC 7515 [8] (JSON Web Signature — mendefinisikan struktur compact serialization, header parameter `alg`, dan prosedur validasi tanda tangan yang dipakai JWT), dan/atau RFC 8725 [2] (JWT Best Current Practices) — bukan vektor yang dibuat ad hoc. RFC 7519 mendefinisikan *claims* JWT; JWT sendiri adalah JWS (atau JWE) menurut RFC 7515 dengan *claims set* JSON sebagai payload — sehingga vektor yang menyerang struktur token, header `alg`, atau proses validasi tanda tangan berpijak pada RFC 7515, bukan RFC 7519. Baris yang tidak berpijak pada RFC-RFC tersebut ditandai jujur dengan referensi lain (RFC 8259 [3] untuk ambiguitas JSON) atau ditandai sebagai *gap* yang belum ditutup oleh RFC manapun.
+
+| Vektor | Status | Lokasi | Referensi RFC |
+|--------|--------|--------|----------------|
+| Signature tampering | Covered | k6 (#1) + `pkg/jwt` | RFC 7515 [8] §5.2 (validation MUST fail if signature invalid); RFC 8725 [2] §3.3 |
+| Token forgery | Covered | k6 (#2) + `pkg/jwt` | RFC 7515 [8] §5.2; RFC 8725 [2] §3.1, §3.3 |
+| Algorithm confusion | Covered | k6 (#3) + `pkg/jwt` | RFC 7515 [8] §4.1.1 "alg" Header Parameter; RFC 8725 [2] §3.1 |
+| None algorithm | Covered | k6 (#4) + `pkg/jwt` | RFC 7519 [1] §6; RFC 7515 [8] §4.1.1, §5.2; RFC 8725 [2] §3.1, §3.2 |
+| Payload manipulation tanpa re-sign | Covered | k6 (#5) + `pkg/jwt` | RFC 7515 [8] §5.2; RFC 8725 [2] §3.3, §3.10 |
+| Expired token | Covered | k6 (#6) payload-tamper; signed case di `pkg/jwt` | RFC 7519 [1] §4.1.4 |
+| Unsigned compact token / signature kosong | Covered | k6 (#7) + `pkg/jwt` | RFC 7515 [8] §7.1 (compact serialization), §5.2; RFC 7519 [1] §6; RFC 8725 [2] §3.1, §3.3 |
+| Cross-algorithm injection | Covered | k6 (#8) + `pkg/jwt` | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 |
+| RS256→HS256 key confusion (kunci publik dipakai sebagai HMAC secret) | Covered | k6 (#9) + `pkg/utils/jwtutils` (`TestAttack_RS256ToHS256KeyConfusion`) | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 (contoh literal di teks RFC) |
+| Issuer tidak valid / missing issuer | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.1; RFC 8725 [2] §3.8 |
+| Audience tidak valid / missing audience | Gap | Parser mendukung `WithAudience`, tetapi aplikasi belum mengatur `aud` | RFC 7519 [1] §4.1.3; RFC 8725 [2] §3.9 (gap belum ditutup) |
+| Subject kosong/tidak valid | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.2 |
+| `nbf` di masa depan | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.5 |
+| `iat` tidak logis | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.6; RFC 8725 [2] §3.10 |
+| Duplicate claim / duplicate header | Covered | `pkg/jwt` parser | RFC 8259 [3] §4 (bukan RFC 7519 [1]/RFC 7515 [8]/RFC 8725 [2] — lihat catatan di `parser_security_test.go`) |
+| Invalid Base64URL / malformed JSON | Covered | `pkg/jwt` parser | RFC 7515 [8] §7.1 (compact serialization format); RFC 8259 [3] (JSON) |
+| Oversized token | Covered | `pkg/utils/jwtutils` | RFC 8725 [2] §3.2 (implementation hardening; tidak ada batas ukuran eksplisit di RFC) |
+| Unknown `kid` / `kid` path traversal | Covered | `pkg/utils/jwtutils`, `kid` ditolak karena key-id belum didukung | RFC 7515 [8] §4.1.4 "kid" Header Parameter; RFC 8725 [2] §3.10 Do Not Trust Received Claims |
+| Token type confusion / altered `typ` | Covered | `pkg/utils/jwtutils`, middleware, auth-service refresh path | RFC 7515 [8] §4.1.9 "typ" Header Parameter; RFC 8725 [2] §3.11, §3.12 |
+| Access token dipakai sebagai refresh token | Covered | Auth-service refresh path memerlukan `token_use=refresh` | RFC 8725 [2] §3.12 Mutually Exclusive Validation Rules |
+| Refresh token dipakai sebagai access token | Covered | Gateway middleware memerlukan `token_use=access` | RFC 8725 [2] §3.12 |
+| Replay refresh token / refresh token reuse | Gap | Butuh stateful refresh-token store atau JTI blacklist | RFC 7519 [1] §4.1.7 (gap belum ditutup; RFC 8725 [2] tidak punya bagian replay) |
+| Revoked key / rotated key | Gap | Butuh key registry, `kid`, dan rotasi kunci operasional | Tidak dibahas eksplisit di RFC 7519 [1], RFC 7515 [8], dan RFC 8725 [2] (gap belum ditutup) |
+| Algorithm case variation | Covered | `pkg/utils/jwtutils` | RFC 7515 [8] §4.1.1 (nilai `alg` case-sensitive); RFC 8725 [2] §3.1 |
+| Invalid `crit` | Covered | `pkg/utils/jwtutils`, `crit` ditolak | RFC 7515 [8] §4.1.11 "crit" Header Parameter; RFC 8725 [2] §3.3 (unvalidated header extension = unvalidated cryptographic operation) |
+| Signature valid tetapi konteks salah | Partially covered | `typ`, `token_use`, `sub=user_id`, issuer; audience/konteks resource belum ada | RFC 8725 [2] §3.9, §3.12 |
 
 Istilah **Missing Signature Verification** tidak dipakai sebagai vektor input. Vektor input yang diuji adalah **unsigned compact token atau JWS dengan bagian signature kosong**. Missing signature verification adalah kelas kelemahan implementasi bila token tersebut diterima.
+
+### 6.6 Vektor Adversarial terhadap Primitif Tanda Tangan FN-DSA (bukan JWT)
+
+Tabel 6.5 di atas seluruhnya menguji lapisan JOSE/JWT — header `alg`, klaim, dan compact serialization — berpijak pada RFC 7519 [1] dan RFC 8725 [2]. RFC tersebut tidak menyatakan apa pun tentang apakah skema tanda tangan FN-DSA sendiri tahan forgery; itu properti primitif kriptografi, bukan format token yang membungkusnya. Pengujian yang hanya memalsukan header JWT membuktikan kebenaran kode parsing envelope — bukan klaim keamanan atas FN-DSA itu sendiri. Karena itu ada suite terpisah yang memanggil `fndsa.Sign`/`fndsa.Verify` langsung, melewati `pkg/jwt`, JSON, dan base64url sepenuhnya: `backend/pkg/fndsa/fndsa_adversarial_test.go`.
+
+Referensi untuk suite ini bukan RFC 7519 [1] dan RFC 8725 [2] (di luar cakupan keduanya), melainkan:
+
+- Fouque, Hoffstein, Kirchner, Lyubashevsky, Pornin, Prest, Ricosset, Seiler, Whyte, Zhang [4] — mendefinisikan algoritma Verify: signature `(s1, s2)` diterima hanya jika berhasil didekode DAN `||(s1, s2)|| ≤ β` (norm bound). Implementasi repo ini menegakkan pemeriksaan itu lewat `mqpoly_sqnorm_is_acceptable()` terhadap tabel `sqbeta[]` (`mq.go`, `vrfy.go`).
+- Goldwasser, Micali, Rivest [5] — mendefinisikan EUF-CMA, tujuan keamanan formal yang harus dipenuhi skema tanda tangan digital manapun (termasuk FN-DSA), independen dari format transport/envelope apa pun.
+- NIST FIPS 204 [6] — konstruksi context-string/Mu yang jadi rujukan gaya domain-separation FN-DSA.
+- NIST FIPS 206 [7] (FN-DSA/Falcon) — standardisasi masih berjalan; per penulisan dokumen ini, Initial Public Draft belum dipublikasikan ke URL publik yang stabil (status update forum PQC NIST, akhir 2025: draft masih dalam proses clearance NIST/Departemen Perdagangan AS). Spesifikasi Falcon Round-3 [4] di atas adalah sumber otoritatif yang jadi target pengujian ini; begitu FIPS 206 [7] terbit, bagian algoritma Verify-nya harus dikutip juga.
+
+Empat dari lima vektor dijalankan sebagai subtest berpasangan lewat helper `signerVariants()`: setiap vektor diuji sekali terhadap **Falcon** (`FN-DSA-512`, signer asli/dinamis — baseline) dan sekali terhadap **Falcon Precomputed** (`FN-DSA-Precomputed-512` — metode yang diusulkan), dengan kunci dan pesan yang identik, supaya hasil PROTECTED/VULNERABLE langsung bisa dibandingkan antar keduanya. Norm-bound rejection tidak dipasangkan karena pemeriksaannya ada di sisi `Verify()` (murni fungsi `mqpoly_sqnorm_is_acceptable`), identik untuk signature dari signer manapun — precomputation hanya mengubah persiapan trapdoor/basis saat signing, bukan kriteria penerimaan verifikasi.
+
+| Vektor | Status | Dibandingkan: Falcon vs Precomputed | Referensi |
+|--------|--------|--------------------------------------|-----------|
+| Signature norm-bound rejection (forged over-norm signature) | Covered | Tidak — cek di sisi Verify(), identik untuk kedua signer | `TestAttack_SignatureNormBoundRejection` — Falcon spec [4], algoritma Verify (norm bound β) |
+| Cross-key forgery | Covered | Ya — subtest `Falcon (FN-DSA-512 original/dynamic)` + `Falcon Precomputed (FN-DSA-Precomputed-512)` | `TestAttack_CrossKeyForgery` — EUF-CMA [5] |
+| Domain-separation context confusion | Covered | Ya (idem) | `TestAttack_DomainContextConfusion` — context-string construction (gaya FIPS 204 [6] §5.4 Mu, diwariskan ke FN-DSA) |
+| Pre-hash identifier confusion (raw vs pre-hashed) | Covered | Ya (idem) | `TestAttack_PreHashIdentifierConfusion` — Falcon spec [4] |
+| Truncated/malformed signature encoding | Covered | Ya (idem) | `TestAttack_TruncatedSignatureRejected` — Falcon spec [4] (compact encoding) |
+| Bit-flip signature / bit-flip message | Covered | Ya — `TestAttack_BitFlipTampering` (dua signer); `TestPrecomputedSignRejectsTampering` (`pkg/fndsa/sign_precomputed_test.go`) tetap ada sebagai pengujian precomputed-only tambahan | Falcon spec [4], algoritma Verify; EUF-CMA [5] |
 
 ---
 
@@ -344,10 +381,12 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 
 | Variabel | Keterangan |
 |----------|------------|
-| Profil signer | FN-DSA-Precomputed-512, FN-DSA-512 |
-| JWS `alg` | `FN-DSA-512` untuk kedua profil FN-DSA |
-| State signer | Original signer vs precomputed LDL tree |
-| Kompleksitas penandatanganan runtime | Berbeda karena precomputation |
+| Profil signer | FN-DSA-Precomputed-512, FN-DSA-512, HS256, RS256, ES256, EdDSA |
+| Kategori algoritma | PQC (FN-DSA) vs klasik (HS256/RS256/ES256/EdDSA) |
+| JWS `alg` | `FN-DSA-512` untuk kedua profil FN-DSA; sama dengan nama profil untuk profil klasik |
+| State signer | Original FN-DSA signer vs precomputed LDL tree vs signer klasik stateless |
+| Kompleksitas penandatanganan runtime | Berbeda karena precomputation (FN-DSA) dan karena keluarga algoritma (lattice vs RSA vs ECDSA vs EdDSA vs HMAC) |
+| Ukuran kunci dan tanda tangan | Berbeda per keluarga algoritma; dicatat dari `token` size di hasil benchmark |
 
 ### 7.3 Variabel Terikat (Diukur)
 
@@ -592,6 +631,28 @@ make client-k6-isolated BASE_URL=http://localhost:8080
 # Dengan lebih banyak iterasi (rekomendasi: 500 untuk data final):
 k6 run -e BASE_URL=http://localhost:8080 -e ISOLATED_ONLY=true -e ITERATIONS=500 k6/benchmark_sign.js
 ```
+
+---
+
+## 15. Referensi
+
+Format sitasi: IEEE. Nomor `[n]` di seluruh dokumen ini merujuk ke daftar berikut. Diverifikasi terhadap sumber resmi (RFC Editor, SIAM, NIST, falcon-sign.info) — lihat catatan status pada [7] untuk satu referensi yang belum berupa publikasi final.
+
+[1] M. Jones, J. Bradley, and N. Sakimura, "JSON Web Token (JWT)," IETF RFC 7519, May 2015. doi: 10.17487/RFC7519. [Online]. Available: https://www.rfc-editor.org/rfc/rfc7519
+
+[2] Y. Sheffer, D. Hardt, and M. Jones, "JSON Web Token Best Current Practices," IETF RFC 8725, BCP 225, Feb. 2020. doi: 10.17487/RFC8725. [Online]. Available: https://www.rfc-editor.org/rfc/rfc8725
+
+[3] T. Bray, Ed., "The JavaScript Object Notation (JSON) Data Interchange Format," IETF RFC 8259, Dec. 2017. doi: 10.17487/RFC8259. [Online]. Available: https://www.rfc-editor.org/rfc/rfc8259
+
+[4] P.-A. Fouque, J. Hoffstein, P. Kirchner, V. Lyubashevsky, T. Pornin, T. Prest, T. Ricosset, G. Seiler, W. Whyte, and Z. Zhang, "Falcon: Fast-Fourier Lattice-based Compact Signatures over NTRU," NIST Post-Quantum Cryptography Standardization Project, Round 3 submission, specification v1.2, Oct. 1, 2020. [Online]. Available: https://falcon-sign.info/falcon.pdf
+
+[5] S. Goldwasser, S. Micali, and R. L. Rivest, "A digital signature scheme secure against adaptive chosen-message attacks," SIAM J. Comput., vol. 17, no. 2, pp. 281–308, Apr. 1988. doi: 10.1137/0217017.
+
+[6] National Institute of Standards and Technology, "Module-Lattice-Based Digital Signature Standard," NIST, Gaithersburg, MD, USA, FIPS PUB 204, Aug. 13, 2024. doi: 10.6028/NIST.FIPS.204.
+
+[7] National Institute of Standards and Technology, "FN-DSA (FIPS 206)," NIST, Gaithersburg, MD, USA — standardization in progress; as of this writing (per NIST PQC Forum status updates, late 2025) the Initial Public Draft has not yet been published to a stable public URL and remains in NIST/Department of Commerce internal clearance. Cited here for the FN-DSA name/status only; [4] is the normative source for the algorithm this document's tests target.
+
+[8] M. Jones, J. Bradley, and N. Sakimura, "JSON Web Signature (JWS)," IETF RFC 7515, May 2015. doi: 10.17487/RFC7515. [Online]. Available: https://www.rfc-editor.org/rfc/rfc7515
 
 ---
 
