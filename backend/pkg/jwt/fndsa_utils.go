@@ -6,11 +6,11 @@ import (
 )
 
 var (
-	ErrNotFalconPrivateKey = errors.New("key is not a valid Falcon private key")
-	ErrNotFalconPublicKey  = errors.New("key is not a valid Falcon public key")
+	ErrNotFNDSAPrivateKey = errors.New("key is not a valid FN-DSA private key")
+	ErrNotFNDSAPublicKey  = errors.New("key is not a valid FN-DSA public key")
 )
 
-func ParseFalconPrivateKeyFromPEM(key []byte) ([]byte, error) {
+func ParseFNDSAPrivateKeyFromPEM(key []byte) ([]byte, error) {
 	// Parse PEM block
 	var block *pem.Block
 	if block, _ = pem.Decode(key); block == nil {
@@ -20,7 +20,7 @@ func ParseFalconPrivateKeyFromPEM(key []byte) ([]byte, error) {
 	return block.Bytes, nil
 }
 
-func ParseFalconPublicKeyFromPEM(key []byte) ([]byte, error) {
+func ParseFNDSAPublicKeyFromPEM(key []byte) ([]byte, error) {
 	// Parse PEM block
 	var block *pem.Block
 	if block, _ = pem.Decode(key); block == nil {

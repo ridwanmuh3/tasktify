@@ -24,7 +24,7 @@ func NewAuthHandler(log *zap.SugaredLogger, authClient model.AuthServiceClient) 
 }
 
 // SignIn - Permintaan Login (Username, Password)
-// Flow: Client -> Gateway -> Auth Service (gRPC) -> Validate -> Generate JWT (Falcon + Precomputed LDL Tree) -> Return Token
+// Flow: Client -> Gateway -> Auth Service (gRPC) -> Validate -> Generate JWT (FN-DSA + Precomputed LDL Tree) -> Return Token
 // Sets X-Sign-Time-Ms response header with pure cryptographic signing duration (ms).
 func (h *AuthHandler) SignIn(c fiber.Ctx) error {
 	var req SignInRequest

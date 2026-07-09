@@ -113,15 +113,15 @@ const RUN_STRESS = !ISOLATED_ONLY && !ATTACK_ONLY;
 const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
 
 const ALGORITHMS = [
-  { id: "FNP512", name: "Falcon-Precomputed-512", category: "PQC", port: 5001 },
-  { id: "FN512", name: "Falcon-512", category: "PQC", port: 5002 },
+  { id: "FNP512", name: "FN-DSA-Precomputed-512", category: "PQC", port: 5001 },
+  { id: "FN512", name: "FN-DSA-512", category: "PQC", port: 5002 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
 // Dirty = full k6 round-trip budget; Actual = server-side JWT generation budget.
 const STRESS_BUDGET = {
-  "Falcon-Precomputed-512": { dirty: 5000, actual: 500 },
-  "Falcon-512": { dirty: 10000, actual: 1000 },
+  "FN-DSA-Precomputed-512": { dirty: 5000, actual: 500 },
+  "FN-DSA-512": { dirty: 10000, actual: 1000 },
 };
 const DEFAULT_STRESS_BUDGET = { dirty: 300000, actual: 120000 };
 
@@ -138,7 +138,7 @@ function benchmarkBody(email, algName) {
 }
 
 function jwsAlgForBenchmarkProfile(algName) {
-  if (algName === "Falcon-Precomputed-512" || algName === "Falcon-512") {
+  if (algName === "FN-DSA-Precomputed-512" || algName === "FN-DSA-512") {
     return "FN-DSA-512";
   }
   return algName;
@@ -522,7 +522,8 @@ export function runIsolated(data) {
 
   try {
     const result = JSON.parse(res.body).data;
-    if ((result?.success_count ?? 0) <= 0) {
+    const successCount = successfulIterations(result, "sign_timings_ms");
+    if (successCount <= 0) {
       benchFailed.add(1, tags);
       console.error(`[isolated|${alg.name}] no successful iterations`);
       return;
@@ -595,7 +596,7 @@ export function runIsolated(data) {
     const gcFree = s.token_generation_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
     console.log(
-      `[isolated|${alg.name}] n=${result.success_count}/${result.iterations}` +
+      `[isolated|${alg.name}] n=${successCount}/${result.iterations}` +
         ` warmup=${result.warmup_iterations}` +
         ` gc_contaminated=${gcCount}` +
         ` | token_generation(all): avg=${(s.token_generation?.avg_ms ?? s.sign.avg_ms)?.toFixed(3)} p95=${(s.token_generation?.p95_ms ?? s.sign.p95_ms)?.toFixed(3)} stdev=${(s.token_generation?.stdev_ms ?? s.sign.stdev_ms)?.toFixed(3)} ms` +
@@ -640,7 +641,8 @@ export function runIsolated(data) {
 
   try {
     const result = JSON.parse(pureRes.body).data;
-    if ((result?.success_count ?? 0) <= 0) {
+    const successCount = successfulIterations(result, "pure_signing_timings_ms");
+    if (successCount <= 0) {
       benchPureSigningFailed.add(1, tags);
       console.error(`[pure-signing|${alg.name}] no successful iterations`);
       sleep(1);
@@ -666,7 +668,7 @@ export function runIsolated(data) {
     const gcFree = s.pure_signing_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
     console.log(
-      `[pure-signing|${alg.name}] n=${result.success_count}/${result.iterations}` +
+      `[pure-signing|${alg.name}] n=${successCount}/${result.iterations}` +
         ` warmup=${result.warmup_iterations}` +
         ` gc_contaminated=${gcCount}` +
         ` | pure(all): avg=${s.pure_signing.avg_ms?.toFixed(3)} p95=${s.pure_signing.p95_ms?.toFixed(3)} stdev=${s.pure_signing.stdev_ms?.toFixed(3)} ms` +
@@ -711,6 +713,14 @@ function addSamples(metric, values, tags) {
   for (const value of values) {
     addNumber(metric, value, tags);
   }
+}
+
+function successfulIterations(result, timingField) {
+  const explicit = result?.success_count ?? result?.successCount;
+  if (typeof explicit === "number" && explicit > 0) return explicit;
+
+  const timings = result?.[timingField];
+  return Array.isArray(timings) ? timings.length : 0;
 }
 
 function tamperToken(token) {
@@ -1047,6 +1057,9 @@ export function handleSummary(data) {
       const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
       const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
       const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
+      const isolatedJWTSuccess = getCount("bench_success", alg.name, null);
+      const isolatedJWTFailed = getCount("bench_failed", alg.name, null);
+      const hasIsolatedJWT = isolatedJWTSuccess > 0;
       const isolatedRefreshAvg = getNumber(
         "bench_refresh_token_generation_avg",
         alg.name,
@@ -1192,6 +1205,8 @@ export function handleSummary(data) {
               pure_signing_endpoint: PURE_SIGNING_ENDPOINT,
               metric_scope: "jwt_issuance",
               pure_signing_metric_scope: "pure_signing",
+              jwt_issuance_success_count: isolatedJWTSuccess,
+              jwt_issuance_failed_count: isolatedJWTFailed,
               pure_signing_success_count: isolatedPureSuccess,
               pure_signing_failed_count: isolatedPureFailed,
               gc_contaminated_count: isolatedGCCnt || 0,
@@ -1222,16 +1237,18 @@ export function handleSummary(data) {
                     sd: isolatedPureGCFreeStdev,
                   }
                 : null,
-              token_generation_ms: {
-                avg: isolatedTokenAvg,
-                min: getNumber("bench_token_generation_sample", alg.name, null, "min"),
-                max: getNumber("bench_token_generation_sample", alg.name, null, "max"),
-                p50: getNumber("bench_token_generation_sample", alg.name, null, "med"),
-                p95: isolatedTokenP95,
-                p99: getNumber("bench_token_generation_sample", alg.name, null, "p(99)"),
-                sd: isolatedTokenStdev,
-              },
-              token_generation_gc_free_ms: isolatedTokenGCFreeAvg != null
+              token_generation_ms: hasIsolatedJWT
+                ? {
+                    avg: isolatedTokenAvg,
+                    min: getNumber("bench_token_generation_sample", alg.name, null, "min"),
+                    max: getNumber("bench_token_generation_sample", alg.name, null, "max"),
+                    p50: getNumber("bench_token_generation_sample", alg.name, null, "med"),
+                    p95: isolatedTokenP95,
+                    p99: getNumber("bench_token_generation_sample", alg.name, null, "p(99)"),
+                    sd: isolatedTokenStdev,
+                  }
+                : null,
+              token_generation_gc_free_ms: hasIsolatedJWT && isolatedTokenGCFreeAvg != null
                 ? {
                     avg: isolatedTokenGCFreeAvg,
                     min: getNumber("bench_token_generation_gc_free_sample", alg.name, null, "min"),
@@ -1247,16 +1264,38 @@ export function handleSummary(data) {
                     sd: isolatedTokenGCFreeStdev,
                   }
                 : null,
-              refresh_token_generation_ms: {
-                avg: isolatedRefreshAvg,
-                min: getNumber("bench_refresh_token_generation_sample", alg.name, null, "min"),
-                max: getNumber("bench_refresh_token_generation_sample", alg.name, null, "max"),
-                p50: getNumber("bench_refresh_token_generation_sample", alg.name, null, "med"),
-                p95: isolatedRefreshP95,
-                p99: getNumber("bench_refresh_token_generation_sample", alg.name, null, "p(99)"),
-                sd: isolatedRefreshStdev,
-              },
-              refresh_token_generation_gc_free_ms: isolatedRefreshGCFreeAvg != null
+              refresh_token_generation_ms: hasIsolatedJWT
+                ? {
+                    avg: isolatedRefreshAvg,
+                    min: getNumber(
+                      "bench_refresh_token_generation_sample",
+                      alg.name,
+                      null,
+                      "min",
+                    ),
+                    max: getNumber(
+                      "bench_refresh_token_generation_sample",
+                      alg.name,
+                      null,
+                      "max",
+                    ),
+                    p50: getNumber(
+                      "bench_refresh_token_generation_sample",
+                      alg.name,
+                      null,
+                      "med",
+                    ),
+                    p95: isolatedRefreshP95,
+                    p99: getNumber(
+                      "bench_refresh_token_generation_sample",
+                      alg.name,
+                      null,
+                      "p(99)",
+                    ),
+                    sd: isolatedRefreshStdev,
+                  }
+                : null,
+              refresh_token_generation_gc_free_ms: hasIsolatedJWT && isolatedRefreshGCFreeAvg != null
                 ? {
                     avg: isolatedRefreshGCFreeAvg,
                     min: getNumber(
@@ -1287,92 +1326,112 @@ export function handleSummary(data) {
                     sd: isolatedRefreshGCFreeStdev,
                   }
                 : null,
-              total_ms: {
-                avg: isolatedTotalAvg,
-                min: getNumber("bench_total_sample", alg.name, null, "min"),
-                max: getNumber("bench_total_sample", alg.name, null, "max"),
-                p50: getNumber("bench_total_sample", alg.name, null, "med"),
-                p95: isolatedTotalP95,
-                p99: getNumber("bench_total_sample", alg.name, null, "p(99)"),
-                sd: isolatedTotalStdev,
-              },
+              total_ms: hasIsolatedJWT
+                ? {
+                    avg: isolatedTotalAvg,
+                    min: getNumber("bench_total_sample", alg.name, null, "min"),
+                    max: getNumber("bench_total_sample", alg.name, null, "max"),
+                    p50: getNumber("bench_total_sample", alg.name, null, "med"),
+                    p95: isolatedTotalP95,
+                    p99: getNumber("bench_total_sample", alg.name, null, "p(99)"),
+                    sd: isolatedTotalStdev,
+                  }
+                : null,
               overhead_avg_ms:
-                isolatedTokenAvg != null && isolatedTotalAvg != null
+                hasIsolatedJWT && isolatedTokenAvg != null && isolatedTotalAvg != null
                   ? isolatedTotalAvg - isolatedTokenAvg
                   : null,
-              jwt_issuance_over_pure_avg_ms: subtractOrNull(isolatedTokenAvg, isolatedPureAvg),
-              jwt_issuance_over_pure_ratio: divideOrNull(isolatedTokenAvg, isolatedPureAvg),
+              jwt_issuance_over_pure_avg_ms: hasIsolatedJWT
+                ? subtractOrNull(isolatedTokenAvg, isolatedPureAvg)
+                : null,
+              jwt_issuance_over_pure_ratio: hasIsolatedJWT
+                ? divideOrNull(isolatedTokenAvg, isolatedPureAvg)
+                : null,
               jwt_issuance_over_pure_gc_free_avg_ms: subtractOrNull(
-                isolatedTokenGCFreeAvg,
+                hasIsolatedJWT ? isolatedTokenGCFreeAvg : null,
                 isolatedPureGCFreeAvg,
               ),
               jwt_issuance_over_pure_gc_free_ratio: divideOrNull(
-                isolatedTokenGCFreeAvg,
+                hasIsolatedJWT ? isolatedTokenGCFreeAvg : null,
                 isolatedPureGCFreeAvg,
               ),
-              cpu_pct: {
-                avg: isolatedCPUAvg,
-                min: getNumber("bench_auth_cpu_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_cpu_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_cpu_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_cpu_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_cpu_avg", alg.name, null, "p(99)"),
-                sd: isolatedCPUStdev,
-              },
-              cpu_time_ms: {
-                avg: isolatedCPUTimeAvg,
-                min: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(99)"),
-                sd: isolatedCPUTimeStdev,
-              },
-              cpu_time_per_token_ms: {
-                avg: isolatedCPUTimePerTokenAvg,
-                min: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(99)"),
-                sd: isolatedCPUTimePerTokenStdev,
-              },
-              memory_alloc_kb: {
-                avg: isolatedMemAvg,
-                min: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(99)"),
-                sd: isolatedMemStdev,
-              },
-              memory_alloc_delta_kb: {
-                avg: isolatedMemDeltaAvg,
-                min: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(99)"),
-                sd: isolatedMemDeltaStdev,
-              },
-              memory_sys_kb: {
-                avg: isolatedMemSysAvg,
-                min: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(99)"),
-                sd: isolatedMemSysStdev,
-              },
-              memory_rss_kb: {
-                avg: isolatedMemRSSAvg,
-                min: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "min"),
-                max: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "max"),
-                p50: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "med"),
-                p95: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(95)"),
-                p99: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(99)"),
-                sd: isolatedMemRSSStdev,
-              },
+              cpu_pct: hasIsolatedJWT
+                ? {
+                    avg: isolatedCPUAvg,
+                    min: getNumber("bench_auth_cpu_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_cpu_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_cpu_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_cpu_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_cpu_avg", alg.name, null, "p(99)"),
+                    sd: isolatedCPUStdev,
+                  }
+                : null,
+              cpu_time_ms: hasIsolatedJWT
+                ? {
+                    avg: isolatedCPUTimeAvg,
+                    min: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_cpu_time_ms_avg", alg.name, null, "p(99)"),
+                    sd: isolatedCPUTimeStdev,
+                  }
+                : null,
+              cpu_time_per_token_ms: hasIsolatedJWT
+                ? {
+                    avg: isolatedCPUTimePerTokenAvg,
+                    min: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_cpu_time_per_token_ms_avg", alg.name, null, "p(99)"),
+                    sd: isolatedCPUTimePerTokenStdev,
+                  }
+                : null,
+              memory_alloc_kb: hasIsolatedJWT
+                ? {
+                    avg: isolatedMemAvg,
+                    min: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_memory_alloc_kb_avg", alg.name, null, "p(99)"),
+                    sd: isolatedMemStdev,
+                  }
+                : null,
+              memory_alloc_delta_kb: hasIsolatedJWT
+                ? {
+                    avg: isolatedMemDeltaAvg,
+                    min: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_memory_alloc_delta_kb_avg", alg.name, null, "p(99)"),
+                    sd: isolatedMemDeltaStdev,
+                  }
+                : null,
+              memory_sys_kb: hasIsolatedJWT
+                ? {
+                    avg: isolatedMemSysAvg,
+                    min: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_memory_sys_kb_avg", alg.name, null, "p(99)"),
+                    sd: isolatedMemSysStdev,
+                  }
+                : null,
+              memory_rss_kb: hasIsolatedJWT
+                ? {
+                    avg: isolatedMemRSSAvg,
+                    min: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "min"),
+                    max: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "max"),
+                    p50: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "med"),
+                    p95: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(95)"),
+                    p99: getNumber("bench_auth_memory_rss_kb_avg", alg.name, null, "p(99)"),
+                    sd: isolatedMemRSSStdev,
+                  }
+                : null,
             }
           : null,
         stress: [],
@@ -1382,6 +1441,23 @@ export function handleSummary(data) {
       // ── Stress: extract full k6 Trend distributions ───────────
       for (const vus of CONCURRENCY_LEVELS) {
         const vusKey = String(vus);
+        function stressStat(metric, stat) {
+          return getNumber(metric, alg.name, vusKey, stat);
+        }
+
+        const benchmarkTokenSuccess = getCount("stress_req_success", alg.name, vusKey);
+        const benchmarkTokenFailed = getCount("stress_req_failed", alg.name, vusKey);
+        const refreshSuccess = getCount("stress_refresh_success", alg.name, vusKey);
+        const refreshFailed = getCount("stress_refresh_failed", alg.name, vusKey);
+        const loginTotal = stressStat("stress_login_dirty", "count") || 0;
+
+        if (
+          benchmarkTokenSuccess + benchmarkTokenFailed + refreshSuccess + refreshFailed + loginTotal ===
+          0
+        ) {
+          continue;
+        }
+
         const signAvg = getNumber("stress_token_generation_clean", alg.name, vusKey, "avg");
         const refreshAvg = getNumber(
           "stress_refresh_token_generation_clean",
@@ -1394,15 +1470,6 @@ export function handleSummary(data) {
         if (signAvg === null && refreshAvg === null && e2eAvg === null) {
           continue;
         }
-
-        function stressStat(metric, stat) {
-          return getNumber(metric, alg.name, vusKey, stat);
-        }
-
-        const benchmarkTokenSuccess = getCount("stress_req_success", alg.name, vusKey);
-        const benchmarkTokenFailed = getCount("stress_req_failed", alg.name, vusKey);
-        const refreshSuccess = getCount("stress_refresh_success", alg.name, vusKey);
-        const refreshFailed = getCount("stress_refresh_failed", alg.name, vusKey);
 
         item.stress.push({
           vus,
@@ -1419,7 +1486,7 @@ export function handleSummary(data) {
             benchmark_token_success: benchmarkTokenSuccess,
             benchmark_token_failed: benchmarkTokenFailed,
             benchmark_token_total: benchmarkTokenSuccess + benchmarkTokenFailed,
-            login_total: stressStat("stress_login_dirty", "count") || 0,
+            login_total: loginTotal,
             refresh_success: refreshSuccess,
             refresh_failed: refreshFailed,
             refresh_total: refreshSuccess + refreshFailed,
@@ -1539,6 +1606,7 @@ export function handleSummary(data) {
 
   for (const alg of ALGORITHMS) {
     const n = alg.name;
+    const hasJWT = getCount("bench_success", n, null) > 0;
     const hasPure = getCount("bench_pure_signing_success", n, null) > 0;
     const pa = hasPure
       ? getValFallback("bench_pure_signing_gc_free_avg", "bench_pure_signing_avg", n, null, "avg")
@@ -1546,37 +1614,45 @@ export function handleSummary(data) {
     const pp = hasPure
       ? getValFallback("bench_pure_signing_gc_free_p95", "bench_pure_signing_p95", n, null, "avg")
       : "—";
-    const sa = getValFallback(
-      "bench_token_generation_gc_free_avg",
-      "bench_token_generation_avg",
-      n,
-      null,
-      "avg",
-    );
-    const sp = getValFallback(
-      "bench_token_generation_gc_free_p95",
-      "bench_token_generation_p95",
-      n,
-      null,
-      "avg",
-    );
-    const ra = getValFallback(
-      "bench_refresh_token_generation_gc_free_avg",
-      "bench_refresh_token_generation_avg",
-      n,
-      null,
-      "avg",
-    );
-    const rp = getValFallback(
-      "bench_refresh_token_generation_gc_free_p95",
-      "bench_refresh_token_generation_p95",
-      n,
-      null,
-      "avg",
-    );
-    const ta = getVal("bench_total_avg", n, null, "avg");
-    const cpu = getVal("bench_auth_cpu_avg", n, null, "avg");
-    const rss = getVal("bench_auth_memory_rss_kb_avg", n, null, "avg");
+    const sa = hasJWT
+      ? getValFallback(
+          "bench_token_generation_gc_free_avg",
+          "bench_token_generation_avg",
+          n,
+          null,
+          "avg",
+        )
+      : "—";
+    const sp = hasJWT
+      ? getValFallback(
+          "bench_token_generation_gc_free_p95",
+          "bench_token_generation_p95",
+          n,
+          null,
+          "avg",
+        )
+      : "—";
+    const ra = hasJWT
+      ? getValFallback(
+          "bench_refresh_token_generation_gc_free_avg",
+          "bench_refresh_token_generation_avg",
+          n,
+          null,
+          "avg",
+        )
+      : "—";
+    const rp = hasJWT
+      ? getValFallback(
+          "bench_refresh_token_generation_gc_free_p95",
+          "bench_refresh_token_generation_p95",
+          n,
+          null,
+          "avg",
+        )
+      : "—";
+    const ta = hasJWT ? getVal("bench_total_avg", n, null, "avg") : "—";
+    const cpu = hasJWT ? getVal("bench_auth_cpu_avg", n, null, "avg") : "—";
+    const rss = hasJWT ? getVal("bench_auth_memory_rss_kb_avg", n, null, "avg") : "—";
 
     const row =
       [

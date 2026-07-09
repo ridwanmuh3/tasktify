@@ -18,14 +18,14 @@ func main() {
 		fatal("failed to create %s: %v", outDir, err)
 	}
 
-	// Falcon-512 and Falcon-Precomputed-512 share the same FN-DSA-512 key pair.
+	// FN-DSA-512 and FN-DSA-Precomputed-512 share the same FN-DSA-512 key pair.
 	fnSk, fnVk, err := fndsa.KeyGen(9, nil)
 	if err != nil {
-		fatal("Falcon-512 keygen failed: %v", err)
+		fatal("FN-DSA-512 keygen failed: %v", err)
 	}
 	writeKeyPair(outDir, "FNDSA-512", fnVk, fnSk)
 
-	fmt.Println("Falcon keys generated successfully in", outDir)
+	fmt.Println("FN-DSA keys generated successfully in", outDir)
 }
 
 func writeKeyPair(dir, alg string, pk, sk []byte) {

@@ -15,10 +15,10 @@ import (
 // For verification only (gateway), pass signMode=false.
 func LoadAlgConfig(keysDir string, alg string, signMode bool) (*AlgConfig, error) {
 	switch alg {
-	case "FN-DSA-512", "Falcon-512":
-		return loadFalconOriginal(keysDir, alg, signMode)
-	case "Falcon-Precomputed-512":
-		return loadFalconPrecomputed(keysDir, alg, signMode)
+	case "FN-DSA-512":
+		return loadFNDSAOriginal(keysDir, alg, signMode)
+	case "FN-DSA-Precomputed-512":
+		return loadFNDSAPrecomputed(keysDir, alg, signMode)
 	case "ML-DSA-44", "ML-DSA-65", "ML-DSA-87":
 		return loadMLDSA(keysDir, alg, signMode)
 	case "SLH-DSA-SHA2-128f", "SLH-DSA-SHA2-128s", "SLH-DSA-SHAKE-128f", "SLH-DSA-SHAKE-128s":
@@ -57,7 +57,7 @@ func readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func loadFalconOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) {
+func loadFNDSAOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) {
 	cfg := &AlgConfig{Method: jwt.SigningMethodFN512}
 
 	// Public key for verification
@@ -65,7 +65,7 @@ func loadFalconOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) 
 	if err != nil {
 		return nil, err
 	}
-	vk, err := jwt.ParseFalconPublicKeyFromPEM(vkBytes)
+	vk, err := jwt.ParseFNDSAPublicKeyFromPEM(vkBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func loadFalconOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) 
 		if err != nil {
 			return nil, err
 		}
-		sk, err := jwt.ParseFalconPrivateKeyFromPEM(skBytes)
+		sk, err := jwt.ParseFNDSAPrivateKeyFromPEM(skBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -85,15 +85,15 @@ func loadFalconOriginal(keysDir, alg string, signMode bool) (*AlgConfig, error) 
 	return cfg, nil
 }
 
-func loadFalconPrecomputed(keysDir, alg string, signMode bool) (*AlgConfig, error) {
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+func loadFNDSAPrecomputed(keysDir, alg string, signMode bool) (*AlgConfig, error) {
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 
 	// Public key for verification
 	vkBytes, err := readFile(filepath.Join(keysDir, "FNDSA-512_pk.pem"))
 	if err != nil {
 		return nil, err
 	}
-	vk, err := jwt.ParseFalconPublicKeyFromPEM(vkBytes)
+	vk, err := jwt.ParseFNDSAPublicKeyFromPEM(vkBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func loadFalconPrecomputed(keysDir, alg string, signMode bool) (*AlgConfig, erro
 		if err != nil {
 			return nil, err
 		}
-		sk, err := jwt.ParseFalconPrivateKeyFromPEM(skBytes)
+		sk, err := jwt.ParseFNDSAPrivateKeyFromPEM(skBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +259,7 @@ func loadHMAC(keysDir, alg string, signMode bool) (*AlgConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	secret, err := jwt.ParseFalconPrivateKeyFromPEM(secretBytes) // reuse PEM decoder for raw bytes
+	secret, err := jwt.ParseFNDSAPrivateKeyFromPEM(secretBytes) // reuse PEM decoder for raw bytes
 	if err != nil {
 		return nil, err
 	}

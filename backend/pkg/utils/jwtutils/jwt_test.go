@@ -9,8 +9,8 @@ import (
 const keysDir = "../../../keys"
 
 var testAlgs = []string{
-	"Falcon-Precomputed-512",
-	"Falcon-512",
+	"FN-DSA-Precomputed-512",
+	"FN-DSA-512",
 }
 
 // BenchmarkJWTSign menguji waktu murni untuk generasi token (Sign)
@@ -20,7 +20,7 @@ func BenchmarkJWTSign(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "Falcon-Precomputed-512", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",
@@ -48,7 +48,7 @@ func BenchmarkJWTVerify(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "Falcon-Precomputed-512", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",

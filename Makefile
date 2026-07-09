@@ -43,7 +43,7 @@ help:
 	@echo "  make build            Build backend binaries"
 	@echo "  make test             Run backend Go tests"
 	@echo "  make check            Validate Compose configs"
-	@echo "  make falcon-check     Run Falcon KAT/tests and benchmark config checks"
+	@echo "  make fndsa-check     Run FN-DSA KAT/tests and benchmark config checks"
 
 env:
 	$(MAKE) -C $(BACKEND_DIR) env

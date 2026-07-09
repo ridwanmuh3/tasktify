@@ -56,7 +56,7 @@ func sign_core(logn uint,
 
 	for counter := 0; ; counter++ {
 		// Generate the nonce and sub-seed. Note that we regenerate the
-		// nonce at each iteration (the original Falcon algorithm did not;
+		// nonce at each iteration (the original FN-DSA algorithm did not;
 		// regenerating the nonce cannot induce weaknesses, and helps with
 		// provability). Since we work over a provided seed, we use
 		// SHAKE256 over the concatenation of the seed and the loop counter

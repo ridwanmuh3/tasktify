@@ -1,7 +1,7 @@
 // This package implements the FN-DSA signature algorithm.
 //
 // WARNING: FN-DSA is currently being specified by NIST, based on the
-// Falcon algorithm submitted to the [PQC project]. This implementation
+// FN-DSA algorithm submitted to the [PQC project]. This implementation
 // is a prospective guess on what FN-DSA will look like. When the (draft)
 // standard is published, this code will be adjusted, very probably
 // breaking backward compatibility. As such, this code should right now

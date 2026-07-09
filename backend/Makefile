@@ -12,7 +12,7 @@ BENCH_COMPOSE = docker compose -p $(BENCH_COMPOSE_PROJECT_NAME) -f docker-compos
 GOCACHE ?= /tmp/go-build-cache
 ATTACK_BASE_URL ?= http://localhost:5001
 ATTACK_ITERATIONS ?= 10
-ATTACK_ALGORITHM ?= Falcon-Precomputed-512
+ATTACK_ALGORITHM ?= FN-DSA-Precomputed-512
 BENCH_OUTPUT_DIR ?= benchmark-results
 BENCH_SAMPLE_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_sign_samples.ndjson
 BENCH_RESULT_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_sign_result.json
@@ -26,6 +26,8 @@ BASE_URL ?= https://poc-ridwanmuh3.my.id
 VPS_SSH ?= 
 VPS_REPO ?= ~/tasktify
 VPS_BACKEND ?= $(VPS_REPO)/backend
+VPS_HOST ?= $(word 2,$(subst @, ,$(VPS_SSH)))
+HOSTINGER_BENCH_HOST ?= $(VPS_HOST)
 SSH ?= ssh
 SCP ?= scp
 SSH_OPTS ?=
@@ -65,7 +67,7 @@ help:
 	@echo "  make tidy             Tidy Go modules"
 	@echo "  make test             Run Go tests"
 	@echo "  make check            Validate Compose configs"
-	@echo "  make falcon-check     Run Falcon KAT/tests and benchmark config checks"
+	@echo "  make fndsa-check     Run FN-DSA KAT/tests and benchmark config checks"
 	@echo ""
 	@echo "Split benchmark:"
 	@echo "  make hostinger-bench-up VPS_SSH=user@host  Start benchmark stack on VPS"
@@ -78,13 +80,13 @@ env:
 	@test -f .env || cp .env.example .env
 
 # --- Key Generation ---
-# keygen: generate Falcon JWT keys ke auth-service/keys dan copy ke gateway/keys (production)
+# keygen: generate FN-DSA JWT keys ke auth-service/keys dan copy ke gateway/keys (production)
 keygen:
 	mkdir -p auth-service/keys gateway/keys
 	cd cmd/keygen && go run main.go ../../auth-service/keys
 	cp -r auth-service/keys/. gateway/keys/
 
-# keygen-all: generate Falcon JWT keys ke ./keys untuk benchmark (shared oleh semua service)
+# keygen-all: generate FN-DSA JWT keys ke ./keys untuk benchmark (shared oleh semua service)
 keygen-all:
 	mkdir -p keys
 	cd cmd/keygen && go run main.go ../../keys
@@ -294,16 +296,16 @@ hostinger-health: require-vps
 	@curl -fsS "$(BASE_URL)/health" >/dev/null && echo "HTTP OK: $(BASE_URL)/health"
 
 client-k6: require-k6 prepare-bench-output
-	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BASE_URL=$(BASE_URL) k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BENCH_HOST=$(BENCH_HOST) -e BASE_URL=$(BASE_URL) k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 client-k6-isolated: require-k6 prepare-bench-output
-	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BASE_URL=$(BASE_URL) -e ISOLATED_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BENCH_HOST=$(BENCH_HOST) -e BASE_URL=$(BASE_URL) -e ISOLATED_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 client-k6-stress: require-k6 prepare-bench-output
-	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BASE_URL=$(BASE_URL) -e STRESS_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BENCH_HOST=$(BENCH_HOST) -e BASE_URL=$(BASE_URL) -e STRESS_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 client-k6-attack: require-k6 prepare-bench-output
-	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BASE_URL=$(BASE_URL) -e ATTACK_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
+	$(K6) run --no-color --out json=$(BENCH_SAMPLE_OUT) $(BENCH_K6_ENV) -e BENCH_HOST=$(BENCH_HOST) -e BASE_URL=$(BASE_URL) -e ATTACK_ONLY=true k6/benchmark_sign.js 2>&1 | tee $(BENCH_STDOUT_OUT)
 
 hostinger-upload: require-vps
 	@test -f $(BENCH_RESULT_OUT) || (echo "Missing $(BENCH_RESULT_OUT). Run make client-k6 first."; exit 2)
@@ -324,7 +326,7 @@ hostinger-fetch: require-vps prepare-bench-output
 	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_ABLATION_OUT) $(BENCH_OUTPUT_DIR)/
 
 hostinger-bench:
-	$(MAKE) client-k6
+	$(MAKE) client-k6 BENCH_HOST=$(HOSTINGER_BENCH_HOST)
 	$(MAKE) hostinger-upload
 	$(MAKE) hostinger-calc
 	$(MAKE) hostinger-fetch

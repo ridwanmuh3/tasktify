@@ -44,9 +44,9 @@ Pengujian dirancang dalam **tiga fase berurutan** yang dieksekusi dalam satu ses
 | Mode | Variabel Lingkungan | Keterangan |
 |------|---------------------|------------|
 | **Single Gateway** | `BASE_URL=https://...` | Satu gateway melayani semua algoritma |
-| **Multi Gateway** | `BENCH_HOST=localhost` | Satu gateway per profil Falcon, port berbeda (5001-5002) |
+| **Multi Gateway** | `BENCH_HOST=localhost` | Satu gateway per profil FN-DSA, port berbeda (5001-5002) |
 
-Pada mode multi-gateway, setiap profil Falcon mendapatkan proses gateway terpisah sehingga tidak ada kontestasi sumber daya antar profil selama pengujian.
+Pada mode multi-gateway, setiap profil FN-DSA mendapatkan proses gateway terpisah sehingga tidak ada kontestasi sumber daya antar profil selama pengujian.
 
 ---
 
@@ -54,10 +54,10 @@ Pada mode multi-gateway, setiap profil Falcon mendapatkan proses gateway terpisa
 
 | ID Internal | Profil Benchmark | JWS `alg` | Kategori | Port (Multi-GW) |
 |-------------|-------------------|-----------|----------|-----------------|
-| `FNP512` | Falcon-Precomputed-512 | FN-DSA-512 | PQC | 5001 |
-| `FN512` | Falcon-512 | FN-DSA-512 | PQC | 5002 |
+| `FNP512` | FN-DSA-Precomputed-512 | FN-DSA-512 | PQC | 5001 |
+| `FN512` | FN-DSA-512 | FN-DSA-512 | PQC | 5002 |
 
-Kolom **Profil Benchmark** adalah konfigurasi signer internal untuk eksperimen. Untuk Falcon, token JWT tetap memakai JWS `alg` eksperimental `FN-DSA-512`; profil `Falcon-Precomputed-512` tidak muncul sebagai nilai `alg` karena precomputation hanya teknik implementasi signer. Falcon-512 adalah basis FN-DSA-512, sedangkan profil JOSE/FIPS final masih harus mengikuti spesifikasi resmi terbaru ketika tersedia.
+Kolom **Profil Benchmark** adalah konfigurasi signer internal untuk eksperimen. Untuk FN-DSA, token JWT tetap memakai JWS `alg` eksperimental `FN-DSA-512`; profil `FN-DSA-Precomputed-512` tidak muncul sebagai nilai `alg` karena precomputation hanya teknik implementasi signer. FN-DSA-512 adalah basis FN-DSA-512, sedangkan profil JOSE/FIPS final masih harus mengikuti spesifikasi resmi terbaru ketika tersedia.
 
 ---
 
@@ -79,7 +79,7 @@ Endpoint ini menjalankan loop generasi token langsung di dalam proses gateway. J
 POST /api/benchmark/pure-signing
 ```
 
-Endpoint ini menjalankan loop `SigningMethod.Sign()` terhadap pesan tetap. Jalur ini tidak membuat klaim JWT, tidak melakukan serialisasi JSON, tidak melakukan Base64URL, dan tidak melakukan assembly compact JWS. Metrik ini dipakai sebagai baseline pure Falcon/FN-DSA signing di workflow k6.
+Endpoint ini menjalankan loop `SigningMethod.Sign()` terhadap pesan tetap. Jalur ini tidak membuat klaim JWT, tidak melakukan serialisasi JSON, tidak melakukan Base64URL, dan tidak melakukan assembly compact JWS. Metrik ini dipakai sebagai baseline pure FN-DSA/FN-DSA signing di workflow k6.
 
 ### 4.3 Konfigurasi
 
@@ -139,8 +139,8 @@ Dua set statistik dilaporkan:
 
 | Set | Keterangan |
 |-----|------------|
-| `pure_signing_ms` | Primitive Falcon/FN-DSA signing, semua iterasi |
-| `pure_signing_gc_free_ms` | Primitive Falcon/FN-DSA signing, hanya iterasi bersih |
+| `pure_signing_ms` | Primitive FN-DSA/FN-DSA signing, semua iterasi |
+| `pure_signing_gc_free_ms` | Primitive FN-DSA/FN-DSA signing, hanya iterasi bersih |
 | `token_generation_ms` | Access-token generation, semua iterasi, termasuk yang terkena GC |
 | `token_generation_gc_free_ms` | Access-token generation, hanya iterasi bersih (GC tidak terjadi) — **gunakan ini sebagai hasil primer skripsi** |
 | `refresh_token_generation_ms` | Refresh-token generation, semua iterasi |
@@ -217,8 +217,8 @@ Ambang batas (*threshold*) p95 yang ditetapkan untuk setiap profil:
 
 | Algoritma | p95 Dirty (ms) | p95 Actual (ms) |
 |-----------|---------------|-----------------|
-| Falcon-Precomputed-512 | 5.000 | 500 |
-| Falcon-512 | 10.000 | 1.000 |
+| FN-DSA-Precomputed-512 | 5.000 | 500 |
+| FN-DSA-512 | 10.000 | 1.000 |
 
 Pengujian dinyatakan **gagal** (exit code non-zero) apabila nilai p95 melampaui anggaran yang ditetapkan.
 
@@ -344,8 +344,8 @@ Variabel kontrol adalah parameter yang dijaga konstan selama pengujian untuk mem
 
 | Variabel | Keterangan |
 |----------|------------|
-| Profil signer | Falcon-Precomputed-512, Falcon-512 |
-| JWS `alg` | `FN-DSA-512` untuk kedua profil Falcon |
+| Profil signer | FN-DSA-Precomputed-512, FN-DSA-512 |
+| JWS `alg` | `FN-DSA-512` untuk kedua profil FN-DSA |
 | State signer | Original signer vs precomputed LDL tree |
 | Kompleksitas penandatanganan runtime | Berbeda karena precomputation |
 
@@ -386,7 +386,7 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 
 | Istilah | Sumber | Mencakup | Tidak mencakup | Pemakaian |
 |---------|--------|----------|----------------|----------|
-| `pure_signing_gc_free_ms` | `/api/benchmark/pure-signing` | Primitive Falcon/FN-DSA signing atas pesan tetap | JWT serialization, Base64URL, compact assembly, DB, bcrypt, HTTP round-trip | Baseline pure signing |
+| `pure_signing_gc_free_ms` | `/api/benchmark/pure-signing` | Primitive FN-DSA/FN-DSA signing atas pesan tetap | JWT serialization, Base64URL, compact assembly, DB, bcrypt, HTTP round-trip | Baseline pure signing |
 | `token_generation_clean` | Header HTTP dari server | Generasi JWT dari payload benchmark: klaim, signing string, signature, compact token | DB, bcrypt, auth-service, HTTP round-trip | Metrik utama skripsi saat isolated; metrik pendukung saat stress |
 | `clean` | `timings.waiting` k6 | Waktu tunggu sampai TTFB | Download body penuh | Diagnosa antrean/server |
 | `network` | `dirty - clean` | Estimasi overhead client/network | Server-side token timer | Diagnosa transport |
@@ -399,8 +399,8 @@ Pengujian ini membedakan beberapa lapisan latensi dengan istilah spesifik:
 ## 9. Urutan Waktu Eksekusi Pengujian Penuh
 
 ```
-t=0s       Fase 1 — Isolated Falcon-Precomputed-512 (≤ 60 detik)
-t=65s      Fase 1 — Isolated Falcon-512             (≤ 60 detik)
+t=0s       Fase 1 — Isolated FN-DSA-Precomputed-512 (≤ 60 detik)
+t=65s      Fase 1 — Isolated FN-DSA-512             (≤ 60 detik)
 t=130s     [Jeda 30 detik antar fase]
 t=160s     Fase 2 — Stress FNP512 @ 10 VU (30 detik)
 t=210s     Fase 2 — Stress FNP512 @ 30 VU (30 detik)
@@ -429,7 +429,7 @@ k6 menghasilkan tiga berkas keluaran di akhir pengujian:
 {
   "algorithms": [
     {
-      "algorithm": "Falcon-Precomputed-512",
+      "algorithm": "FN-DSA-Precomputed-512",
       "jws_alg": "FN-DSA-512",
       "isolated": {
         "iterations": 100,
@@ -483,11 +483,11 @@ Kalimat aman: metrik ini mengukur generasi JWT server-side dari payload benchmar
 
 - **tampered_token_block_rate_pct = 100%** — seluruh kasus negatif yang diuji ditolak oleh gateway. Angka ini bukan bukti keamanan sistem secara menyeluruh.
 
-### 11.4 Perbandingan Falcon-Precomputed vs Falcon-512
+### 11.4 Perbandingan FN-DSA-Precomputed vs FN-DSA-512
 
-Falcon-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisialisasi dan disimpan di memori. Kedua profil Falcon tetap menghasilkan JWT dengan JWS `alg` `FN-DSA-512`; perbedaan precomputed hanya tercatat pada konfigurasi signer, metadata benchmark, dan hasil eksperimen. Perbandingan `avg_ms` keduanya pada Fase 1 menunjukkan **tradeoff waktu-memori** (*time-memory tradeoff*): penggunaan memori persisten lebih tinggi pada Precomputed sebagai imbalan latensi penandatanganan runtime yang lebih rendah.
+FN-DSA-Precomputed-512 menggunakan pohon LDL yang dihitung satu kali saat inisialisasi dan disimpan di memori. Kedua profil FN-DSA tetap menghasilkan JWT dengan JWS `alg` `FN-DSA-512`; perbedaan precomputed hanya tercatat pada konfigurasi signer, metadata benchmark, dan hasil eksperimen. Perbandingan `avg_ms` keduanya pada Fase 1 menunjukkan **tradeoff waktu-memori** (*time-memory tradeoff*): penggunaan memori persisten lebih tinggi pada Precomputed sebagai imbalan latensi penandatanganan runtime yang lebih rendah.
 
-### 11.5 Studi Ablasi FN-DSA Falcon Precomputed
+### 11.5 Studi Ablasi FN-DSA FN-DSA Precomputed
 
 Studi ablasi berada di `backend/pkg/fndsa/precompute_ablation_test.go` dan memakai seeded signing path, sehingga biaya RNG tidak masuk pengukuran. Varian bergerak dari original menuju komponen detached:
 
@@ -517,25 +517,25 @@ Benchmark Go langsung:
 
 ```bash
 cd backend/pkg
-go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem
+go test ./fndsa -run '^$' -bench '^BenchmarkFN-DSAPrecomputeAblation512/' -benchmem
 ```
 
 ---
 
-## 12. Correctness Test Falcon/FN-DSA
+## 12. Correctness Test FN-DSA/FN-DSA
 
 Correctness tidak dinilai dari latensi. Jalankan test terpisah untuk memastikan dynamic signer, precomputed signer, dan verifier tetap benar.
 
 | Properti | Status | Lokasi |
 |----------|--------|--------|
-| Setiap signature diverifikasi | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
-| Bit-flip signature gagal | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
-| Bit-flip message gagal | Covered | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
-| Dynamic verifier dan precomputed verifier interoperabel | Covered | `backend/pkg/jwt/falcon_optimize_test.go`, `backend/pkg/jwt/falcon_correctness_test.go` |
-| Signature untuk pesan sama tetap valid | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Setiap signature diverifikasi | Covered | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Bit-flip signature gagal | Covered | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Bit-flip message gagal | Covered | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
+| Dynamic verifier dan precomputed verifier interoperabel | Covered | `backend/pkg/jwt/fndsa_precomputed_test.go`, `backend/pkg/jwt/fndsa_correctness_test.go` |
+| Signature untuk pesan sama tetap valid | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
 | Known-answer test | Covered | `backend/pkg/fndsa/fndsa_test.go` dynamic + precomputed KAT |
-| Property test | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
-| Concurrent verification | Covered | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Property test | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
+| Concurrent verification | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
 | Concurrent signing + race detector | Wajib dijalankan | `go test -race ./fndsa ./jwt ./utils/jwtutils` |
 
 ---
@@ -547,8 +547,8 @@ Correctness tidak dinilai dari latensi. Jalankan test terpisah untuk memastikan 
 | Item | Status | Tindakan |
 |------|--------|----------|
 | Ubah klaim kebaruan | Wajib redaksi | Klaim sebagai evaluasi implementasi dan benchmark, bukan penemuan algoritma baru |
-| Perbaiki status Falcon/FN-DSA | Wajib redaksi | Tulis Falcon/FN-DSA sebagai profil eksperimen; ikuti status standar resmi terbaru saat publikasi |
-| Jangan gunakan `Falcon-Precomputed-512` sebagai nilai `alg` | Covered | Nilai JWS `alg` tetap `FN-DSA-512`; precomputed hanya profil signer internal |
+| Perbaiki status FN-DSA/FN-DSA | Wajib redaksi | Tulis FN-DSA/FN-DSA sebagai profil eksperimen; ikuti status standar resmi terbaru saat publikasi |
+| Jangan gunakan `FN-DSA-Precomputed-512` sebagai nilai `alg` | Covered | Nilai JWS `alg` tetap `FN-DSA-512`; precomputed hanya profil signer internal |
 | Jelaskan library, commit, modifikasi kode | Wajib catat saat run | Sertakan `git rev-parse HEAD`, `go list -m all`, dan ringkasan patch lokal |
 | Redaksi token, kredensial, IP, data server | Wajib sebelum publikasi | Jangan commit raw token, password, IP privat, host VPS sensitif |
 | Ukur persistent memory expanded key | Covered | `PrecomputedSigner.PersistentBytes()` dan benchmark precompute |

@@ -46,7 +46,7 @@ services:
       - bench-backend
 
   # =========================
-  # Falcon-Precomputed-512
+  # FN-DSA-Precomputed-512
   # Gateway: :5001
   # =========================
   bench-auth-fnp512:
@@ -68,8 +68,8 @@ services:
       APP_NAME: bench-auth-fnp512
       APP_MODE: production
       GRPC_PORT: 3001
-      JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -93,8 +93,8 @@ services:
       APP_MODE: production
       AUTH_SERVICE_ADDR: bench-auth-fnp512:3001
       TODO_SERVICE_ADDR: bench-todo:3002
-      JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -109,7 +109,7 @@ services:
       - bench-backend
 
   # =========================
-  # Falcon-512
+  # FN-DSA-512
   # Gateway: :5002
   # =========================
   bench-auth-fn512:
@@ -131,8 +131,8 @@ services:
       APP_NAME: bench-auth-fn512
       APP_MODE: production
       GRPC_PORT: 3001
-      JWT_DEFAULT_ALG: Falcon-512
-      JWT_ALLOWED_ALGS: Falcon-512
+      JWT_DEFAULT_ALG: FN-DSA-512
+      JWT_ALLOWED_ALGS: FN-DSA-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -156,8 +156,8 @@ services:
       APP_MODE: production
       AUTH_SERVICE_ADDR: bench-auth-fn512:3001
       TODO_SERVICE_ADDR: bench-todo:3002
-      JWT_DEFAULT_ALG: Falcon-512
-      JWT_ALLOWED_ALGS: Falcon-512
+      JWT_DEFAULT_ALG: FN-DSA-512
+      JWT_ALLOWED_ALGS: FN-DSA-512
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys

@@ -11,7 +11,7 @@ import (
 	jwtlib "github.com/ridwanmuh3/tasktify/pkg/jwt"
 )
 
-func newSecurityTestJWT(t *testing.T) (JwtUtil, *jwtlib.SigningMethodFalconPrecomputed) {
+func newSecurityTestJWT(t *testing.T) (JwtUtil, *jwtlib.SigningMethodFNDSAPrecomputed) {
 	t.Helper()
 	skey, vkey, err := fndsa.KeyGen(9, nil)
 	if err != nil {
@@ -21,10 +21,10 @@ func newSecurityTestJWT(t *testing.T) (JwtUtil, *jwtlib.SigningMethodFalconPreco
 	if err != nil {
 		t.Fatalf("precompute failed: %v", err)
 	}
-	method := &jwtlib.SigningMethodFalconPrecomputed{Name: jwtlib.AlgFNDSA512}
+	method := &jwtlib.SigningMethodFNDSAPrecomputed{Name: jwtlib.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
-	util := NewMultiAlgJwtUtil("tasktify", 60, "Falcon-Precomputed-512", map[string]*AlgConfig{
-		"Falcon-Precomputed-512": {
+	util := NewMultiAlgJwtUtil("tasktify", 60, "FN-DSA-Precomputed-512", map[string]*AlgConfig{
+		"FN-DSA-Precomputed-512": {
 			Method:    method,
 			SignKey:   nil,
 			VerifyKey: vkey,
@@ -52,7 +52,7 @@ func baseSecurityClaims(tokenUse string) JWTClaims {
 
 func signSecurityClaims(
 	t *testing.T,
-	method *jwtlib.SigningMethodFalconPrecomputed,
+	method *jwtlib.SigningMethodFNDSAPrecomputed,
 	claims JWTClaims,
 	header map[string]any,
 ) string {

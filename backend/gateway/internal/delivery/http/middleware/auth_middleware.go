@@ -32,7 +32,7 @@ func (m *AuthMiddleware) Handle(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid authorization format")
 	}
 
-	// Verifikasi Signature PQC Falcon (Menggunakan Public Key)
+	// Verifikasi Signature PQC FN-DSA (Menggunakan Public Key)
 	claims, err := m.jwtUtil.Parse(tokenString)
 	if err != nil {
 		m.log.Warnf("token verification failed: %v", err)

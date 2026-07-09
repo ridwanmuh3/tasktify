@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Falcon-only publication graphics from current benchmark result JSON files."""
+"""Generate FN-DSA-only publication graphics from current benchmark result JSON files."""
 
 from __future__ import annotations
 
@@ -45,25 +45,25 @@ AXIS = "#2F3A45"
 WHITE = "#FFFFFF"
 
 ALGORITHM_ORDER = [
-    "Falcon-Precomputed-512",
-    "Falcon-512",
+    "FN-DSA-Precomputed-512",
+    "FN-DSA-512",
 ]
 ALGORITHM_SET = set(ALGORITHM_ORDER)
 
 ALGORITHM_SHORT = {
-    "Falcon-Precomputed-512": "Falcon-Precomp. 512",
-    "Falcon-512": "Falcon-512",
+    "FN-DSA-Precomputed-512": "FN-DSA-Precomp. 512",
+    "FN-DSA-512": "FN-DSA-512",
 }
 
 ALGORITHM_WRAP = {
-    "Falcon-Precomputed-512": ["Falcon-Precomp.", "512"],
-    "Falcon-512": ["Falcon", "512"],
+    "FN-DSA-Precomputed-512": ["FN-DSA-Precomp.", "512"],
+    "FN-DSA-512": ["FN-DSA", "512"],
 }
 
 # Colorblind-safe palette. Keep mapping stable across every figure.
 COLORS = {
-    "Falcon-Precomputed-512": "#0072B2",
-    "Falcon-512": "#E69F00",
+    "FN-DSA-Precomputed-512": "#0072B2",
+    "FN-DSA-512": "#E69F00",
 }
 
 ATTACK_COLOR = "#009E73"

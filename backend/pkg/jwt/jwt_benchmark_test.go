@@ -44,31 +44,31 @@ func setupBenchmarkAlgorithms(t *testing.T) []algSetup {
 	t.Helper()
 	var algs []algSetup
 
-	// 1. Falcon-512 (Original)
+	// 1. FN-DSA-512 (Original)
 	fnSk, fnVk, err := fndsa.KeyGen(9, nil)
 	if err != nil {
-		t.Fatalf("Falcon-512 keygen failed: %v", err)
+		t.Fatalf("FN-DSA-512 keygen failed: %v", err)
 	}
 	algs = append(algs, algSetup{
-		Name:      "Falcon-512",
+		Name:      "FN-DSA-512",
 		Method:    jwt.SigningMethodFN512,
 		SignKey:   fnSk,
 		VerifyKey: fnVk,
 	})
 
-	// 2. Falcon-Precomputed-512
+	// 2. FN-DSA-Precomputed-512
 	fnpSk, fnpVk, err := fndsa.KeyGen(9, nil)
 	if err != nil {
-		t.Fatalf("Falcon-Precomputed-512 keygen failed: %v", err)
+		t.Fatalf("FN-DSA-Precomputed-512 keygen failed: %v", err)
 	}
 	precomputedSigner, err := fndsa.NewPrecomputedSigner(fnpSk)
 	if err != nil {
 		t.Fatalf("Precomputed signer creation failed: %v", err)
 	}
-	fnpMethod := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	fnpMethod := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	fnpMethod.SetPrecomputedSigner(precomputedSigner)
 	algs = append(algs, algSetup{
-		Name:      "Falcon-Precomputed-512",
+		Name:      "FN-DSA-Precomputed-512",
 		Method:    fnpMethod,
 		SignKey:   nil, // signer embedded in method
 		VerifyKey: fnpVk,

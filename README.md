@@ -1,29 +1,29 @@
 # Tasktify
 
-Tasktify is a Go microservice task API with post-quantum JWT signing. It exposes HTTP/JSON through a Fiber gateway, uses gRPC between services, stores data in PostgreSQL, and benchmarks Falcon/FN-DSA JWT generation with k6.
+Tasktify is a Go microservice task API with post-quantum JWT signing. It exposes HTTP/JSON through a Fiber gateway, uses gRPC between services, stores data in PostgreSQL, and benchmarks FN-DSA JWT generation with k6 JWT generation with k6.
 
-Current research scope is limited to two Falcon signer profiles:
+Current research scope is limited to two FN-DSA signer profiles:
 
 | Profile | JWS `alg` | Benchmark port | Meaning |
 | ------- | --------- | -------------- | ------- |
-| `Falcon-Precomputed-512` | `FN-DSA-512` | `5001` | FN-DSA-512 signer with precomputed LDL tree |
-| `Falcon-512` | `FN-DSA-512` | `5002` | FN-DSA-512 original signer |
+| `FN-DSA-Precomputed-512` | `FN-DSA-512` | `5001` | FN-DSA-512 signer with precomputed LDL tree |
+| `FN-DSA-512` | `FN-DSA-512` | `5002` | FN-DSA-512 original signer |
 
-`Falcon-Precomputed-512` is a benchmark profile, not a JOSE algorithm value. Tokens from both profiles use `FN-DSA-512`; precomputation is implementation state recorded in config, metadata, and benchmark output.
+`FN-DSA-Precomputed-512` is a benchmark profile, not a JOSE algorithm value. Tokens from both profiles use `FN-DSA-512`; precomputation is implementation state recorded in config, metadata, and benchmark output.
 
 ## Recent Updates
 
 | Area | Change | Result |
 | ---- | ------ | ------ |
-| Benchmark scope | Removed unrelated benchmark algorithms from benchmark flow | Compose, keygen, gateway config, and k6 focus on `Falcon-Precomputed-512` and `Falcon-512` |
-| JWS algorithm | Kept `FN-DSA-512` as the token `alg` for both Falcon profiles | Avoids using `Falcon-Precomputed-512` as a fake JOSE algorithm |
+| Benchmark scope | Removed unrelated benchmark algorithms from benchmark flow | Compose, keygen, gateway config, and k6 focus on `FN-DSA-Precomputed-512` and `FN-DSA-512` |
+| JWS algorithm | Kept `FN-DSA-512` as the token `alg` for both FN-DSA profiles | Avoids using `FN-DSA-Precomputed-512` as a fake JOSE algorithm |
 | JWT issuance | Added `POST /api/benchmark/jwt-issuance` | Measures JWT claims, serialization, Base64URL, signing, and compact token assembly without DB, bcrypt, auth-service, or gRPC |
 | Pure signing | Added `POST /api/benchmark/pure-signing` | Measures `SigningMethod.Sign(fixedMessage)` only, without JWT serialization, Base64URL, or compact assembly |
 | k6 workflow | Isolated k6 phase now runs JWT issuance and pure signing | `benchmark_sign_result.json` includes pure signing, JWT issuance, and JWT-over-pure overhead ratio |
 | Stress metadata | Added stage duration, ramp-up, steady state, ramp-down, request count, think time, load model, timeout, connection reuse, TLS, error rate, pool, and quota metadata | Load is no longer described by VU count only |
 | Security tests | Expanded JWT parser and claim tests | Covers malformed tokens, duplicate header/claim, invalid Base64URL, oversized token, `kid`, `typ`, token-use confusion, unsigned/signature-empty tokens, and claim validation |
-| Falcon correctness | Added dynamic and precomputed FN-DSA KAT coverage | `TestFNDSA_Precomputed_KAT` validates precomputed signing against known-answer behavior |
-| Automation | Added `make falcon-kat`, `make falcon-check`, `make wait-bench`, and simplified benchmark targets | Validation and benchmark startup use fewer manual steps |
+| FN-DSA correctness | Added dynamic and precomputed FN-DSA KAT coverage | `TestFNDSA_Precomputed_KAT` validates precomputed signing against known-answer behavior |
+| Automation | Added `make falcon-kat`, `make fndsa-check`, `make wait-bench`, and simplified benchmark targets | Validation and benchmark startup use fewer manual steps |
 | Documentation | Cleaned README and benchmark docs | Metric scope and interpretation are explicit |
 
 ## Architecture
@@ -43,8 +43,8 @@ Benchmark runtime:
 
 ```text
 k6 client
-  -> Gateway Falcon-Precomputed-512 (:5001)
-  -> Gateway Falcon-512 (:5002)
+  -> Gateway FN-DSA-Precomputed-512 (:5001)
+  -> Gateway FN-DSA-512 (:5002)
       -> shared benchmark PostgreSQL and todo service
 ```
 
@@ -57,7 +57,7 @@ Each benchmark profile gets an isolated gateway/auth process pair. This avoids c
 | Gateway | `backend/gateway/` | Public HTTP API, JWT verification, benchmark endpoints, gRPC clients |
 | Auth service | `backend/auth-service/` | User registration, sign-in, refresh token flow, bcrypt, JWT signing |
 | Todo service | `backend/todo-service/` | Task CRUD scoped by authenticated user |
-| Shared package | `backend/pkg/` | JWT implementation, Falcon/FN-DSA signing methods, key loaders, precomputed signer |
+| Shared package | `backend/pkg/` | JWT implementation, FN-DSA signing methods, key loaders, precomputed signer |
 | Key generator | `backend/cmd/keygen/` | Generate production and benchmark keys |
 | k6 scripts | `backend/k6/` | Isolated, stress, refresh, and adversarial JWT scenarios |
 | API specs | `backend/api/`, `backend/gateway/api/`, service `api/` folders | OpenAPI and service contracts |
@@ -154,7 +154,7 @@ Go modules:
 | `backend/gateway` | HTTP gateway and gRPC clients |
 | `backend/auth-service` | Auth/user gRPC server |
 | `backend/todo-service` | Task gRPC server |
-| `backend/pkg` | Shared JWT and Falcon/FN-DSA code |
+| `backend/pkg` | Shared JWT and FN-DSA code |
 | `backend/cmd/keygen` | Key generation CLI |
 
 ## Configuration
@@ -240,11 +240,11 @@ make compile-proto
 
 ## Benchmark Workflow
 
-Validate Falcon/FN-DSA code and benchmark config:
+Validate FN-DSA/FN-DSA code and benchmark config:
 
 ```bash
 cd backend
-make falcon-check
+make fndsa-check
 ```
 
 Run local benchmark stack and k6 workflow:
@@ -263,7 +263,7 @@ make client-k6 BASE_URL=https://example.com
 ```
 
 Remote single-gateway runs must load every benchmarked signing profile in
-`JWT_ALLOWED_ALGS`, for example `Falcon-Precomputed-512,Falcon-512`.
+`JWT_ALLOWED_ALGS`, for example `FN-DSA-Precomputed-512,FN-DSA-512`.
 Otherwise the unconfigured profile fails instead of being silently measured with
 the wrong signer.
 
@@ -299,7 +299,7 @@ Use these metric names consistently:
 
 | Metric | Scope | Use |
 | ------ | ----- | --- |
-| `isolated.pure_signing_gc_free_ms` | Direct Falcon/FN-DSA signing over fixed message, GC-free | Pure signing baseline |
+| `isolated.pure_signing_gc_free_ms` | Direct FN-DSA signing over fixed message, GC-free | Pure signing baseline |
 | `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free | Primary JWT issuance metric |
 | `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free | Secondary JWT issuance metric |
 | `stress.token_generation_ms` | Access JWT generation under concurrent VUs | Signing under load |
@@ -313,7 +313,7 @@ Interpretation rules:
 - Do not call `isolated.token_generation_gc_free_ms` login latency.
 - Do not call `isolated.token_generation_gc_free_ms` network latency.
 - Do not call `isolated.token_generation_gc_free_ms` pure cryptographic signing.
-- Use `isolated.pure_signing_gc_free_ms` for pure Falcon/FN-DSA signing.
+- Use `isolated.pure_signing_gc_free_ms` for pure FN-DSA/FN-DSA signing.
 - Use `isolated.token_generation_gc_free_ms` for server-side JWT issuance from benchmark payload.
 - Use `stress.login_ms` for login latency with JWT signing, because it includes DB lookup, bcrypt, transport, and response serialization.
 - Use `stress.refresh_ms` for refresh latency with token verification and JWT rotation.
@@ -345,21 +345,21 @@ JWT security tests cover:
 | Refresh token replay/reuse | Gap until stateful refresh-token store or JTI blacklist exists |
 | Key revocation/rotation | Gap until key registry and operational rotation exist |
 
-Falcon/FN-DSA correctness tests cover:
+FN-DSA correctness tests cover:
 
 | Property | Location |
 | -------- | -------- |
 | Dynamic and precomputed KAT | `backend/pkg/fndsa/fndsa_test.go` |
-| Signature verification, bit-flip signature failure, bit-flip message failure | `backend/pkg/jwt/falcon_correctness_test.go`, `backend/pkg/fndsa/*_test.go` |
-| Dynamic and precomputed verifier interoperability | `backend/pkg/jwt/falcon_optimize_test.go` |
-| Concurrent verification/signing behavior | `backend/pkg/jwt/falcon_correctness_test.go` |
+| Signature verification, bit-flip signature failure, bit-flip message failure | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/*_test.go` |
+| Dynamic and precomputed verifier interoperability | `backend/pkg/jwt/fndsa_precomputed_test.go` |
+| Concurrent verification/signing behavior | `backend/pkg/jwt/fndsa_correctness_test.go` |
 
 Run:
 
 ```bash
 cd backend
 make falcon-kat
-make falcon-check
+make fndsa-check
 ```
 
 ## Statistical Analysis
@@ -375,7 +375,7 @@ Common variants:
 ```bash
 python3 scripts/benchmark_stat_tests.py --metric isolated.pure_signing_gc_free_ms
 python3 scripts/benchmark_stat_tests.py --metric isolated.refresh_token_generation_gc_free_ms
-python3 scripts/benchmark_stat_tests.py --baseline Falcon-Precomputed-512
+python3 scripts/benchmark_stat_tests.py --baseline FN-DSA-Precomputed-512
 python3 scripts/benchmark_stat_tests.py --format csv
 ```
 
@@ -394,7 +394,7 @@ Direct Go benchmark:
 
 ```bash
 cd backend/pkg
-go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem
+go test ./fndsa -run '^$' -bench '^BenchmarkFNDSAPrecomputeAblation512/' -benchmem
 ```
 
 The ablation compares original runtime signing against detached precomputation stages. `Significance %` in that output means relative runtime reduction from A0, not statistical significance.
@@ -413,7 +413,7 @@ env GOCACHE=/tmp/go-build-cache go test ./utils/jwtutils ./jwt ./fndsa
 
 cd ..
 k6 inspect k6/benchmark_sign.js
-make falcon-check
+make fndsa-check
 ```
 
 ## Make Targets
@@ -433,7 +433,7 @@ Run from `backend/`.
 | `make tidy` | Run `go mod tidy` in Go modules |
 | `make build` | Build gateway, auth-service, and todo-service binaries into `bin/` |
 | `make falcon-kat` | Run FN-DSA dynamic and precomputed KAT |
-| `make falcon-check` | Run Falcon KAT/tests plus Compose and k6 script checks |
+| `make fndsa-check` | Run FN-DSA KAT/tests plus Compose and k6 script checks |
 | `make bench-up` | Build and start benchmark Compose stack |
 | `make wait-bench` | Wait for benchmark gateways on ports `5001` and `5002` |
 | `make bench-down` | Stop benchmark stack and remove volumes |

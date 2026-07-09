@@ -77,7 +77,7 @@ func TokenTypeForUse(tokenUse string) string {
 
 func HeaderAlgForConfigAlg(alg string) string {
 	switch alg {
-	case "Falcon-512", "Falcon-Precomputed-512", "FN-DSA-512":
+	case "FN-DSA-512", "FN-DSA-Precomputed-512":
 		return jwt.AlgFNDSA512
 	default:
 		return alg
@@ -111,7 +111,7 @@ type jwtUtil struct {
 }
 
 // NewJwtUtil creates a JwtUtil for verification only (gateway).
-// The verifyKey is the Falcon public key bytes.
+// The verifyKey is the FN-DSA public key bytes.
 func NewJwtUtil(config *viper.Viper, verifyKey []byte) JwtUtil {
 	return &jwtUtil{
 		allowedAlgs: normalizeAllowedAlgs(config.GetStringSlice("JWT_ALLOWED_ALGS")),
@@ -158,7 +158,7 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 	})
 	token.Header["typ"] = TokenTypeForUse(tokenUse)
 
-	// For precomputed Falcon, key is ignored by Sign() as signer is embedded
+	// For precomputed FN-DSA, key is ignored by Sign() as signer is embedded
 	s, err := token.SignedString(nil)
 	if err != nil {
 		return "", err

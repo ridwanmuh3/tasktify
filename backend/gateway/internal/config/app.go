@@ -28,8 +28,8 @@ type BootstrapConfig struct {
 
 // Supported algorithms for multi-algorithm JWT verification
 var supportedAlgorithms = []string{
-	"Falcon-512",
-	"Falcon-Precomputed-512",
+	"FN-DSA-512",
+	"FN-DSA-Precomputed-512",
 }
 
 func Bootstrap(config *BootstrapConfig) {
@@ -40,7 +40,7 @@ func Bootstrap(config *BootstrapConfig) {
 
 	defaultAlg := config.Config.GetString("JWT_DEFAULT_ALG")
 	if defaultAlg == "" {
-		defaultAlg = "Falcon-Precomputed-512"
+		defaultAlg = "FN-DSA-Precomputed-512"
 	}
 
 	// Determine which algorithms to load.

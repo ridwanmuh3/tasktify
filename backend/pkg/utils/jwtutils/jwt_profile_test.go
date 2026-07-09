@@ -20,7 +20,7 @@ func TestMultiAlgJwtUtilUsesCanonicalFNDSAHeaderForPrecomputedProfile(t *testing
 	tokenString, err := util.Sign(&JWTPayload{
 		UserID:    userID,
 		Email:     "profile@example.com",
-		Algorithm: "Falcon-Precomputed-512",
+		Algorithm: "FN-DSA-Precomputed-512",
 		TokenUse:  TokenUseAccess,
 	})
 	if err != nil {
@@ -31,7 +31,7 @@ func TestMultiAlgJwtUtilUsesCanonicalFNDSAHeaderForPrecomputedProfile(t *testing
 	if header["alg"] != jwt.AlgFNDSA512 {
 		t.Fatalf("wrong alg header: got %v, want %s", header["alg"], jwt.AlgFNDSA512)
 	}
-	if header["alg"] == "Falcon-Precomputed-512" {
+	if header["alg"] == "FN-DSA-Precomputed-512" {
 		t.Fatal("precomputed signer profile leaked into JWS alg header")
 	}
 	if header["typ"] != TokenTypeAccess {
@@ -55,17 +55,17 @@ func TestMultiAlgJwtUtilUsesCanonicalFNDSAHeaderForPrecomputedProfile(t *testing
 	}
 }
 
-func TestMultiAlgJwtUtilRejectsUnconfiguredFalconSigningProfile(t *testing.T) {
+func TestMultiAlgJwtUtilRejectsUnconfiguredFNDSASigningProfile(t *testing.T) {
 	util := newTestFNDSAJwtUtil(t, "tasktify")
 
 	_, err := util.Sign(&JWTPayload{
 		UserID:    uuid.New(),
 		Email:     "profile@example.com",
-		Algorithm: "Falcon-512",
+		Algorithm: "HS256",
 		TokenUse:  TokenUseAccess,
 	})
-	if err == nil || !strings.Contains(err.Error(), "unsupported algorithm: Falcon-512") {
-		t.Fatalf("Sign(Falcon-512) error = %v, want unsupported algorithm", err)
+	if err == nil || !strings.Contains(err.Error(), "unsupported algorithm: HS256") {
+		t.Fatalf("Sign(HS256) error = %v, want unsupported algorithm", err)
 	}
 }
 
@@ -189,7 +189,7 @@ func newTestFNDSAJwtUtil(t *testing.T, issuer string) JwtUtil {
 	return util
 }
 
-func newTestFNDSAJwtUtilWithMethod(t *testing.T, issuer string) (JwtUtil, *jwt.SigningMethodFalconPrecomputed) {
+func newTestFNDSAJwtUtilWithMethod(t *testing.T, issuer string) (JwtUtil, *jwt.SigningMethodFNDSAPrecomputed) {
 	t.Helper()
 	sk, vk, err := fndsa.KeyGen(9, nil)
 	if err != nil {
@@ -199,15 +199,15 @@ func newTestFNDSAJwtUtilWithMethod(t *testing.T, issuer string) (JwtUtil, *jwt.S
 	if err != nil {
 		t.Fatalf("precompute failed: %v", err)
 	}
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 	configs := map[string]*AlgConfig{
-		"Falcon-Precomputed-512": {
+		"FN-DSA-Precomputed-512": {
 			Method:    method,
 			VerifyKey: vk,
 		},
 	}
-	return NewMultiAlgJwtUtil(issuer, 60, "Falcon-Precomputed-512", configs), method
+	return NewMultiAlgJwtUtil(issuer, 60, "FN-DSA-Precomputed-512", configs), method
 }
 
 func decodeJWTHeader(t *testing.T, tokenString string) map[string]any {

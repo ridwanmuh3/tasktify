@@ -35,7 +35,7 @@ flowchart LR
     direction TB
     claims["JWT claims<br/>jti, user_id, email,<br/>token_use, iss, iat, exp"]
     alg_policy["Alg policy<br/>default + allowlist"]
-    signer["PQC signer<br/>Falcon, ML-DSA, SLH-DSA"]
+    signer["PQC signer<br/>FN-DSA, ML-DSA, SLH-DSA"]
     token_pair["Token pair<br/>access + refresh"]
     verifier["Verifier<br/>alg, issuer, exp,<br/>signature, token_use"]
 
@@ -51,7 +51,7 @@ flowchart LR
     precompute["Startup precompute<br/>decode f,g,F<br/>derive G,h"]
     cache["Cache<br/>hashedVK, FFT basis,<br/>LDL tree"]
     runtime_sign["Runtime sign<br/>reuse cache"]
-    signature["Falcon signature"]
+    signature["FN-DSA signature"]
 
     key_load --> precompute
     precompute --> cache
@@ -74,7 +74,7 @@ flowchart LR
   gateway --> route_type
   gateway --> bench_api
   auth_svc -->|"signin / refresh"| claims
-  signer -->|"Falcon-Precomputed-512"| key_load
+  signer -->|"FN-DSA-Precomputed-512"| key_load
   signer -->|"JWT generation endpoint"| bench_api
   signer -->|"latency samples"| metrics
 
@@ -104,7 +104,7 @@ Diagram reading:
 - 3.1: request masuk lewat Caddy, lalu Gateway.
 - 3.2: Gateway dispatch ke Auth/Todo; data inti ada di `users` dan `tasks`.
 - 3.3: Auth/benchmark membentuk JWT, signer PQC menandatangani, Gateway memverifikasi.
-- 3.4: Falcon-Precomputed memindahkan decode, FFT basis, dan LDL tree ke startup cache.
+- 3.4: FN-DSA-Precomputed memindahkan decode, FFT basis, dan LDL tree ke startup cache.
 - 3.5: k6 mengukur generasi JWT, stress, attack block-rate; output jadi JSON, statistik, figure, docs.
 
 ## Production Runtime
@@ -133,7 +133,7 @@ flowchart LR
   subgraph crypto["PQC JWT library"]
     jwtutils["pkg/utils/jwtutils<br/>Sign / Parse facade"]
     jwtpkg["pkg/jwt<br/>JWT parser + signing methods"]
-    fndsa["pkg/fndsa<br/>Falcon / FN-DSA implementation"]
+    fndsa["pkg/fndsa<br/>FN-DSA / FN-DSA implementation"]
     keygen["cmd/keygen<br/>algorithm key generation"]
     keys["KEYS_DIR<br/>private + public keys"]
   end
@@ -275,7 +275,7 @@ Data structure rules:
 - `tasks.user_id` links task rows to authenticated user. API and repository scope task reads/writes by that user.
 - JWT payload carries `sub`, `user_id`, `email`, `token_use`, `iss`, `iat`, `exp`, and `jti`.
 - Token header carries `alg` and `typ`; gateway parser accepts only configured algorithms and validates token type against `token_use`.
-- `Falcon-Precomputed-512` is a signer profile. JWT header `alg` remains `FN-DSA-512` for both dynamic and precomputed Falcon profiles.
+- `FN-DSA-Precomputed-512` is a signer profile. JWT header `alg` remains `FN-DSA-512` for both dynamic and precomputed FN-DSA profiles.
 - gRPC contracts use protobuf messages. HTTP handlers map JSON DTOs to protobuf requests.
 - Benchmark output keeps raw samples plus summary stats so research can audit p50/p95/p99 and GC-free timing.
 
@@ -286,16 +286,16 @@ flowchart LR
   k6["k6 benchmark scripts<br/>backend/k6/benchmark_sign.js<br/>backend/k6/adversarial_jwt.js"]
 
   subgraph gateways["One gateway per algorithm"]
-    gw1["bench-gw-fnp512<br/>Falcon-Precomputed-512<br/>localhost:5001"]
-    gw2["bench-gw-fn512<br/>Falcon-512<br/>localhost:5002"]
+    gw1["bench-gw-fnp512<br/>FN-DSA-Precomputed-512<br/>localhost:5001"]
+    gw2["bench-gw-fn512<br/>FN-DSA-512<br/>localhost:5002"]
     gw3["bench-gw-mldsa44<br/>ML-DSA-44<br/>localhost:5003"]
     gw4["bench-gw-slhdsa128f<br/>SLH-DSA-SHA2-128f<br/>localhost:5004"]
     gw5["bench-gw-slhdsa128s<br/>SLH-DSA-SHA2-128s<br/>localhost:5005"]
   end
 
   subgraph auth_pairs["Matching auth service per algorithm"]
-    a1["bench-auth-fnp512<br/>JWT_DEFAULT_ALG=Falcon-Precomputed-512"]
-    a2["bench-auth-fn512<br/>JWT_DEFAULT_ALG=Falcon-512"]
+    a1["bench-auth-fnp512<br/>JWT_DEFAULT_ALG=FN-DSA-Precomputed-512"]
+    a2["bench-auth-fn512<br/>JWT_DEFAULT_ALG=FN-DSA-512"]
     a3["bench-auth-mldsa44<br/>JWT_DEFAULT_ALG=ML-DSA-44"]
     a4["bench-auth-slhdsa128f<br/>JWT_DEFAULT_ALG=SLH-DSA-SHA2-128f"]
     a5["bench-auth-slhdsa128s<br/>JWT_DEFAULT_ALG=SLH-DSA-SHA2-128s"]
@@ -399,12 +399,12 @@ flowchart TD
   fft["Precompute FFT basis<br/>b00, b01, b10, b11"]
   gram["Build Gram matrix"]
   ldl["Precompute LDL tree"]
-  method["SigningMethodFalconPrecomputed<br/>signer embedded in method"]
+  method["SigningMethodFN-DSAPrecomputed<br/>signer embedded in method"]
   runtime["Runtime Sign()"]
   hash_msg["Hash JWT signing string to lattice point"]
   sample["Sample with precomputed LDL tree"]
   map_back["Map sample back through precomputed basis"]
-  encode["Encode Falcon signature"]
+  encode["Encode FN-DSA signature"]
   verify["Gateway Verify()<br/>public key + SHA3-256"]
 
   sk --> loader --> precompute
@@ -418,8 +418,8 @@ flowchart TD
 
 Optimization logic:
 
-- Baseline `Falcon-512` signs with `fndsa.Sign`, which decodes private key and recomputes key-dependent lattice data during signing.
-- Optimized `Falcon-Precomputed-512` builds `PrecomputedSigner` once at service startup.
+- Baseline `FN-DSA-512` signs with `fndsa.Sign`, which decodes private key and recomputes key-dependent lattice data during signing.
+- Optimized `FN-DSA-Precomputed-512` builds `PrecomputedSigner` once at service startup.
 - Startup precompute stores `hashedVK`, FFT basis arrays `b00`, `b01`, `b10`, `b11`, and LDL tree.
 - Runtime signing reuses stored basis and LDL tree, so each JWT sign avoids repeated private-key decode, `G` recomputation, FFT basis generation, Gram matrix construction, and LDL tree construction.
 - Verification unchanged at cryptographic level: gateway verifies `FN-DSA-512` signature with public key, algorithm allowlist, `typ`, issuer, subject, token_use, issued-at, and expiry checks.

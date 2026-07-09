@@ -5,7 +5,7 @@ info:
   version: 1.0.0
   description: |
     Task management API with Post-Quantum Cryptography (PQC) JWT authentication.
-    Supports multiple signing algorithms: Falcon-512, ML-DSA (44/65/87), SLH-DSA,
+    Supports multiple signing algorithms: FN-DSA-512, ML-DSA (44/65/87), SLH-DSA,
     and classical algorithms (ES256, RS256, HS256, EdDSA).
 
 servers:
@@ -85,7 +85,7 @@ paths:
             example:
               email: john@example.com
               password: secret123
-              algorithm: Falcon-512
+              algorithm: FN-DSA-512
       responses:
         "200":
           description: Sign in successful
@@ -161,7 +161,7 @@ paths:
               $ref: "#/components/schemas/CreateTaskRequest"
             example:
               title: Implement PQC benchmark
-              description: Run Falcon-512 vs ML-DSA comparison
+              description: Run FN-DSA-512 vs ML-DSA comparison
               status: pending
               due_date: 1714291200000
       responses:
@@ -210,7 +210,7 @@ paths:
                   - id: 550e8400-e29b-41d4-a716-446655440001
                     user_id: 550e8400-e29b-41d4-a716-446655440000
                     title: Implement PQC benchmark
-                    description: Run Falcon-512 vs ML-DSA comparison
+                    description: Run FN-DSA-512 vs ML-DSA comparison
                     status: pending
                     due_date: 1714291200000
                     created_at: 1714204800000
@@ -250,7 +250,7 @@ paths:
                   id: 550e8400-e29b-41d4-a716-446655440001
                   user_id: 550e8400-e29b-41d4-a716-446655440000
                   title: Implement PQC benchmark
-                  description: Run Falcon-512 vs ML-DSA comparison
+                  description: Run FN-DSA-512 vs ML-DSA comparison
                   status: pending
                   due_date: 1714291200000
                   created_at: 1714204800000
@@ -276,7 +276,7 @@ paths:
               $ref: "#/components/schemas/UpdateTaskRequest"
             example:
               title: Implement PQC benchmark
-              description: Run Falcon-512 vs ML-DSA comparison
+              description: Run FN-DSA-512 vs ML-DSA comparison
               status: in_progress
               due_date: 1714291200000
       responses:
@@ -338,7 +338,7 @@ paths:
             schema:
               $ref: "#/components/schemas/BenchmarkSignRequest"
             example:
-              algorithm: Falcon-512
+              algorithm: FN-DSA-512
               iterations: 100
               email: bench@example.com
               password: secret123
@@ -369,7 +369,7 @@ paths:
               example:
                 status: 200
                 data:
-                  algorithm: Falcon-512
+                  algorithm: FN-DSA-512
                   iterations: 100
                   success_count: 100
                   payload_note: falcon-baseline-run-1
@@ -405,7 +405,7 @@ components:
       bearerFormat: JWT
       description: |
         PQC-signed JWT token obtained from `POST /api/auth/signin`.
-        Token header contains the algorithm identifier (e.g. `Falcon-512`, `ML-DSA-44`).
+        Token header contains the algorithm identifier (e.g. `FN-DSA-512`, `ML-DSA-44`).
 
   parameters:
     TaskId:
@@ -561,8 +561,8 @@ components:
           type: string
           description: Override signing algorithm. Defaults to service-configured algorithm.
           enum:
-            - Falcon-512
-            - Falcon-Precomputed-512
+            - FN-DSA-512
+            - FN-DSA-Precomputed-512
             - ML-DSA-44
             - ML-DSA-65
             - ML-DSA-87
@@ -574,7 +574,7 @@ components:
             - RS256
             - HS256
             - EdDSA
-          example: Falcon-512
+          example: FN-DSA-512
 
     AuthData:
       type: object
@@ -629,7 +629,7 @@ components:
           example: Implement PQC benchmark
         description:
           type: string
-          example: Run Falcon-512 vs ML-DSA comparison
+          example: Run FN-DSA-512 vs ML-DSA comparison
         status:
           $ref: "#/components/schemas/TaskStatus"
         due_date:
@@ -666,7 +666,7 @@ components:
           example: Implement PQC benchmark
         description:
           type: string
-          example: Run Falcon-512 vs ML-DSA comparison
+          example: Run FN-DSA-512 vs ML-DSA comparison
         status:
           $ref: "#/components/schemas/TaskStatus"
         due_date:
@@ -684,7 +684,7 @@ components:
           example: Implement PQC benchmark
         description:
           type: string
-          example: Run Falcon-512 vs ML-DSA comparison
+          example: Run FN-DSA-512 vs ML-DSA comparison
         status:
           $ref: "#/components/schemas/TaskStatus"
         due_date:
@@ -701,8 +701,8 @@ components:
           type: string
           description: PQC or classical algorithm to benchmark
           enum:
-            - Falcon-512
-            - Falcon-Precomputed-512
+            - FN-DSA-512
+            - FN-DSA-Precomputed-512
             - ML-DSA-44
             - ML-DSA-65
             - ML-DSA-87
@@ -714,7 +714,7 @@ components:
             - RS256
             - HS256
             - EdDSA
-          example: Falcon-512
+          example: FN-DSA-512
         iterations:
           type: integer
           minimum: 1
@@ -739,7 +739,7 @@ components:
       properties:
         algorithm:
           type: string
-          example: Falcon-512
+          example: FN-DSA-512
         iterations:
           type: integer
           example: 100

@@ -377,7 +377,7 @@ func TestPrecomputeAblationVariantsMatchOriginal(t *testing.T) {
 	}
 }
 
-func BenchmarkFalconPrecomputeAblation512(b *testing.B) {
+func BenchmarkFNDSAPrecomputeAblation512(b *testing.B) {
 	skey, _, err := KeyGen(9, nil)
 	if err != nil {
 		b.Fatal(err)
@@ -444,7 +444,7 @@ var ablationSignatureSink []byte
 func ablationJWTSigningInput(logn uint, iteration int) []byte {
 	issuedAt := ablationJWTBaseUnix + int64(iteration)
 	header := ablationJWTHeader{
-		Alg: "Falcon-512",
+		Alg: "FN-DSA-512",
 		Typ: "JWT",
 	}
 	claims := ablationJWTClaims{

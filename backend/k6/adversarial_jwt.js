@@ -14,7 +14,7 @@
  *   #5  Payload Manipulation      — change email claim without re-signing
  *   #6  Expired Token Abuse       — set exp to past (payload mod, sig fails)
  *   #7  Unsigned Compact Token    — send compact JWS with empty signature
- *   #8  Cross-Algorithm Injection — classic header against Falcon verifier
+ *   #8  Cross-Algorithm Injection — classic header against FN-DSA verifier
  *
  * Usage:
  *   k6 run k6/adversarial_jwt.js
@@ -34,7 +34,7 @@ import { randomString } from "./k6-utils.js";
 
 const BASE_URL = "http://localhost:3000";
 const ITERATIONS = parseInt(__ENV.ITERATIONS || "10", 10);
-const ALGORITHM = "Falcon-Precomputed-512";
+const ALGORITHM = "FN-DSA-Precomputed-512";
 const SUMMARY_DIR = (__ENV.BENCH_OUTPUT_DIR || "").replace(/\/+$/, "");
 
 function summaryFile(name) {
@@ -333,10 +333,10 @@ export default function (data) {
   group("8_cross_algorithm_injection", () => {
     for (const alg of ["RS256", "HS256", "ES256"]) {
       const tags = { attack: "8_cross_algorithm_injection", alg };
-      // Classic alg header but Falcon signature → should be rejected
+      // Classic alg header but FN-DSA signature → should be rejected
       const forged = withHeader(token, { alg });
       recordAttack(
-        `#8 Cross-Algorithm Injection (${alg}→Falcon)`,
+        `#8 Cross-Algorithm Injection (${alg}→FN-DSA)`,
         hitProtected(forged),
         blockRateCrossAlg,
         tags,

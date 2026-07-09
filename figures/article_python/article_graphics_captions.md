@@ -1,8 +1,8 @@
 # Article Graphics Captions
 
 Legend:
-- `Falcon-Precomputed-512`: `#0072B2`
-- `Falcon-512`: `#E69F00`
+- `FN-DSA-Precomputed-512`: `#0072B2`
+- `FN-DSA-512`: `#E69F00`
 
 Captions:
 - Fig. 1: Isolated access-token generation latency. Metric: access_token_generation_avg_ms.

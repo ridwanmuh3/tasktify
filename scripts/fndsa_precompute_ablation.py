@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run or parse FN-DSA Falcon precompute ablation benchmarks."""
+"""Run or parse FN-DSA precompute ablation benchmarks."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PKG_DIR = ROOT / "backend" / "pkg"
 BENCH_RE = re.compile(
-    r"^BenchmarkFalconPrecomputeAblation512/(?P<variant>\S+)-\d+\s+"
+    r"^BenchmarkFNDSAPrecomputeAblation512/(?P<variant>\S+)-\d+\s+"
     r"(?P<iters>\d+)\s+"
     r"(?P<ns>[0-9.]+)\s+ns/op\s+"
     r"(?P<bytes>[0-9.]+)\s+B/op\s+"
@@ -53,7 +53,7 @@ class BenchRow:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Measure FN-DSA Falcon-512 ablation from original signer to detached "
+            "Measure FN-DSA FN-DSA-512 ablation from original signer to detached "
             "precomputed LDL-tree signer. Reports ms/op, KB/op, and percentages."
         )
     )
@@ -92,7 +92,7 @@ def run_benchmark(benchtime: str, count: int) -> str:
         "-run",
         "^$",
         "-bench",
-        "^BenchmarkFalconPrecomputeAblation512/",
+        "^BenchmarkFNDSAPrecomputeAblation512/",
         "-benchmem",
         "-benchtime",
         benchtime,
@@ -130,7 +130,7 @@ def parse_benchmarks(text: str) -> list[BenchRow]:
         )
 
     if not raw:
-        raise ValueError("no BenchmarkFalconPrecomputeAblation512 rows found")
+        raise ValueError("no BenchmarkFNDSAPrecomputeAblation512 rows found")
 
     grouped: dict[str, list[tuple[int, float, float, float]]] = {}
     for variant, iters, ms_per_op, kb_per_op, allocs_per_op in raw:
@@ -209,10 +209,10 @@ def fmt_num(value: float, digits: int = 4) -> str:
 
 
 def print_markdown(rows: list[BenchRow], source: str) -> None:
-    print("# FN-DSA Falcon Precompute Ablation")
+    print("# FN-DSA FN-DSA Precompute Ablation")
     print()
     print(f"- Source: {source}")
-    print("- Benchmark: `BenchmarkFalconPrecomputeAblation512`")
+    print("- Benchmark: `BenchmarkFNDSAPrecomputeAblation512`")
     print("- Sign input: valid JWT compact signing input, `base64url(header).base64url(payload)`.")
     print("- Percent: latency change magnitude. Lower `ms/op` is better.")
     print("- vs A0 percent: `abs(Ai ms/op - A0 ms/op) / A0 ms/op * 100`; direction says faster/slower.")
@@ -310,7 +310,7 @@ def main() -> int:
         source = f"`{args.bench_output}`"
     else:
         text = run_benchmark(args.benchtime, args.count)
-        source = "`go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem`"
+        source = "`go test ./fndsa -run '^$' -bench '^BenchmarkFNDSAPrecomputeAblation512/' -benchmem`"
 
     rows = parse_benchmarks(text)
     if args.format == "json":

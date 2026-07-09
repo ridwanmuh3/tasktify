@@ -532,7 +532,7 @@ Dua kali pemanggilan: pertama men-trigger koleksi, kedua memastikan semua finali
 
 ### 11.5 Deteksi dan Pemisahan Iterasi yang Terkontaminasi GC
 
-**Masalah:** Meski sudah ada GC cleanup, GC tetap bisa berjalan di tengah iterasi pengukuran (terutama untuk algoritma yang mengalokasikan memori besar seperti Falcon). Iterasi tersebut memiliki latensi yang **tidak representatif** karena mencakup jeda STW.
+**Masalah:** Meski sudah ada GC cleanup, GC tetap bisa berjalan di tengah iterasi pengukuran (terutama untuk algoritma yang mengalokasikan memori besar seperti FN-DSA). Iterasi tersebut memiliki latensi yang **tidak representatif** karena mencakup jeda STW.
 
 **Solusi:** Setiap iterasi mendeteksi apakah GC berjalan selama `Sign()` dengan membandingkan `runtime.MemStats.NumGC` sebelum dan sesudah:
 

@@ -10,7 +10,7 @@ import (
 )
 
 // PQC JWT Authorization header sizes (base64url-encoded signatures):
-//   Falcon-512 / Precomputed-512 :  ~1.1 KB  — fits in 4 KB default
+//   FN-DSA-512 / Precomputed-512 :  ~1.1 KB  — fits in 4 KB default
 //   ML-DSA-44                    :  ~3.4 KB  — fails combined with other headers
 //   SLH-DSA-SHA2-128s            : ~10.5 KB  — always fails at 4 KB default
 //   SLH-DSA-SHA2-128f            : ~22.5 KB  — always fails at 4 KB default

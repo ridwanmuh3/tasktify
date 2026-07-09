@@ -26,12 +26,12 @@ type TestClaims struct {
 	Email  string    `json:"email"`
 }
 
-// setupFalconKeys generates Falcon-512 key pair dan precomputed signer
-func setupFalconKeys(t *testing.T) (skey []byte, vkey []byte, signer *fndsa.PrecomputedSigner) {
+// setupFNDSAKeys generates FN-DSA-512 key pair dan precomputed signer
+func setupFNDSAKeys(t *testing.T) (skey []byte, vkey []byte, signer *fndsa.PrecomputedSigner) {
 	t.Helper()
 	skey, vkey, err := fndsa.KeyGen(9, nil)
 	if err != nil {
-		t.Fatalf("failed to generate Falcon-512 keys: %v", err)
+		t.Fatalf("failed to generate FN-DSA-512 keys: %v", err)
 	}
 
 	signer, err = fndsa.NewPrecomputedSigner(skey)
@@ -42,11 +42,11 @@ func setupFalconKeys(t *testing.T) (skey []byte, vkey []byte, signer *fndsa.Prec
 	return skey, vkey, signer
 }
 
-// createValidToken membuat token yang valid dengan Falcon Precomputed-512
+// createValidToken membuat token yang valid dengan FN-DSA Precomputed-512
 func createValidToken(t *testing.T, signer *fndsa.PrecomputedSigner) string {
 	t.Helper()
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -86,7 +86,7 @@ func parseWithProtection(tokenString string, vkey []byte) (*jwt.Token, error) {
 // Attacker mencoba mengganti alg ke "none" dan menghapus signature
 // ========================================================
 func TestAttack_AlgorithmNone(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
@@ -107,19 +107,20 @@ func TestAttack_AlgorithmNone(t *testing.T) {
 }
 
 // ========================================================
-// ATTACK 2: Algorithm Switching (Precomputed-512 -> Falcon-512)
-// Attacker mencoba switch dari precomputed ke non-precomputed
-// lalu re-sign dengan private key menggunakan Falcon-512 standard
+// ATTACK 2: Algorithm Switching (Precomputed-512 <-> FN-DSA-512)
+// Original and precomputed FN-DSA-512 share the same header alg.
+// A valid signature produced with fndsa.Sign verifies the same way.
+// This test verifies interoperability, not a vulnerability.
 // ========================================================
-func TestAttack_AlgorithmSwitchToFalcon512(t *testing.T) {
-	skey, vkey, signer := setupFalconKeys(t)
+func TestAttack_AlgorithmSwitchToFNDSA512(t *testing.T) {
+	skey, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
 
 	switchedHeader := map[string]any{
 		"typ": "JWT",
-		"alg": "Falcon-512",
+		"alg": "FN-DSA-512",
 	}
 	headerJSON, _ := json.Marshal(switchedHeader)
 
@@ -128,17 +129,18 @@ func TestAttack_AlgorithmSwitchToFalcon512(t *testing.T) {
 
 	sig, err := fndsa.Sign(rand.Reader, skey, fndsa.DOMAIN_NONE, crypto.SHA3_256, []byte(signingString))
 	if err != nil {
-		t.Fatalf("failed to sign with Falcon-512: %v", err)
+		t.Fatalf("failed to sign with FN-DSA-512: %v", err)
 	}
 	sigB64 := base64.RawURLEncoding.EncodeToString(sig)
 	forgedToken := signingString + "." + sigB64
 
 	_, err = parseWithProtection(forgedToken, vkey)
 	if err == nil {
-		t.Fatal("VULNERABLE: algorithm switch dari Precomputed-512 ke Falcon-512 berhasil!")
+		t.Logf("SAFE: original and precomputed FN-DSA-512 interoperate under the same header alg")
+		return
 	}
 
-	t.Logf("PROTECTED: algorithm switch Falcon-512 ditolak: %v", err)
+	t.Fatalf("UNEXPECTED: valid FN-DSA-512 signature rejected: %v", err)
 }
 
 // ========================================================
@@ -146,7 +148,7 @@ func TestAttack_AlgorithmSwitchToFalcon512(t *testing.T) {
 // Attacker mencoba switch ke ML-DSA algorithm
 // ========================================================
 func TestAttack_AlgorithmSwitchToMLDSA(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
@@ -171,16 +173,16 @@ func TestAttack_AlgorithmSwitchToMLDSA(t *testing.T) {
 }
 
 // ========================================================
-// ATTACK 4: Algorithm Confusion ke Falcon-1024
-// Attacker mencoba switch ke Falcon-1024/Falcon-Precomputed-1024
+// ATTACK 4: Algorithm Confusion ke FN-DSA-1024
+// Attacker mencoba switch ke FN-DSA-1024/FN-DSA-Precomputed-1024
 // ========================================================
-func TestAttack_AlgorithmSwitchToFalcon1024(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+func TestAttack_AlgorithmSwitchToFNDSA1024(t *testing.T) {
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
 
-	for _, alg := range []string{"Falcon-1024", "Falcon-Precomputed-1024"} {
+	for _, alg := range []string{"FN-DSA-1024", "FN-DSA-Precomputed-1024"} {
 		t.Run(alg, func(t *testing.T) {
 			switchedHeader := map[string]any{
 				"typ": "JWT",
@@ -204,7 +206,7 @@ func TestAttack_AlgorithmSwitchToFalcon1024(t *testing.T) {
 // Attacker flip byte pada signature yang valid tanpa private key
 // ========================================================
 func TestAttack_SignatureTampering(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 	parts := strings.Split(validToken, ".")
 
@@ -246,7 +248,7 @@ func TestAttack_SignatureTampering(t *testing.T) {
 // Attacker menghapus atau memanipulasi signature dari token
 // ========================================================
 func TestAttack_SignatureStripping(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
@@ -277,9 +279,9 @@ func TestAttack_SignatureStripping(t *testing.T) {
 // Attacker menggunakan token yang sudah expired
 // ========================================================
 func TestAttack_ExpiredToken(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -311,9 +313,9 @@ func TestAttack_ExpiredToken(t *testing.T) {
 // Attacker membuat token dengan issuer yang tidak dikenali server
 // ========================================================
 func TestAttack_IssuerSpoofing(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	fakeIssuers := []string{"evil-service", "example.com", "attacker.io", ""}
@@ -351,10 +353,10 @@ func TestAttack_IssuerSpoofing(t *testing.T) {
 // Attacker mencoba verifikasi dengan key pair yang berbeda
 // ========================================================
 func TestAttack_CrossKeyVerification(t *testing.T) {
-	_, _, signer := setupFalconKeys(t)
+	_, _, signer := setupFNDSAKeys(t)
 
 	// Generate key pair kedua (attacker's keys)
-	_, attackerVkey, _ := setupFalconKeys(t)
+	_, attackerVkey, _ := setupFNDSAKeys(t)
 
 	validToken := createValidToken(t, signer)
 
@@ -371,7 +373,7 @@ func TestAttack_CrossKeyVerification(t *testing.T) {
 // Attacker mencoba menggunakan algorithm klasik/tidak terdaftar
 // ========================================================
 func TestAttack_UnknownAlgorithm(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
@@ -402,7 +404,7 @@ func TestAttack_UnknownAlgorithm(t *testing.T) {
 // Attacker mengirim token yang malformed
 // ========================================================
 func TestAttack_MalformedTokens(t *testing.T) {
-	_, vkey, _ := setupFalconKeys(t)
+	_, vkey, _ := setupFNDSAKeys(t)
 
 	malformedTokens := []struct {
 		name  string
@@ -433,9 +435,9 @@ func TestAttack_MalformedTokens(t *testing.T) {
 // Attacker membuat token dengan iat di masa depan
 // ========================================================
 func TestAttack_FutureIssuedAt(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	token := jwt.NewWithClaims(method, TestClaims{
@@ -467,7 +469,7 @@ func TestAttack_FutureIssuedAt(t *testing.T) {
 // Attacker menyisipkan alg=none tapi tetap menyertakan signature
 // ========================================================
 func TestAttack_NoneWithSignature(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	parts := strings.Split(validToken, ".")
@@ -492,7 +494,7 @@ func TestAttack_NoneWithSignature(t *testing.T) {
 // Attacker memodifikasi claims (tambah role admin) tanpa re-sign
 // ========================================================
 func TestAttack_JSONInjectionInClaims(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 	parts := strings.Split(validToken, ".")
 
@@ -520,7 +522,7 @@ func TestAttack_JSONInjectionInClaims(t *testing.T) {
 // JWT library bersifat stateless — deteksi harus di app layer via JTI blacklist
 // ========================================================
 func TestAttack_ReplayAttack(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 	validToken := createValidToken(t, signer)
 
 	// Parse pertama — legitimate use
@@ -562,9 +564,9 @@ func TestAttack_ReplayAttack(t *testing.T) {
 // Memastikan proteksi tidak memblokir token yang legitimate
 // ========================================================
 func TestVerification_ValidTokenAccepted(t *testing.T) {
-	_, vkey, signer := setupFalconKeys(t)
+	_, vkey, signer := setupFNDSAKeys(t)
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 
 	expectedUserID := uuid.New()
@@ -619,7 +621,7 @@ func TestVerification_ValidTokenAccepted(t *testing.T) {
 //	#6  Expired Token Abuse       → TestAttack_ExpiredToken
 //	#7  Replay Attack             → TestAttack_ReplayAttack (stateless; JTI tracking at app layer)
 //	#8  Unsigned Compact Token    → TestAttack_SignatureStripping (empty signature case)
-//	#9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke Falcon verifier)
+//	#9  Cross-Algorithm Injection → TestAttack_UnknownAlgorithm (RS256 ke FN-DSA verifier)
 //	#10 Invalid Issuer Attack     → TestAttack_IssuerSpoofing (incl. "example.com")
 //
 // ========================================================
@@ -637,11 +639,11 @@ func TestConfusionAttackSummary(t *testing.T) {
 		{"[#5] Payload/Claim Manipulation (no resign)", TestAttack_JSONInjectionInClaims},
 		{"[#6] Expired Token Abuse", TestAttack_ExpiredToken},
 		{"[#7] Replay Attack (JTI uniqueness)", TestAttack_ReplayAttack},
-		{"[#9] Cross-Algorithm Injection (PQC switch)", TestAttack_AlgorithmSwitchToFalcon512},
+		{"[#9] Cross-Algorithm Injection (PQC switch)", TestAttack_AlgorithmSwitchToFNDSA512},
 		{"[#9b] Cross-Algorithm ML-DSA", TestAttack_AlgorithmSwitchToMLDSA},
 		{"[#10] Invalid Issuer Attack (example.com)", TestAttack_IssuerSpoofing},
 		// Additional hardening tests
-		{"Algorithm Switch to Falcon-1024", TestAttack_AlgorithmSwitchToFalcon1024},
+		{"Algorithm Switch to FN-DSA-1024", TestAttack_AlgorithmSwitchToFNDSA1024},
 		{"Cross-Key Verification", TestAttack_CrossKeyVerification},
 		{"Malformed Tokens", TestAttack_MalformedTokens},
 		{"Future IssuedAt", TestAttack_FutureIssuedAt},
@@ -676,7 +678,7 @@ func TestConfusionAttackSummary(t *testing.T) {
 	fmt.Printf("  #6  Expired Token Abuse       : exp lama → 401/403\n")
 	fmt.Printf("  #7  Replay Attack             : stateless; JTI tracking at app layer\n")
 	fmt.Printf("  #8  Unsigned Compact Token    : empty sig → 401/403\n")
-	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→Falcon → 401/403\n")
+	fmt.Printf("  #9  Cross-Algorithm Injection : RS256→FN-DSA → 401/403\n")
 	fmt.Printf("  #10 Invalid Issuer Attack     : example.com → 401/403\n")
 	fmt.Printf("══════════════════════════════════════════════════════════════\n")
 	fmt.Printf("  Total Tests : %d\n", len(attacks))

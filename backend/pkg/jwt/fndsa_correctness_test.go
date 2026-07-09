@@ -10,20 +10,20 @@ import (
 	"github.com/ridwanmuh3/tasktify/pkg/jwt"
 )
 
-func newPrecomputedFalconMethod(t *testing.T, skey []byte) *jwt.SigningMethodFalconPrecomputed {
+func newPrecomputedFNDSAMethod(t *testing.T, skey []byte) *jwt.SigningMethodFNDSAPrecomputed {
 	t.Helper()
 	signer, err := fndsa.NewPrecomputedSigner(skey)
 	if err != nil {
 		t.Fatalf("precompute failed: %v", err)
 	}
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
 	return method
 }
 
-func TestFalconJWTSignaturesVerifyAndRejectBitFlips(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
-	precomputed := newPrecomputedFalconMethod(t, skey)
+func TestFNDSAJWTSignaturesVerifyAndRejectBitFlips(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
+	precomputed := newPrecomputedFNDSAMethod(t, skey)
 
 	methods := []struct {
 		name   string
@@ -64,9 +64,9 @@ func TestFalconJWTSignaturesVerifyAndRejectBitFlips(t *testing.T) {
 	}
 }
 
-func TestFalconSameMessageSignaturesRemainValid(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
-	precomputed := newPrecomputedFalconMethod(t, skey)
+func TestFNDSASameMessageSignaturesRemainValid(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
+	precomputed := newPrecomputedFNDSAMethod(t, skey)
 	message := "same-message-validity"
 
 	for _, method := range []struct {
@@ -91,9 +91,9 @@ func TestFalconSameMessageSignaturesRemainValid(t *testing.T) {
 	}
 }
 
-func TestFalconJWTSignVerifyProperty(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
-	precomputed := newPrecomputedFalconMethod(t, skey)
+func TestFNDSAJWTSignVerifyProperty(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
+	precomputed := newPrecomputedFNDSAMethod(t, skey)
 
 	property := func(raw []byte) bool {
 		if len(raw) > 256 {
@@ -123,9 +123,9 @@ func TestFalconJWTSignVerifyProperty(t *testing.T) {
 	}
 }
 
-func TestFalconConcurrentVerification(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
-	precomputed := newPrecomputedFalconMethod(t, skey)
+func TestFNDSAConcurrentVerification(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
+	precomputed := newPrecomputedFNDSAMethod(t, skey)
 	message := "concurrent-verification-message"
 
 	sigs := make([][]byte, 8)

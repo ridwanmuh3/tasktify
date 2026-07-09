@@ -27,7 +27,7 @@ DEFAULT_SAMPLE_FILES = (
     ROOT / "backend" / "benchmark_sign_samples.ndjson",
 )
 DEFAULT_METRIC = "isolated.token_generation_gc_free_ms"
-DEFAULT_BASELINE = "Falcon-512"
+DEFAULT_BASELINE = "FN-DSA-512"
 SAMPLE_KEYS = ("samples", "observations", "raw_values")
 K6_SAMPLE_METRICS = {
     "isolated.pure_signing_ms": "bench_pure_signing_sample",

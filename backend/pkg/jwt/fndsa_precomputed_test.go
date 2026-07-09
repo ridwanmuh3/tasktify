@@ -8,9 +8,9 @@ import (
 	"github.com/ridwanmuh3/tasktify/pkg/jwt"
 )
 
-func TestFalconPrecomputedSignUsesPrivateKeyMaterial(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+func TestFNDSAPrecomputedSignUsesPrivateKeyMaterial(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	signingString := "header.payload"
 
 	sig, err := method.Sign(signingString, skey)
@@ -34,13 +34,13 @@ func TestFalconPrecomputedSignUsesPrivateKeyMaterial(t *testing.T) {
 	}
 }
 
-func TestFalconPrecomputedAndDynamicInteroperate(t *testing.T) {
-	skey, vkey := mustFalconKeyPair(t, 9)
+func TestFNDSAPrecomputedAndDynamicInteroperate(t *testing.T) {
+	skey, vkey := mustFNDSAKeyPair(t, 9)
 	signer, err := fndsa.NewPrecomputedSigner(skey)
 	if err != nil {
 		t.Fatalf("precompute failed: %v", err)
 	}
-	precomputed := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	precomputed := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	precomputed.SetPrecomputedSigner(signer)
 	signingString := "header.payload"
 
@@ -61,14 +61,14 @@ func TestFalconPrecomputedAndDynamicInteroperate(t *testing.T) {
 	}
 }
 
-func TestFalconPrecomputedRejectsAlgorithmDegreeMismatch(t *testing.T) {
-	skey1024, vkey1024 := mustFalconKeyPair(t, 10)
+func TestFNDSAPrecomputedRejectsAlgorithmDegreeMismatch(t *testing.T) {
+	skey1024, vkey1024 := mustFNDSAKeyPair(t, 10)
 	signer1024, err := fndsa.NewPrecomputedSigner(skey1024)
 	if err != nil {
 		t.Fatalf("precompute failed: %v", err)
 	}
 
-	method := &jwt.SigningMethodFalconPrecomputed{Name: jwt.AlgFNDSA512}
+	method := &jwt.SigningMethodFNDSAPrecomputed{Name: jwt.AlgFNDSA512}
 	if _, err := method.Sign("header.payload", signer1024); err == nil {
 		t.Fatal("expected sign error for mismatched precomputed signer")
 	}
@@ -77,7 +77,7 @@ func TestFalconPrecomputedRejectsAlgorithmDegreeMismatch(t *testing.T) {
 	}
 }
 
-func mustFalconKeyPair(t *testing.T, logn uint) ([]byte, []byte) {
+func mustFNDSAKeyPair(t *testing.T, logn uint) ([]byte, []byte) {
 	t.Helper()
 	var seed [32]byte
 	for i := 0; i < len(seed); i++ {

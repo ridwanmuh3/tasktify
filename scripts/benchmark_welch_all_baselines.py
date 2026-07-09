@@ -25,7 +25,7 @@ from benchmark_stat_tests import (
 )
 
 
-DEFAULT_TARGET = "Falcon-Precomputed-512"
+DEFAULT_TARGET = "FN-DSA-Precomputed-512"
 
 
 def parse_names(value: str) -> tuple[str, ...]:

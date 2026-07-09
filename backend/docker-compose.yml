@@ -66,10 +66,10 @@ services:
       APP_NAME: auth-service
       APP_MODE: production
       GRPC_PORT: 3001
-      # Production app uses Falcon-Precomputed-512 only.
+      # Production app uses FN-DSA-Precomputed-512 only.
       # Run `make keygen` first to populate auth-service/keys/.
-      JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
@@ -149,8 +149,8 @@ services:
       APP_MODE: production
       AUTH_SERVICE_ADDR: auth-service:3001
       TODO_SERVICE_ADDR: todo-service:3002
-      JWT_DEFAULT_ALG: Falcon-Precomputed-512
-      JWT_ALLOWED_ALGS: Falcon-Precomputed-512
+      JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60

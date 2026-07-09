@@ -64,7 +64,7 @@ var DOMAIN_NONE = DomainContext([]byte{})
 //	c                 output slice
 //
 // If id is 0 then the data is supposed to be "raw" (no pre-hashing).
-// As a special case, if id is -1 (0xFFFFFFFF) then the original Falcon
+// As a special case, if id is -1 (0xFFFFFFFF) then the original FN-DSA
 // mode is used (data is supposed to be raw, domain and hashed verifying
 // key are ignored).
 // The output polynomial is in "ext" representation (values in [0,q-1]).
