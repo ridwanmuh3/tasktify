@@ -15,9 +15,9 @@ import (
 // For verification only (gateway), pass signMode=false.
 func LoadAlgConfig(keysDir string, alg string, signMode bool) (*AlgConfig, error) {
 	switch alg {
-	case "FN-DSA-512":
+	case "FN-DSA-512", "Falcon-512":
 		return loadFNDSAOriginal(keysDir, alg, signMode)
-	case "FN-DSA-Precomputed-512":
+	case "FN-DSA-Precomputed-512", "Falcon-Precomputed-512":
 		return loadFNDSAPrecomputed(keysDir, alg, signMode)
 	case "ML-DSA-44", "ML-DSA-65", "ML-DSA-87":
 		return loadMLDSA(keysDir, alg, signMode)

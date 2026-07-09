@@ -29,6 +29,8 @@ type BootstrapConfig struct {
 var supportedAlgorithms = []string{
 	"FN-DSA-512",
 	"FN-DSA-Precomputed-512",
+	"Falcon-512",
+	"Falcon-Precomputed-512",
 }
 
 func Bootstrap(config *BootstrapConfig) {

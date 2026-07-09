@@ -77,7 +77,7 @@ func TokenTypeForUse(tokenUse string) string {
 
 func HeaderAlgForConfigAlg(alg string) string {
 	switch alg {
-	case "FN-DSA-512", "FN-DSA-Precomputed-512":
+	case "FN-DSA-512", "FN-DSA-Precomputed-512", "Falcon-512", "Falcon-Precomputed-512":
 		return jwt.AlgFNDSA512
 	default:
 		return alg
