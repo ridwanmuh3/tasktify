@@ -454,9 +454,71 @@ export function setup() {
     password: "BenchPass!123",
   };
 
+  // ── Preflight: every algorithm gateway must actually sign a token ──
+  // Each algorithm targets its own gateway (ports 5001-5006 in multi-gateway
+  // mode). setup() previously probed only ALGORITHMS[0], so a broken gateway for
+  // any other algorithm was never detected — its scenarios ran against nothing
+  // and the summary emitted zero-filled latencies (threshold submetrics report
+  // 0 with no samples) that look like real "0 ms" measurements.
+  //
+  // A bare liveness ping is not enough: a gateway can accept connections yet
+  // fail every /api/benchmark/token call (e.g. missing signing key), which also
+  // yields all-zero results. So probe the exact endpoint the stress phase uses
+  // and require a 200 with an access_token for every algorithm. The token path
+  // derives its user id from the email hash and does not need a registered
+  // user, so this can run before registration.
+  const preflightBody = (algName) =>
+    benchmarkBody(`preflight-${suffix}@bench.test`, algName);
+  const tokenOk = (res) => {
+    if (res.status !== 200) return false;
+    try {
+      return !!JSON.parse(res.body).data?.access_token;
+    } catch {
+      return false;
+    }
+  };
+
+  const PREFLIGHT_TIMEOUT_MS = 180000; // allow cold-start; the whole stack boots together
+  const preflightDeadline = Date.now() + PREFLIGHT_TIMEOUT_MS;
+  let pending = ALGORITHMS.slice();
+  let lastFailure = {};
+  let preflightRound = 0;
+  while (pending.length > 0 && Date.now() < preflightDeadline) {
+    preflightRound++;
+    pending = pending.filter((alg) => {
+      const res = http.post(
+        `${getBaseUrl(alg)}/api/benchmark/token`,
+        preflightBody(alg.name),
+        { headers: { "Content-Type": "application/json" }, timeout: "5s" },
+      );
+      if (tokenOk(res)) return false; // healthy — drop from pending
+      lastFailure[alg.name] =
+        res.status === 0
+          ? "unreachable (connection refused/timed out)"
+          : `HTTP ${res.status}: ${String(res.body).slice(0, 120)}`;
+      return true;
+    });
+    if (pending.length > 0) {
+      console.log(
+        `[preflight ${preflightRound}] ${pending.length}/${ALGORITHMS.length} gateway(s) not ready, retrying in 2s...`,
+      );
+      sleep(2);
+    }
+  }
+  if (pending.length > 0) {
+    const dead = pending
+      .map((alg) => `${alg.name} → ${getBaseUrl(alg)} — ${lastFailure[alg.name]}`)
+      .join("\n  ");
+    exec.test.abort(
+      `Preflight failed — ${pending.length}/${ALGORITHMS.length} gateway(s) cannot sign a token after 180s:\n  ${dead}\n` +
+        `Bring every benchmark service up and healthy before running; ` +
+        `otherwise these algorithms produce zero-filled (not actual) results.`,
+    );
+  }
+
   const firstAlg = ALGORITHMS[0];
   const registerUrl = `${getBaseUrl(firstAlg)}/api/auth/register`;
-  console.log(`Registering benchmark user at: ${registerUrl}`);
+  console.log(`All ${ALGORITHMS.length} gateway(s) can sign. Registering benchmark user at: ${registerUrl}`);
 
   let regRes;
   for (let attempt = 1; attempt <= 90; attempt++) {
