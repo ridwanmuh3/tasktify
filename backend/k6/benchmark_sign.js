@@ -438,7 +438,7 @@ export const options = {
   summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   noConnectionReuse: false,
   noVUConnectionReuse: false,
-  setupTimeout: "180s",
+  setupTimeout: "240s",
   teardownTimeout: "30s",
 };
 
@@ -478,7 +478,10 @@ export function setup() {
     }
   };
 
-  const PREFLIGHT_TIMEOUT_MS = 180000; // allow cold-start; the whole stack boots together
+  // Budget carved out of setupTimeout (240s) so it never starves the
+  // registration retry loop below — that loop needs its own room, and both
+  // run inside the same setup() call, sharing one k6-enforced ceiling.
+  const PREFLIGHT_TIMEOUT_MS = 90000;
   const preflightDeadline = Date.now() + PREFLIGHT_TIMEOUT_MS;
   let pending = ALGORITHMS.slice();
   let lastFailure = {};
@@ -510,7 +513,7 @@ export function setup() {
       .map((alg) => `${alg.name} → ${getBaseUrl(alg)} — ${lastFailure[alg.name]}`)
       .join("\n  ");
     exec.test.abort(
-      `Preflight failed — ${pending.length}/${ALGORITHMS.length} gateway(s) cannot sign a token after 180s:\n  ${dead}\n` +
+      `Preflight failed — ${pending.length}/${ALGORITHMS.length} gateway(s) cannot sign a token after 90s:\n  ${dead}\n` +
         `Bring every benchmark service up and healthy before running; ` +
         `otherwise these algorithms produce zero-filled (not actual) results.`,
     );
@@ -520,20 +523,23 @@ export function setup() {
   const registerUrl = `${getBaseUrl(firstAlg)}/api/auth/register`;
   console.log(`All ${ALGORITHMS.length} gateway(s) can sign. Registering benchmark user at: ${registerUrl}`);
 
+  // Preflight already proved this gateway reachable and signing, so this loop
+  // only needs to ride out the DB-backed register path warming up — its
+  // budget is kept well inside what's left of setupTimeout after preflight.
   let regRes;
-  for (let attempt = 1; attempt <= 90; attempt++) {
+  for (let attempt = 1; attempt <= 45; attempt++) {
     regRes = http.post(registerUrl, JSON.stringify(user), {
       headers: { "Content-Type": "application/json" },
       timeout: "5s",
     });
     if (regRes.status !== 0) break;
-    console.log(`[${attempt}/90] Service not ready, retrying in 2s...`);
+    console.log(`[${attempt}/45] Service not ready, retrying in 2s...`);
     sleep(2);
   }
 
   if (regRes.status === 0) {
     exec.test.abort(
-      `Service ${registerUrl} unreachable after 180s — ensure docker-compose is running`,
+      `Service ${registerUrl} unreachable after 90s — ensure docker-compose is running`,
     );
   }
 
