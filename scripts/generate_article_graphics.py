@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate FN-DSA-only publication graphics from current benchmark result JSON files."""
+"""Generate PQC vs classical publication graphics from current benchmark result JSON files."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ ADVERSARIAL_FILES = (
     ROOT / "adversarial_result.json",
     ROOT / "backend" / "adversarial_result.json",
 )
-OUT_DIR = Path(os.environ.get("ARTICLE_GRAPHICS_DIR", ROOT / "figures" / "article_python"))
+OUT_DIR = Path(os.environ.get("ARTICLE_GRAPHICS_DIR", ROOT / "figures" / "article"))
 
 W = 1900
 H = 1120
@@ -47,26 +47,44 @@ WHITE = "#FFFFFF"
 ALGORITHM_ORDER = [
     "FN-DSA-Precomputed-512",
     "FN-DSA-512",
+    "HS256",
+    "RS256",
+    "ES256",
+    "EdDSA",
 ]
 ALGORITHM_SET = set(ALGORITHM_ORDER)
 
 ALGORITHM_SHORT = {
     "FN-DSA-Precomputed-512": "FN-DSA-Precomp. 512",
     "FN-DSA-512": "FN-DSA-512",
+    "HS256": "HS256",
+    "RS256": "RS256",
+    "ES256": "ES256",
+    "EdDSA": "EdDSA",
 }
 
 ALGORITHM_WRAP = {
     "FN-DSA-Precomputed-512": ["FN-DSA-Precomp.", "512"],
     "FN-DSA-512": ["FN-DSA", "512"],
+    "HS256": ["HS256"],
+    "RS256": ["RS256"],
+    "ES256": ["ES256"],
+    "EdDSA": ["EdDSA"],
 }
 
-# Colorblind-safe palette. Keep mapping stable across every figure.
+# Colorblind-safe categorical palette (validated: dataviz skill
+# references/palette.md, run through scripts/validate_palette.js — worst
+# adjacent CVD ΔE 24.2, PASS). Fixed hue order, never reassigned/cycled.
 COLORS = {
-    "FN-DSA-Precomputed-512": "#0072B2",
-    "FN-DSA-512": "#E69F00",
+    "FN-DSA-Precomputed-512": "#2a78d6",  # blue   (slot 1 — proposed method)
+    "FN-DSA-512": "#1baf7a",  # aqua   (slot 2 — PQC baseline / "Falcon")
+    "HS256": "#eda100",  # yellow (slot 3 — classical, symmetric)
+    "RS256": "#008300",  # green  (slot 4 — classical, RSA)
+    "ES256": "#4a3aa7",  # violet (slot 5 — classical, ECDSA)
+    "EdDSA": "#e34948",  # red    (slot 6 — classical, Ed25519)
 }
 
-ATTACK_COLOR = "#009E73"
+ATTACK_COLOR = "#eb6834"
 LABEL_BG = "#FFFFFF"
 LABEL_BORDER = "#D7DEE8"
 VALUE_SIZE = 23
@@ -582,6 +600,23 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
                 ("isolated", alg, "", "total_generation_avg", iso["total_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "cpu_utilization_avg", iso["cpu_pct"]["avg"], "%"),
                 ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"] / 1024, "MB"),
+                (
+                    "isolated",
+                    alg,
+                    "",
+                    "pure_signing_gc_free_avg",
+                    (iso["pure_signing_gc_free_ms"] or iso["pure_signing_ms"])["avg"],
+                    "ms",
+                ),
+                ("isolated", alg, "", "memory_rss_avg", iso["memory_rss_kb"]["avg"] / 1024, "MB"),
+                (
+                    "isolated",
+                    alg,
+                    "",
+                    "cpu_time_per_token_avg",
+                    iso["cpu_time_per_token_ms"]["avg"],
+                    "ms",
+                ),
             ]
             for row in rows:
                 writer.writerow(row)
@@ -718,6 +753,41 @@ def main() -> None:
             lambda item: item["isolated"]["memory_alloc_kb"]["avg"] / 1024,
             False,
             "memory_alloc_avg_mb",
+        ),
+        # fig_14-16 appended (not inserted as fig_07+) so existing figure
+        # numbers stay stable for anything already citing "Fig. N" in the
+        # thesis text.
+        (
+            "fig_14_isolated_pure_signing_gc_free_avg_ms",
+            "Fig. 14",
+            "Isolated pure signing latency (GC-free)",
+            "Average latency (ms, log10)",
+            # Falls back to the all-iterations pure-signing avg if every
+            # iteration was GC-contaminated (pure_signing_gc_free_ms is
+            # null only in that edge case).
+            lambda item: (
+                item["isolated"]["pure_signing_gc_free_ms"] or item["isolated"]["pure_signing_ms"]
+            )["avg"],
+            True,
+            "pure_signing_gc_free_avg_ms",
+        ),
+        (
+            "fig_15_isolated_memory_rss_avg_mb",
+            "Fig. 15",
+            "Isolated resident memory (RSS)",
+            "Average RSS (MB)",
+            lambda item: item["isolated"]["memory_rss_kb"]["avg"] / 1024,
+            False,
+            "memory_rss_avg_mb",
+        ),
+        (
+            "fig_16_isolated_cpu_time_per_token_avg_ms",
+            "Fig. 16",
+            "Isolated CPU time per token",
+            "Average CPU time per token (ms, log10)",
+            lambda item: item["isolated"]["cpu_time_per_token_ms"]["avg"],
+            True,
+            "cpu_time_per_token_avg_ms",
         ),
     ]
 
