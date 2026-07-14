@@ -36,6 +36,8 @@ results/
 backend/token.json
 backend/cmd/keygen/keygen
 **/benchmark-results/*.ndjson
+# Exception: small filtered isolated-sample vectors (single run) for replicable stats.
+!backend/benchmark-results/benchmark_sign_samples.ndjson
 
 .claude
 CLAUDE.md

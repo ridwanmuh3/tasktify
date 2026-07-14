@@ -1,0 +1,21 @@
+{
+  "break_even_signatures": 2.14547499283203,
+  "build_median_ms": 0.385367,
+  "build_reps": 50,
+  "degree": 512,
+  "host": {
+    "goarch": "amd64",
+    "goos": "linux",
+    "num_cpu": 4
+  },
+  "persistent_bytes_per_key": 110712,
+  "rss_delta_kb_by_signers": {
+    "1": 8,
+    "10": -292,
+    "100": 12404
+  },
+  "saving_per_signature_ms": 0.17961850000000001,
+  "sign_dynamic_median_ms": 0.598777,
+  "sign_precomputed_median_ms": 0.4191585,
+  "sign_reps": 200
+}

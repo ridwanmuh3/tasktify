@@ -452,7 +452,9 @@ def mann_whitney_u_test(left: MetricData, right: MetricData) -> TestResult:
 
     correction = 0.5 if u1 > mean_u else -0.5 if u1 < mean_u else 0.0
     z = (u1 - mean_u - correction) / math.sqrt(variance)
-    p_value = 2 * (1 - normal_cdf(abs(z)))
+    # Two-tailed p via the survival function (erfc) to avoid catastrophic
+    # cancellation: 1 - normal_cdf(z) rounds to 0 for large z (~z>8).
+    p_value = math.erfc(abs(z) / math.sqrt(2))
     return TestResult("mann_whitney_u", u1, p_value, f"z={z:.4g}")
 
 
@@ -472,6 +474,62 @@ def cohen_d(left: MetricData, right: MetricData, higher_is_better: bool) -> floa
 
     diff = left.mean - right.mean if higher_is_better else right.mean - left.mean
     return diff / pooled
+
+
+def hedges_g(left: MetricData, right: MetricData, higher_is_better: bool) -> float | None:
+    d = cohen_d(left, right, higher_is_better)
+    if d is None or not left.n or not right.n:
+        return None
+    dof = left.n + right.n - 2
+    if dof <= 1:
+        return None
+    # Small-sample bias correction J (Hedges 1981).
+    correction = 1.0 - 3.0 / (4.0 * dof - 1.0)
+    return d * correction
+
+
+def t_quantile(p: float, df: float) -> float | None:
+    """Inverse Student-t CDF via bisection on student_t_cdf. No SciPy dependency."""
+    if df <= 0 or not 0.0 < p < 1.0:
+        return None
+    lo, hi = -1000.0, 1000.0
+    for _ in range(200):
+        mid = (lo + hi) / 2.0
+        if student_t_cdf(mid, df) < p:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2.0
+
+
+def mean_diff_ci(
+    left: MetricData,
+    right: MetricData,
+    higher_is_better: bool,
+    confidence: float = 0.95,
+) -> tuple[float, float, float] | None:
+    """Welch CI for the target-vs-baseline mean difference: (point, low, high)."""
+    if left.sd is None or right.sd is None or not left.n or not right.n:
+        return None
+    if left.n < 2 or right.n < 2:
+        return None
+
+    left_var = left.sd**2 / left.n
+    right_var = right.sd**2 / right.n
+    se = math.sqrt(left_var + right_var)
+    diff = left.mean - right.mean if higher_is_better else right.mean - left.mean
+    if se == 0:
+        return (diff, diff, diff)
+
+    df_denominator = (left_var**2 / (left.n - 1)) + (right_var**2 / (right.n - 1))
+    if df_denominator == 0:
+        return None
+    df = (left_var + right_var) ** 2 / df_denominator
+    t_crit = t_quantile(1.0 - (1.0 - confidence) / 2.0, df)
+    if t_crit is None:
+        return None
+    margin = t_crit * se
+    return (diff, diff - margin, diff + margin)
 
 
 def rank_biserial(left: MetricData, right: MetricData, higher_is_better: bool) -> float | None:
