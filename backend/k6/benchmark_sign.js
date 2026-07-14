@@ -280,6 +280,13 @@ const benchAuthMemorySysKBAvg = new Trend("bench_auth_memory_sys_kb_avg");
 const benchAuthMemorySysKBStdev = new Trend("bench_auth_memory_sys_kb_stdev");
 const benchAuthMemoryRSSKBAvg = new Trend("bench_auth_memory_rss_kb_avg");
 const benchAuthMemoryRSSKBStdev = new Trend("bench_auth_memory_rss_kb_stdev");
+// Pure-signing has its own resource-stats block server-side
+// (BenchmarkPureSigningResult.Stats.Resource) distinct from jwt_issuance's —
+// these carry it through; previously only latency was read from that scope.
+const benchPureSigningMemoryAllocKBAvg = new Trend("bench_pure_signing_memory_alloc_kb_avg");
+const benchPureSigningMemoryAllocKBStdev = new Trend("bench_pure_signing_memory_alloc_kb_stdev");
+const benchPureSigningMemoryRSSKBAvg = new Trend("bench_pure_signing_memory_rss_kb_avg");
+const benchPureSigningMemoryRSSKBStdev = new Trend("bench_pure_signing_memory_rss_kb_stdev");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
 const benchPureSigningGCContaminatedCount = new Counter(
   "bench_pure_signing_gc_contaminated_count",
@@ -288,6 +295,15 @@ const benchSuccess = new Counter("bench_success");
 const benchFailed = new Counter("bench_failed");
 const benchPureSigningSuccess = new Counter("bench_pure_signing_success");
 const benchPureSigningFailed = new Counter("bench_pure_signing_failed");
+// bench_success/failed above count HTTP calls (always 0 or 1 for a
+// shared-iterations isolated scenario) — they gate thresholds, not report
+// how many of the ITERATIONS server-side loop actually succeeded. These two
+// carry the real per-iteration count so the summary doesn't mislabel a
+// 100/100 success as "success_count: 1".
+const benchIterationSuccess = new Counter("bench_iteration_success");
+const benchIterationFailed = new Counter("bench_iteration_failed");
+const benchPureSigningIterationSuccess = new Counter("bench_pure_signing_iteration_success");
+const benchPureSigningIterationFailed = new Counter("bench_pure_signing_iteration_failed");
 const benchSignSample = new Trend("bench_sign_sample", true);
 const benchTokenGenerationSample = new Trend("bench_token_generation_sample", true);
 const benchTokenGenerationGCFreeSample = new Trend("bench_token_generation_gc_free_sample", true);
@@ -414,6 +430,10 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_auth_memory_sys_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_rss_kb_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_memory_alloc_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_memory_alloc_kb_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_memory_rss_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_sign_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_generation_sample${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_token_generation_gc_free_sample${ta}`] = [`p(95)<9999999`];
@@ -426,6 +446,10 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_pure_signing_gc_contaminated_count${ta}`] = [`count>=0`];
     thresholds[`bench_success${ta}`] = [`count>0`];
     thresholds[`bench_pure_signing_success${ta}`] = [`count>0`];
+    thresholds[`bench_iteration_success${ta}`] = [`count>=0`];
+    thresholds[`bench_iteration_failed${ta}`] = [`count>=0`];
+    thresholds[`bench_pure_signing_iteration_success${ta}`] = [`count>=0`];
+    thresholds[`bench_pure_signing_iteration_failed${ta}`] = [`count>=0`];
   }
   if (RUN_ATTACKS) {
     thresholds[`attack_block_rate${ta}`] = [`rate>0.99`];
@@ -609,6 +633,8 @@ export function runIsolated(data) {
       return;
     }
     benchSuccess.add(1, tags);
+    benchIterationSuccess.add(successCount, tags);
+    benchIterationFailed.add(Math.max(0, (result.iterations ?? 0) - successCount), tags);
     const s = result.stats;
     const hasTokenGCFree =
       Array.isArray(result.token_generation_gc_free_timings_ms) &&
@@ -729,6 +755,8 @@ export function runIsolated(data) {
       return;
     }
     benchPureSigningSuccess.add(1, tags);
+    benchPureSigningIterationSuccess.add(successCount, tags);
+    benchPureSigningIterationFailed.add(Math.max(0, (result.iterations ?? 0) - successCount), tags);
     const s = result.stats;
     const hasPureGCFree =
       Array.isArray(result.pure_signing_gc_free_timings_ms) &&
@@ -744,6 +772,10 @@ export function runIsolated(data) {
     }
     addSamples(benchPureSigningSample, result.pure_signing_timings_ms, tags);
     addSamples(benchPureSigningGCFreeSample, result.pure_signing_gc_free_timings_ms, tags);
+    addStat(benchPureSigningMemoryAllocKBAvg, s.resource?.memory_alloc_kb, "avg", tags);
+    addStat(benchPureSigningMemoryAllocKBStdev, s.resource?.memory_alloc_kb, "stdev", tags);
+    addStat(benchPureSigningMemoryRSSKBAvg, s.resource?.memory_rss_kb, "avg", tags);
+    addStat(benchPureSigningMemoryRSSKBStdev, s.resource?.memory_rss_kb, "stdev", tags);
 
     const gcFree = s.pure_signing_gc_free;
     const gcCount = result.gc_contaminated_count ?? 0;
@@ -1138,8 +1170,8 @@ export function handleSummary(data) {
       const isolatedTokenAvg = getNumber("bench_token_generation_avg", alg.name, null, "avg");
       const isolatedTokenP95 = getNumber("bench_token_generation_p95", alg.name, null, "avg");
       const isolatedTokenStdev = getNumber("bench_token_generation_stdev", alg.name, null, "avg");
-      const isolatedJWTSuccess = getCount("bench_success", alg.name, null);
-      const isolatedJWTFailed = getCount("bench_failed", alg.name, null);
+      const isolatedJWTSuccess = getCount("bench_iteration_success", alg.name, null);
+      const isolatedJWTFailed = getCount("bench_iteration_failed", alg.name, null);
       const hasIsolatedJWT = isolatedJWTSuccess > 0;
       const isolatedRefreshAvg = getNumber(
         "bench_refresh_token_generation_avg",
@@ -1177,8 +1209,8 @@ export function handleSummary(data) {
         null,
         "avg",
       );
-      const isolatedPureSuccess = getCount("bench_pure_signing_success", alg.name, null);
-      const isolatedPureFailed = getCount("bench_pure_signing_failed", alg.name, null);
+      const isolatedPureSuccess = getCount("bench_pure_signing_iteration_success", alg.name, null);
+      const isolatedPureFailed = getCount("bench_pure_signing_iteration_failed", alg.name, null);
       const isolatedPureGCCnt = getCount(
         "bench_pure_signing_gc_contaminated_count",
         alg.name,
@@ -1279,6 +1311,18 @@ export function handleSummary(data) {
         "avg",
       );
       const isolatedGCCnt = getCount("bench_gc_contaminated_count", alg.name, null);
+      const isolatedPureMemAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_alloc_kb_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureMemStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_alloc_kb_stdev", alg.name, null, "avg")
+        : null;
+      const isolatedPureMemRSSAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_rss_kb_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureMemRSSStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_rss_kb_stdev", alg.name, null, "avg")
+        : null;
 
       const item = {
         algorithm: alg.name,
@@ -1323,6 +1367,12 @@ export function handleSummary(data) {
                     ),
                     sd: isolatedPureGCFreeStdev,
                   }
+                : null,
+              pure_signing_memory_alloc_kb: hasIsolatedPure
+                ? { avg: isolatedPureMemAvg, sd: isolatedPureMemStdev }
+                : null,
+              pure_signing_memory_rss_kb: hasIsolatedPure
+                ? { avg: isolatedPureMemRSSAvg, sd: isolatedPureMemRSSStdev }
                 : null,
               token_generation_ms: hasIsolatedJWT
                 ? {

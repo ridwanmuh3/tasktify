@@ -54,6 +54,11 @@ ALGORITHM_ORDER = [
 ]
 ALGORITHM_SET = set(ALGORITHM_ORDER)
 
+# FN-DSA profiles swept by make attack-adversarial-compare and drawn
+# side-by-side in fig_21. Both emit alg=FN-DSA-512 and share the verifier,
+# so identical block rates are the expected (and reported) result.
+ATTACK_COMPARE_ORDER = ["FN-DSA-Precomputed-512", "FN-DSA-512"]
+
 ALGORITHM_SHORT = {
     "FN-DSA-Precomputed-512": "FN-DSA-Precomp. 512",
     "FN-DSA-512": "FN-DSA-512",
@@ -102,6 +107,28 @@ def read_json_file(label: str, candidates: tuple[Path, ...]) -> object:
 
     checked = "\n".join(f"  - {path}" for path in candidates)
     raise FileNotFoundError(f"{label} not found. Checked:\n{checked}")
+
+
+def adversarial_compare_files(alg: str) -> tuple[Path, ...]:
+    fname = f"adversarial_result_{alg}.json"
+    return (
+        ROOT / "benchmark-results" / fname,
+        ROOT / "backend" / "benchmark-results" / fname,
+        ROOT / fname,
+        ROOT / "backend" / fname,
+    )
+
+
+def load_attack_compare() -> list[tuple[str, dict]]:
+    """Per-profile adversarial results for fig_21. Empty if any profile is
+    missing (the sweep hasn't run) so the compare figure is skipped cleanly."""
+    loaded: list[tuple[str, dict]] = []
+    for alg in ATTACK_COMPARE_ORDER:
+        try:
+            loaded.append((alg, read_json_file(f"adversarial_result_{alg}.json", adversarial_compare_files(alg))))
+        except FileNotFoundError:
+            return []
+    return loaded
 
 
 def fmt(value: float) -> str:
@@ -193,12 +220,14 @@ def draw_png_algorithm_legend(
     left: int,
     y: int,
     width: int,
+    algs: list[str] | None = None,
 ) -> None:
+    algs = algs or ALGORITHM_ORDER
     marker = 24
     marker_gap = 11
 
-    cell_width = width / len(ALGORITHM_ORDER)
-    for idx, alg in enumerate(ALGORITHM_ORDER):
+    cell_width = width / len(algs)
+    for idx, alg in enumerate(algs):
         color = COLORS[alg]
         label = ALGORITHM_SHORT[alg]
         label_width = draw.textlength(label, font=font(LEGEND_SIZE))
@@ -575,6 +604,44 @@ def render_attack_metric_png(adversarial: dict) -> Path:
     return save_png(img, name)
 
 
+def render_attack_compare_png(adversarials: list[tuple[str, dict]], name: str) -> Path:
+    img, draw = new_png_canvas()
+    left = 430
+    top = 115
+    right = W - 120
+    bottom = H - 245
+    width = right - left
+    # All profiles share the same 9 vectors; drive rows off the first.
+    attacks = adversarials[0][1]["attacks"]
+    n_alg = len(adversarials)
+    row_h = (bottom - top) / len(attacks)
+    label_bounds = (left, top, right, bottom)
+
+    for tick in [0, 25, 50, 75, 100]:
+        x = left + tick / 100 * width
+        draw.line((x, top, x, bottom), fill=GRID, width=2)
+        draw_png_text(draw, x, bottom + 48, str(tick), TICK_SIZE, fill="#425466", anchor="ma")
+    draw.line((left, bottom, right, bottom), fill=AXIS, width=3)
+    draw.line((left, top, left, bottom), fill=AXIS, width=3)
+    draw_png_text(draw, (left + right) / 2, bottom + 108, "Block rate (%)", AXIS_SIZE, fill=AXIS, anchor="ma")
+
+    group_h = row_h * 0.66
+    bar_h = min(group_h / n_alg * 0.82, 30)
+    for idx, attack in enumerate(attacks):
+        row_center = top + idx * row_h + row_h * 0.5
+        draw_png_text(draw, left - 26, row_center + 8, f"#{attack['id']} {attack['name']}", TICK_SIZE, fill="#425466", anchor="ra")
+        for j, (alg, adv) in enumerate(adversarials):
+            match = next(a for a in adv["attacks"] if a["id"] == attack["id"])
+            rate = float(match["block_rate_pct"])
+            cy = row_center - group_h / 2 + group_h / n_alg * (j + 0.5)
+            end_x = left + rate / 100 * width
+            draw.rounded_rectangle((left, cy - bar_h / 2, end_x, cy + bar_h / 2), radius=4, fill=COLORS[alg])
+            png_value_label(draw, end_x - 34, cy, f"{fmt(rate)}%", label_bounds, STRESS_VALUE_SIZE)
+
+    draw_png_algorithm_legend(draw, left, H - 64, right - left, [alg for alg, _ in adversarials])
+    return save_png(img, name)
+
+
 def write_palette() -> None:
     with (OUT_DIR / "article_graphics_palette.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
@@ -583,7 +650,7 @@ def write_palette() -> None:
             writer.writerow([alg, ALGORITHM_SHORT[alg], COLORS[alg]])
 
 
-def write_data_csv(benchmark: dict, adversarial: dict) -> None:
+def write_data_csv(benchmark: dict, adversarial: dict, attack_compare: list[tuple[str, dict]] | None = None) -> None:
     with (OUT_DIR / "article_graphics_data.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(["scope", "algorithm", "vus", "metric", "value", "unit"])
@@ -592,30 +659,30 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
             if alg not in ALGORITHM_SET:
                 continue
             iso = item["isolated"]
+            pure_ms = iso["pure_signing_gc_free_ms"] or iso["pure_signing_ms"]
             rows = [
                 ("isolated", alg, "", "access_token_generation_avg", iso["token_generation_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "access_token_generation_p95", iso["token_generation_ms"]["p95"], "ms"),
                 ("isolated", alg, "", "refresh_token_generation_avg", iso["refresh_token_generation_ms"]["avg"], "ms"),
                 ("isolated", alg, "", "refresh_token_generation_p95", iso["refresh_token_generation_ms"]["p95"], "ms"),
-                ("isolated", alg, "", "total_generation_avg", iso["total_ms"]["avg"], "ms"),
-                ("isolated", alg, "", "cpu_utilization_avg", iso["cpu_pct"]["avg"], "%"),
-                ("isolated", alg, "", "memory_alloc_avg", iso["memory_alloc_kb"]["avg"] / 1024, "MB"),
+                ("isolated", alg, "", "cpu_time_per_token_avg", iso["cpu_time_per_token_ms"]["avg"], "ms"),
+                ("pure_signing", alg, "", "pure_signing_gc_free_avg", pure_ms["avg"], "ms"),
+                ("pure_signing", alg, "", "pure_signing_gc_free_p95", pure_ms["p95"], "ms"),
                 (
-                    "isolated",
+                    "pure_signing",
                     alg,
                     "",
-                    "pure_signing_gc_free_avg",
-                    (iso["pure_signing_gc_free_ms"] or iso["pure_signing_ms"])["avg"],
-                    "ms",
+                    "memory_alloc_avg",
+                    iso["pure_signing_memory_alloc_kb"]["avg"] / 1024,
+                    "MB",
                 ),
-                ("isolated", alg, "", "memory_rss_avg", iso["memory_rss_kb"]["avg"] / 1024, "MB"),
                 (
-                    "isolated",
+                    "pure_signing",
                     alg,
                     "",
-                    "cpu_time_per_token_avg",
-                    iso["cpu_time_per_token_ms"]["avg"],
-                    "ms",
+                    "memory_rss_avg",
+                    iso["pure_signing_memory_rss_kb"]["avg"] / 1024,
+                    "MB",
                 ),
             ]
             for row in rows:
@@ -623,26 +690,38 @@ def write_data_csv(benchmark: dict, adversarial: dict) -> None:
             for stress in item["stress"]:
                 vus = stress["vus"]
                 stress_rows = [
-                    ("stress", alg, vus, "access_token_generation_avg", stress["token_generation_ms"]["avg"], "ms"),
-                    ("stress", alg, vus, "access_token_generation_p95", stress["token_generation_ms"]["p95"], "ms"),
-                    ("stress", alg, vus, "end_to_end_response_avg", stress["e2e_ms"]["avg"], "ms"),
                     ("stress", alg, vus, "login_avg", stress["login_ms"]["avg"], "ms"),
+                    ("stress", alg, vus, "login_p95", stress["login_ms"]["p95"], "ms"),
                     ("stress", alg, vus, "refresh_avg", stress["refresh_ms"]["avg"], "ms"),
+                    ("stress", alg, vus, "refresh_p95", stress["refresh_ms"]["p95"], "ms"),
                     ("stress", alg, vus, "throughput_ok", stress["throughput_ok_per_s"], "requests/s"),
                 ]
                 for row in stress_rows:
                     writer.writerow(row)
-        for attack in adversarial["attacks"]:
-            writer.writerow(
-                [
-                    "security",
-                    adversarial["meta"]["algorithm"],
-                    "",
-                    f"attack_{attack['id']}_block_rate",
-                    attack["block_rate_pct"],
-                    "%",
-                ]
-            )
+        if adversarial is not None:
+            for attack in adversarial["attacks"]:
+                writer.writerow(
+                    [
+                        "security",
+                        adversarial["meta"]["algorithm"],
+                        "",
+                        f"attack_{attack['id']}_block_rate",
+                        attack["block_rate_pct"],
+                        "%",
+                    ]
+                )
+        for alg, adv in attack_compare or []:
+            for attack in adv["attacks"]:
+                writer.writerow(
+                    [
+                        "security_compare",
+                        alg,
+                        "",
+                        f"attack_{attack['id']}_block_rate",
+                        attack["block_rate_pct"],
+                        "%",
+                    ]
+                )
 
 
 def write_captions(figures: list[dict]) -> None:
@@ -697,8 +776,20 @@ def write_contact_sheet(figures: list[dict]) -> Path:
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     benchmark = read_json_file("benchmark_sign_result.json", BENCHMARK_FILES)
-    adversarial = read_json_file("adversarial_result.json", ADVERSARIAL_FILES)
+    try:
+        adversarial = read_json_file("adversarial_result.json", ADVERSARIAL_FILES)
+    except FileNotFoundError:
+        # Produced by a separate script (k6/adversarial_jwt.js), not part of
+        # the isolated/pure-signing/stress figure set — skip rather than
+        # block the rest of the run when it hasn't been generated.
+        print("adversarial_result.json not found — skipping attack block-rate figure")
+        adversarial = None
 
+    # Per-profile attack sweep (make attack-adversarial-compare). Empty unless
+    # both FN-DSA profiles have an adversarial_result_<alg>.json.
+    attack_compare = load_attack_compare()
+
+    # Isolated: access/refresh token avg+p95, CPU per token.
     isolated_specs = [
         (
             "fig_01_isolated_access_token_generation_avg_ms",
@@ -728,57 +819,13 @@ def main() -> None:
             "refresh_token_generation_avg_ms",
         ),
         (
-            "fig_04_isolated_total_generation_avg_ms",
+            "fig_04_isolated_refresh_token_generation_p95_ms",
             "Fig. 4",
-            "Isolated total token generation latency",
-            "Average latency (ms, log10)",
-            lambda item: item["isolated"]["total_ms"]["avg"],
+            "Isolated refresh-token generation p95 latency",
+            "P95 latency (ms, log10)",
+            lambda item: item["isolated"]["refresh_token_generation_ms"]["p95"],
             True,
-            "total_generation_avg_ms",
-        ),
-        (
-            "fig_05_isolated_cpu_utilization_avg_pct",
-            "Fig. 5",
-            "Isolated CPU utilization",
-            "Average CPU utilization (%)",
-            lambda item: item["isolated"]["cpu_pct"]["avg"],
-            False,
-            "cpu_utilization_avg_pct",
-        ),
-        (
-            "fig_06_isolated_memory_alloc_avg_mb",
-            "Fig. 6",
-            "Isolated memory allocation",
-            "Average allocation (MB)",
-            lambda item: item["isolated"]["memory_alloc_kb"]["avg"] / 1024,
-            False,
-            "memory_alloc_avg_mb",
-        ),
-        # fig_14-16 appended (not inserted as fig_07+) so existing figure
-        # numbers stay stable for anything already citing "Fig. N" in the
-        # thesis text.
-        (
-            "fig_14_isolated_pure_signing_gc_free_avg_ms",
-            "Fig. 14",
-            "Isolated pure signing latency (GC-free)",
-            "Average latency (ms, log10)",
-            # Falls back to the all-iterations pure-signing avg if every
-            # iteration was GC-contaminated (pure_signing_gc_free_ms is
-            # null only in that edge case).
-            lambda item: (
-                item["isolated"]["pure_signing_gc_free_ms"] or item["isolated"]["pure_signing_ms"]
-            )["avg"],
-            True,
-            "pure_signing_gc_free_avg_ms",
-        ),
-        (
-            "fig_15_isolated_memory_rss_avg_mb",
-            "Fig. 15",
-            "Isolated resident memory (RSS)",
-            "Average RSS (MB)",
-            lambda item: item["isolated"]["memory_rss_kb"]["avg"] / 1024,
-            False,
-            "memory_rss_avg_mb",
+            "refresh_token_generation_p95_ms",
         ),
         (
             "fig_16_isolated_cpu_time_per_token_avg_ms",
@@ -791,34 +838,55 @@ def main() -> None:
         ),
     ]
 
-    stress_specs = [
+    # Pure signing: latency only (GC-free preferred) plus memory footprint.
+    pure_signing_specs = [
         (
-            "fig_07_stress_access_token_generation_avg_ms",
-            "Fig. 7",
-            "Stress access-token generation latency",
+            "fig_14_pure_signing_avg_ms",
+            "Fig. 14",
+            "Pure signing latency (GC-free)",
             "Average latency (ms, log10)",
-            lambda row: row["token_generation_ms"]["avg"],
+            # Falls back to the all-iterations pure-signing avg if every
+            # iteration was GC-contaminated (pure_signing_gc_free_ms is
+            # null only in that edge case).
+            lambda item: (
+                item["isolated"]["pure_signing_gc_free_ms"] or item["isolated"]["pure_signing_ms"]
+            )["avg"],
             True,
-            "stress_access_token_generation_avg_ms",
+            "pure_signing_gc_free_avg_ms",
         ),
         (
-            "fig_08_stress_access_token_generation_p95_ms",
-            "Fig. 8",
-            "Stress access-token generation p95 latency",
+            "fig_17_pure_signing_p95_ms",
+            "Fig. 17",
+            "Pure signing p95 latency (GC-free)",
             "P95 latency (ms, log10)",
-            lambda row: row["token_generation_ms"]["p95"],
+            lambda item: (
+                item["isolated"]["pure_signing_gc_free_ms"] or item["isolated"]["pure_signing_ms"]
+            )["p95"],
             True,
-            "stress_access_token_generation_p95_ms",
+            "pure_signing_gc_free_p95_ms",
         ),
         (
-            "fig_09_stress_end_to_end_response_avg_ms",
-            "Fig. 9",
-            "Stress end-to-end response latency",
-            "Average latency (ms, log10)",
-            lambda row: row["e2e_ms"]["avg"],
-            True,
-            "stress_end_to_end_response_avg_ms",
+            "fig_15_pure_signing_memory_alloc_avg_mb",
+            "Fig. 15",
+            "Pure signing memory allocation",
+            "Average allocation (MB)",
+            lambda item: item["isolated"]["pure_signing_memory_alloc_kb"]["avg"] / 1024,
+            False,
+            "pure_signing_memory_alloc_avg_mb",
         ),
+        (
+            "fig_18_pure_signing_memory_rss_avg_mb",
+            "Fig. 18",
+            "Pure signing resident memory (RSS)",
+            "Average RSS (MB)",
+            lambda item: item["isolated"]["pure_signing_memory_rss_kb"]["avg"] / 1024,
+            False,
+            "pure_signing_memory_rss_avg_mb",
+        ),
+    ]
+
+    # Stress: login avg+p95, refresh avg+p95, throughput.
+    stress_specs = [
         (
             "fig_10_stress_login_avg_ms",
             "Fig. 10",
@@ -829,6 +897,15 @@ def main() -> None:
             "stress_login_avg_ms",
         ),
         (
+            "fig_19_stress_login_p95_ms",
+            "Fig. 19",
+            "Stress login p95 latency",
+            "P95 latency (ms, log10)",
+            lambda row: row["login_ms"]["p95"],
+            True,
+            "stress_login_p95_ms",
+        ),
+        (
             "fig_11_stress_refresh_avg_ms",
             "Fig. 11",
             "Stress refresh latency",
@@ -836,6 +913,15 @@ def main() -> None:
             lambda row: row["refresh_ms"]["avg"],
             True,
             "stress_refresh_avg_ms",
+        ),
+        (
+            "fig_20_stress_refresh_p95_ms",
+            "Fig. 20",
+            "Stress refresh p95 latency",
+            "P95 latency (ms, log10)",
+            lambda row: row["refresh_ms"]["p95"],
+            True,
+            "stress_refresh_p95_ms",
         ),
         (
             "fig_12_stress_throughput_ok_per_s",
@@ -848,8 +934,36 @@ def main() -> None:
         ),
     ]
 
+    # Filenames encode figure content (e.g. fig_04_isolated_total_generation_*
+    # vs fig_04_isolated_refresh_token_*), so a figure renamed or dropped in a
+    # script revision leaves its old PNG orphaned under a reused figure
+    # number instead of being overwritten. Delete anything not producible by
+    # the current spec lists; leave fig_13 alone even though adversarial data
+    # may be absent this run — it's still valid, just not regenerated here.
+    valid_names = {name for name, *_ in isolated_specs}
+    valid_names |= {name for name, *_ in pure_signing_specs}
+    valid_names |= {name for name, *_ in stress_specs}
+    valid_names.add("fig_13_security_attack_block_rate_pct")
+    valid_names.add("fig_21_security_attack_block_rate_compare_pct")
+    for stale in OUT_DIR.glob("fig_*.png"):
+        if stale.stem not in valid_names:
+            stale.unlink()
+
     figures: list[dict] = []
     for name, fig_id, title, y_label, accessor, log_scale, metric in isolated_specs:
+        values = isolated_values(benchmark, accessor)
+        render_isolated_metric_png(name, y_label, values, log_scale)
+        figures.append(
+            {
+                "figure_id": fig_id,
+                "name": name,
+                "title": title,
+                "metric": metric,
+                "png": True,
+            }
+        )
+
+    for name, fig_id, title, y_label, accessor, log_scale, metric in pure_signing_specs:
         values = isolated_values(benchmark, accessor)
         render_isolated_metric_png(name, y_label, values, log_scale)
         figures.append(
@@ -875,19 +989,32 @@ def main() -> None:
             }
         )
 
-    render_attack_metric_png(adversarial)
-    figures.append(
-        {
-            "figure_id": "Fig. 13",
-            "name": "fig_13_security_attack_block_rate_pct",
-            "title": "JWT adversarial block rate by attack vector",
-            "metric": "security_attack_block_rate_pct",
-            "png": True,
-        }
-    )
+    if adversarial is not None:
+        render_attack_metric_png(adversarial)
+        figures.append(
+            {
+                "figure_id": "Fig. 13",
+                "name": "fig_13_security_attack_block_rate_pct",
+                "title": "JWT adversarial block rate by attack vector",
+                "metric": "security_attack_block_rate_pct",
+                "png": True,
+            }
+        )
+
+    if attack_compare:
+        render_attack_compare_png(attack_compare, "fig_21_security_attack_block_rate_compare_pct")
+        figures.append(
+            {
+                "figure_id": "Fig. 21",
+                "name": "fig_21_security_attack_block_rate_compare_pct",
+                "title": "JWT adversarial block rate by attack vector — FN-DSA-512 vs FN-DSA-Precomputed-512",
+                "metric": "security_attack_block_rate_compare_pct",
+                "png": True,
+            }
+        )
 
     write_palette()
-    write_data_csv(benchmark, adversarial)
+    write_data_csv(benchmark, adversarial, attack_compare)
     write_manifest(figures)
     write_captions(figures)
     write_contact_sheet(figures)

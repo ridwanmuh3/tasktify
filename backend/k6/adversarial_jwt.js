@@ -64,6 +64,11 @@ import { randomString } from "./k6-utils.js";
 const ITERATIONS = parseInt(__ENV.ITERATIONS || "10", 10);
 const ALGORITHM = __ENV.ALGORITHM || "FN-DSA-Precomputed-512";
 const SUMMARY_DIR = (__ENV.BENCH_OUTPUT_DIR || "").replace(/\/+$/, "");
+// Output basenames are overridable so a per-algorithm sweep (make
+// attack-adversarial-compare) writes one file per profile instead of
+// clobbering a single adversarial_result.json.
+const OUTPUT_NAME = __ENV.ADVERSARIAL_OUTPUT || "adversarial_result.json";
+const RAW_OUTPUT_NAME = __ENV.ADVERSARIAL_RAW_OUTPUT || "adversarial_raw.json";
 
 // Per-algorithm benchmark gateway ports (multi-gateway mode, see
 // docker-compose.benchmark.yml / k6/benchmark_sign.js ALGORITHMS).
@@ -623,7 +628,7 @@ ${SEP}
 
   return {
     stdout: table,
-    [summaryFile("adversarial_result.json")]: JSON.stringify(result, null, 2),
-    [summaryFile("adversarial_raw.json")]: JSON.stringify(data, null, 2),
+    [summaryFile(OUTPUT_NAME)]: JSON.stringify(result, null, 2),
+    [summaryFile(RAW_OUTPUT_NAME)]: JSON.stringify(data, null, 2),
   };
 }

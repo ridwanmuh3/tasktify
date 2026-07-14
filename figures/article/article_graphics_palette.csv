@@ -1,3 +1,7 @@
 algorithm,label,hex_color
-Falcon-Precomputed-512,Falcon-Precomputed-512,#0072B2
-Falcon-512,Falcon-512,#E69F00
+FN-DSA-Precomputed-512,FN-DSA-Precomp. 512,#2a78d6
+FN-DSA-512,FN-DSA-512,#1baf7a
+HS256,HS256,#eda100
+RS256,RS256,#008300
+ES256,ES256,#4a3aa7
+EdDSA,EdDSA,#e34948

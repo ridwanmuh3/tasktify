@@ -34,9 +34,8 @@ tmp/
 result.json
 results/
 backend/token.json
-backend/adversarial_result.txt
 backend/cmd/keygen/keygen
-**/benchmark-results/
+**/benchmark-results/*.ndjson
 
 .claude
 CLAUDE.md

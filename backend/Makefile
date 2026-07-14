@@ -13,6 +13,10 @@ GOCACHE ?= /tmp/go-build-cache
 ATTACK_BASE_URL ?= http://localhost:5001
 ATTACK_ITERATIONS ?= 10
 ATTACK_ALGORITHM ?= FN-DSA-Precomputed-512
+# FN-DSA profiles swept side-by-side by attack-adversarial-compare. Space
+# separated; each runs the full attack set against its own gateway port.
+COMPARE_ATTACK_ALGS ?= FN-DSA-Precomputed-512 FN-DSA-512
+COMPARE_BENCH_HOST ?= localhost
 BENCH_OUTPUT_DIR ?= benchmark-results
 BENCH_SAMPLE_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_sign_samples.ndjson
 BENCH_RESULT_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_sign_result.json
@@ -356,4 +360,29 @@ attack-adversarial-remote: prepare-bench-output
 		-e ALGORITHM=$(ATTACK_ALGORITHM) \
 		k6/adversarial_jwt.js
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test falcon-kat falcon-check check prepare-bench-output bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote
+# Run the full attack set against each FN-DSA profile's own gateway,
+# writing one adversarial_result_<alg>.json per profile so the block rates
+# can be compared (scripts/generate_article_graphics.py -> fig_21). Both
+# profiles emit alg=FN-DSA-512 and share the verifier, so identical block
+# rates are the expected result — the figure shows precomputation does not
+# weaken verification.
+attack-adversarial-compare: prepare-bench-output
+	@for alg in $(COMPARE_ATTACK_ALGS); do \
+		echo "=== adversarial attack: $$alg ==="; \
+		$(K6) run --no-color \
+			$(BENCH_K6_ENV) \
+			-e BENCH_HOST=$(COMPARE_BENCH_HOST) \
+			-e ITERATIONS=$(ATTACK_ITERATIONS) \
+			-e ALGORITHM=$$alg \
+			-e ADVERSARIAL_OUTPUT=adversarial_result_$$alg.json \
+			-e ADVERSARIAL_RAW_OUTPUT=adversarial_raw_$$alg.json \
+			k6/adversarial_jwt.js || exit $$?; \
+	done
+
+attack-adversarial-compare-bench: bench-up wait-bench
+	$(MAKE) attack-adversarial-compare COMPARE_BENCH_HOST=localhost
+
+attack-adversarial-compare-remote:
+	$(MAKE) attack-adversarial-compare COMPARE_BENCH_HOST=$(HOSTINGER_BENCH_HOST)
+
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test falcon-kat falcon-check check prepare-bench-output bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote attack-adversarial-compare attack-adversarial-compare-bench attack-adversarial-compare-remote

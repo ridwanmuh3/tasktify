@@ -1,0 +1,77 @@
+{
+  "source": "go test ./fndsa -run '^$' -bench '^BenchmarkFalconPrecomputeAblation512/' -benchmem",
+  "rows": [
+    {
+      "variant": "A0_Original",
+      "iters": 2415,
+      "ms_per_op": 0.43947,
+      "kb_per_op": 47.265625,
+      "allocs_per_op": 15.0,
+      "vs_a0_percent": 0.0,
+      "vs_a0_direction": "same",
+      "step_percent": 0.0,
+      "step_direction": "baseline",
+      "note": "Original: decode key, recompute G/hash, FFT basis, Gram, LDL tree during sign."
+    },
+    {
+      "variant": "A1_KeyMaterialDetached",
+      "iters": 2944,
+      "ms_per_op": 0.343411,
+      "kb_per_op": 43.265625,
+      "allocs_per_op": 9.0,
+      "vs_a0_percent": 21.857919766992058,
+      "vs_a0_direction": "faster",
+      "step_percent": 21.857919766992058,
+      "step_direction": "faster",
+      "note": "A0 + detach private-key decode, G recomputation, verifying-key hash."
+    },
+    {
+      "variant": "A2_FFTBasisDetached",
+      "iters": 3656,
+      "ms_per_op": 0.33027,
+      "kb_per_op": 43.265625,
+      "allocs_per_op": 9.0,
+      "vs_a0_percent": 24.8481124991467,
+      "vs_a0_direction": "faster",
+      "step_percent": 3.82661009693924,
+      "step_direction": "faster",
+      "note": "A1 + detach FFT basis b00/b01/b10/b11."
+    },
+    {
+      "variant": "A3_GramDetached",
+      "iters": 3284,
+      "ms_per_op": 0.31818,
+      "kb_per_op": 43.265625,
+      "allocs_per_op": 9.0,
+      "vs_a0_percent": 27.599153525837945,
+      "vs_a0_direction": "faster",
+      "step_percent": 3.6606412934871435,
+      "step_direction": "faster",
+      "note": "A2 + detach Gram matrix."
+    },
+    {
+      "variant": "A4_LDLTreeDetached",
+      "iters": 3939,
+      "ms_per_op": 0.306736,
+      "kb_per_op": 35.265625,
+      "allocs_per_op": 9.0,
+      "vs_a0_percent": 30.203199308257677,
+      "vs_a0_direction": "faster",
+      "step_percent": 3.5967062668929564,
+      "step_direction": "faster",
+      "note": "A3 + detach LDL tree; runtime uses precomputed sampler tree."
+    },
+    {
+      "variant": "A5_AllPrecomputedCombined",
+      "iters": 3523,
+      "ms_per_op": 0.300618,
+      "kb_per_op": 35.265625,
+      "allocs_per_op": 9.0,
+      "vs_a0_percent": 31.595330739299616,
+      "vs_a0_direction": "faster",
+      "step_percent": 1.9945490584737404,
+      "step_direction": "faster",
+      "note": "A1-A4 combined through production PrecomputedSigner."
+    }
+  ]
+}

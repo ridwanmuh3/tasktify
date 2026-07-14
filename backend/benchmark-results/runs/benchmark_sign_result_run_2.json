@@ -1,0 +1,2184 @@
+{
+  "generated_at": "2026-07-13T17:52:35.765Z",
+  "mode": "Isolated + Stress + Attack",
+  "endpoint": "http://poc-ridwanmuh3.my.id:{5001-5006}",
+  "methodology": {
+    "primary_metric": "isolated_gc_free_token_generation",
+    "pure_signing_metric": "isolated_gc_free_pure_signing",
+    "supporting_metric": "stress_concurrent_jwt_generation",
+    "isolated_endpoint": "/api/benchmark/jwt-issuance",
+    "pure_signing_endpoint": "/api/benchmark/pure-signing",
+    "isolated_iterations": 100,
+    "isolated_warmup_iterations": 20,
+    "stress_duration_seconds": 30,
+    "stress_stage_model": {
+      "executor": "constant-vus",
+      "load_model": "closed-loop",
+      "ramp_up_seconds": 0,
+      "steady_state_seconds": 30,
+      "ramp_down_seconds": 0,
+      "settle_gap_between_stress_scenarios_seconds": 20,
+      "graceful_stop_seconds": 15,
+      "think_time_seconds": 0.05,
+      "warmup_requests_per_vu": 3
+    },
+    "stress_transport": {
+      "request_timeout": "k6 default unless request overrides it; setup registration uses 10s",
+      "connection_reuse": "enabled",
+      "http_protocol": "negotiated by k6/server; see benchmark_sign_raw.json http_req_* protocol tags if emitted",
+      "tls_enabled": false
+    },
+    "stress_environment": {
+      "database_pool_idle": "not provided",
+      "database_pool_open": "not provided",
+      "rate_limit": "not provided",
+      "cpu_quota": "not provided",
+      "memory_quota": "not provided"
+    },
+    "stress_warmup_enabled": true,
+    "concurrency_levels": [
+      10,
+      30,
+      50
+    ],
+    "notes": [
+      "Isolated metrics use gateway-local JWT generation path.",
+      "Pure signing metrics use /api/benchmark/pure-signing and exclude JWT serialization, Base64URL, and compact assembly.",
+      "Stress metrics use /api/benchmark/token instead of /api/auth/signin.",
+      "Refresh metrics use /api/auth/refresh with refresh tokens returned by /api/auth/signin.",
+      "Raw k6 aggregate metrics are omitted here because they mix algorithms and scenarios."
+    ]
+  },
+  "algorithms": [
+    {
+      "algorithm": "FN-DSA-Precomputed-512",
+      "jws_alg": "FN-DSA-512",
+      "category": "PQC",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 4,
+        "pure_signing_gc_contaminated_count": 2,
+        "pure_signing_ms": {
+          "avg": 0.3590875499999999,
+          "min": 0.236038,
+          "max": 0.971526,
+          "p50": 0.34741299999999997,
+          "p95": 0.5484265,
+          "p99": 0.6553417800000015,
+          "sd": 0.0968640584014912
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 0.3521626632653061,
+          "min": 0.236038,
+          "max": 0.652148,
+          "p50": 0.3454035,
+          "p95": 0.5464588499999999,
+          "p99": 0.5686203300000001,
+          "sd": 0.07519374491366759
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 3280.0278125,
+          "sd": 719.2666842803336
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 44302.04,
+          "sd": 720.5674419511336
+        },
+        "token_generation_ms": {
+          "avg": 0.36552587,
+          "min": 0.234219,
+          "max": 1.197415,
+          "p50": 0.3292695,
+          "p95": 0.59851,
+          "p99": 0.9203536000000014,
+          "sd": 0.1440005020196565
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 0.34301721874999996,
+          "min": 0.234219,
+          "max": 0.861336,
+          "p50": 0.3272685,
+          "p95": 0.44869400000000004,
+          "p99": 0.6239613999999993,
+          "sd": 0.08401617647589797
+        },
+        "refresh_token_generation_ms": {
+          "avg": 0.3510500100000001,
+          "min": 0.245689,
+          "max": 0.959456,
+          "p50": 0.3265985,
+          "p95": 0.65736205,
+          "p99": 0.7320440900000013,
+          "sd": 0.1115409159196297
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 0.3506531041666668,
+          "min": 0.245689,
+          "max": 0.959456,
+          "p50": 0.32332,
+          "p95": 0.65930625,
+          "p99": 0.7412324499999994,
+          "sd": 0.11374341392018403
+        },
+        "total_ms": {
+          "avg": 0.71657588,
+          "min": 0.479908,
+          "max": 1.583443,
+          "p50": 0.6564975000000001,
+          "p95": 1.1114879499999997,
+          "p99": 1.2722780800000015,
+          "sd": 0.19028261794910642
+        },
+        "overhead_avg_ms": 0.3510500100000001,
+        "jwt_issuance_over_pure_avg_ms": 0.006438320000000053,
+        "jwt_issuance_over_pure_ratio": 1.017929666455994,
+        "jwt_issuance_over_pure_gc_free_avg_ms": -0.009145444515306134,
+        "jwt_issuance_over_pure_gc_free_ratio": 0.9740306242845048,
+        "cpu_pct": {
+          "avg": 155.87894705963555,
+          "min": 155.87894705963555,
+          "max": 155.87894705963555,
+          "p50": 155.87894705963555,
+          "p95": 155.87894705963555,
+          "p99": 155.87894705963555,
+          "sd": 486.8237506166226
+        },
+        "cpu_time_ms": {
+          "avg": 1,
+          "min": 1,
+          "max": 1,
+          "p50": 1,
+          "p95": 1,
+          "p99": 1,
+          "sd": 3
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 0.5,
+          "min": 0.5,
+          "max": 0.5,
+          "p50": 0.5,
+          "p95": 0.5,
+          "p99": 0.5,
+          "sd": 1.5
+        },
+        "memory_alloc_kb": {
+          "avg": 3261.72953125,
+          "min": 3261.72953125,
+          "max": 3261.72953125,
+          "p50": 3261.72953125,
+          "p95": 3261.72953125,
+          "p99": 3261.72953125,
+          "sd": 664.2835709049218
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 93.484609375,
+          "min": 93.484609375,
+          "max": 93.484609375,
+          "p50": 93.484609375,
+          "p95": 93.484609375,
+          "p99": 93.484609375,
+          "sd": 0.3461465729299828
+        },
+        "memory_sys_kb": {
+          "avg": 38486.2578125,
+          "min": 38486.2578125,
+          "max": 38486.2578125,
+          "p50": 38486.2578125,
+          "p95": 38486.2578125,
+          "p99": 38486.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 44935.68,
+          "min": 44935.68,
+          "max": 44935.68,
+          "p50": 44935.68,
+          "p95": 44935.68,
+          "p99": 44935.68,
+          "sd": 570.0390667313953
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 408,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 408,
+            "login_total": 0,
+            "refresh_success": 408,
+            "refresh_failed": 0,
+            "refresh_total": 408
+          },
+          "token_generation_ms": {
+            "avg": 0.621740196078431,
+            "min": 0.264,
+            "max": 6.135,
+            "med": 0.5175000000000001,
+            "p95": 1.3840499999999996,
+            "p99": 2.4814000000000007
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.6135392156862746,
+            "min": 0.229,
+            "max": 4.634,
+            "med": 0.3635,
+            "p95": 1.9087499999999993,
+            "p99": 2.83643
+          },
+          "refresh_ms": {
+            "avg": 308.36791195588233,
+            "min": 32.531273,
+            "max": 1175.361835,
+            "med": 282.4567235,
+            "p95": 610.2370391499999,
+            "p99": 800.1928941100002
+          },
+          "e2e_ms": {
+            "avg": 13.787253852941166,
+            "min": 10.22157,
+            "max": 57.829287,
+            "med": 12.4268845,
+            "p95": 21.43497204999999,
+            "p99": 30.841129960000014
+          },
+          "throughput_ok_per_s": 13.6,
+          "request_rate_per_s": 13.6,
+          "login_ms": {
+            "avg": 362.390269232843,
+            "min": 118.294559,
+            "max": 1349.355865,
+            "med": 337.8391305,
+            "p95": 658.4697098999997,
+            "p99": 874.41048517
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 399,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 399,
+            "login_total": 0,
+            "refresh_success": 399,
+            "refresh_failed": 0,
+            "refresh_total": 399
+          },
+          "token_generation_ms": {
+            "avg": 0.6260175438596489,
+            "min": 0.292,
+            "max": 3.395,
+            "med": 0.513,
+            "p95": 1.3453999999999968,
+            "p99": 2.4134999999999884
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.6629749373433579,
+            "min": 0.23,
+            "max": 8.747,
+            "med": 0.373,
+            "p95": 2.3256999999999994,
+            "p99": 3.4726199999999783
+          },
+          "refresh_ms": {
+            "avg": 1065.2848467769422,
+            "min": 58.992047,
+            "max": 5232.839305,
+            "med": 955.022128,
+            "p95": 2241.7040354999986,
+            "p99": 2658.719108079993
+          },
+          "e2e_ms": {
+            "avg": 15.370446716791992,
+            "min": 10.447239,
+            "max": 251.636827,
+            "med": 12.458876,
+            "p95": 33.180180199999995,
+            "p99": 44.85198583999999
+          },
+          "throughput_ok_per_s": 13.3,
+          "request_rate_per_s": 13.3,
+          "login_ms": {
+            "avg": 1178.9617634786966,
+            "min": 177.986212,
+            "max": 3961.854572,
+            "med": 1057.495024,
+            "p95": 2549.4590563999996,
+            "p99": 3272.106453959998
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 380,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 380,
+            "login_total": 0,
+            "refresh_success": 380,
+            "refresh_failed": 0,
+            "refresh_total": 380
+          },
+          "token_generation_ms": {
+            "avg": 0.7491868421052631,
+            "min": 0.254,
+            "max": 19.833,
+            "med": 0.5185,
+            "p95": 1.7085500000000005,
+            "p99": 3.2878699999999768
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.667152631578947,
+            "min": 0.234,
+            "max": 7.029,
+            "med": 0.3835,
+            "p95": 2.3320500000000006,
+            "p99": 3.5041299999999884
+          },
+          "refresh_ms": {
+            "avg": 1887.4507611631568,
+            "min": 25.522221,
+            "max": 9431.800821,
+            "med": 1695.197206,
+            "p95": 4151.024197750001,
+            "p99": 7003.066038649995
+          },
+          "e2e_ms": {
+            "avg": 16.730418899999997,
+            "min": 10.315252,
+            "max": 44.643333,
+            "med": 12.971523000000001,
+            "p95": 39.236316900000006,
+            "p99": 44.25704356999999
+          },
+          "throughput_ok_per_s": 12.67,
+          "request_rate_per_s": 12.67,
+          "login_ms": {
+            "avg": 2136.8752211473684,
+            "min": 178.347045,
+            "max": 6878.489395,
+            "med": 1862.7807404999999,
+            "p95": 4595.664098050001,
+            "p99": 6367.413476689995
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    },
+    {
+      "algorithm": "FN-DSA-512",
+      "jws_alg": "FN-DSA-512",
+      "category": "PQC",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 5,
+        "pure_signing_gc_contaminated_count": 1,
+        "pure_signing_ms": {
+          "avg": 0.46157600999999987,
+          "min": 0.328908,
+          "max": 1.491344,
+          "p50": 0.441233,
+          "p95": 0.5764969499999999,
+          "p99": 0.8626771700000032,
+          "sd": 0.13660481043627232
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 0.4600718585858585,
+          "min": 0.328908,
+          "max": 1.491344,
+          "p50": 0.440319,
+          "p95": 0.5736829,
+          "p99": 0.8690273399999974,
+          "sd": 0.13646655548447825
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 3134.663671875,
+          "sd": 596.5419672051016
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 45958.08,
+          "sd": 670.8267090687433
+        },
+        "token_generation_ms": {
+          "avg": 0.42106667999999997,
+          "min": 0.34022,
+          "max": 0.837417,
+          "p50": 0.3995185,
+          "p95": 0.5483039499999999,
+          "p99": 0.663276000000001,
+          "sd": 0.07476182756994107
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 0.41083170526315793,
+          "min": 0.34022,
+          "max": 0.661517,
+          "p50": 0.396009,
+          "p95": 0.506135,
+          "p99": 0.5951154000000002,
+          "sd": 0.05566277577148677
+        },
+        "refresh_token_generation_ms": {
+          "avg": 0.41845618,
+          "min": 0.347307,
+          "max": 0.666988,
+          "p50": 0.401903,
+          "p95": 0.5493135,
+          "p99": 0.66034411,
+          "sd": 0.06765804112245344
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 0.41791461052631584,
+          "min": 0.347307,
+          "max": 0.666988,
+          "p50": 0.400178,
+          "p95": 0.5526909999999999,
+          "p99": 0.66067966,
+          "sd": 0.06815563131621237
+        },
+        "total_ms": {
+          "avg": 0.8395228600000002,
+          "min": 0.693678,
+          "max": 1.252605,
+          "p50": 0.7986865000000001,
+          "p95": 1.0468079999999997,
+          "p99": 1.2445563,
+          "sd": 0.11630185851619225
+        },
+        "overhead_avg_ms": 0.41845618000000023,
+        "jwt_issuance_over_pure_avg_ms": -0.0405093299999999,
+        "jwt_issuance_over_pure_ratio": 0.9122369249649697,
+        "jwt_issuance_over_pure_gc_free_avg_ms": -0.04924015332270054,
+        "jwt_issuance_over_pure_gc_free_ratio": 0.8929729075930617,
+        "cpu_pct": {
+          "avg": 103.26725463610232,
+          "min": 103.26725463610232,
+          "max": 103.26725463610232,
+          "p50": 103.26725463610232,
+          "p95": 103.26725463610232,
+          "p99": 103.26725463610232,
+          "sd": 331.9205165993465
+        },
+        "cpu_time_ms": {
+          "avg": 0.9,
+          "min": 0.9,
+          "max": 0.9,
+          "p50": 0.9,
+          "p95": 0.9,
+          "p99": 0.9,
+          "sd": 2.8618176042508368
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 0.45,
+          "min": 0.45,
+          "max": 0.45,
+          "p50": 0.45,
+          "p95": 0.45,
+          "p99": 0.45,
+          "sd": 1.4309088021254184
+        },
+        "memory_alloc_kb": {
+          "avg": 3265.1678125,
+          "min": 3265.1678125,
+          "max": 3265.1678125,
+          "p50": 3265.1678125,
+          "p95": 3265.1678125,
+          "p99": 3265.1678125,
+          "sd": 661.7201746622429
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 117.486171875,
+          "min": 117.486171875,
+          "max": 117.486171875,
+          "p50": 117.486171875,
+          "p95": 117.486171875,
+          "p99": 117.486171875,
+          "sd": 0.34363786345682557
+        },
+        "memory_sys_kb": {
+          "avg": 34390.2578125,
+          "min": 34390.2578125,
+          "max": 34390.2578125,
+          "p50": 34390.2578125,
+          "p95": 34390.2578125,
+          "p99": 34390.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 46477.88,
+          "min": 46477.88,
+          "max": 46477.88,
+          "p50": 46477.88,
+          "p95": 46477.88,
+          "p99": 46477.88,
+          "sd": 631.2206473175605
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 376,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 376,
+            "login_total": 0,
+            "refresh_success": 376,
+            "refresh_failed": 0,
+            "refresh_total": 376
+          },
+          "token_generation_ms": {
+            "avg": 0.7440664893617025,
+            "min": 0.397,
+            "max": 4.735,
+            "med": 0.604,
+            "p95": 1.54775,
+            "p99": 2.7744999999999997
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.8792553191489367,
+            "min": 0.336,
+            "max": 3.881,
+            "med": 0.535,
+            "p95": 2.55525,
+            "p99": 3.2405
+          },
+          "refresh_ms": {
+            "avg": 318.69159439627657,
+            "min": 49.010411,
+            "max": 1514.702267,
+            "med": 264.6409865,
+            "p95": 646.2957215,
+            "p99": 1334.7277139999999
+          },
+          "e2e_ms": {
+            "avg": 14.10524816223404,
+            "min": 10.034724,
+            "max": 241.382462,
+            "med": 12.4484955,
+            "p95": 19.88162775,
+            "p99": 27.680122500000003
+          },
+          "throughput_ok_per_s": 12.53,
+          "request_rate_per_s": 12.53,
+          "login_ms": {
+            "avg": 417.40456413031916,
+            "min": 115.330194,
+            "max": 1486.500046,
+            "med": 368.50343250000003,
+            "p95": 786.10155275,
+            "p99": 1211.14004225
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 415,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 415,
+            "login_total": 0,
+            "refresh_success": 415,
+            "refresh_failed": 0,
+            "refresh_total": 415
+          },
+          "token_generation_ms": {
+            "avg": 1.1749566265060252,
+            "min": 0.391,
+            "max": 26.909,
+            "med": 0.61,
+            "p95": 2.094299999999999,
+            "p99": 16.049880000000012
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.9553084337349392,
+            "min": 0.339,
+            "max": 14.564,
+            "med": 0.539,
+            "p95": 2.552799999999998,
+            "p99": 4.729280000000019
+          },
+          "refresh_ms": {
+            "avg": 1027.4581297710843,
+            "min": 90.507118,
+            "max": 3920.755849,
+            "med": 921.827905,
+            "p95": 2248.663144099998,
+            "p99": 2764.5797404400005
+          },
+          "e2e_ms": {
+            "avg": 15.019203715662641,
+            "min": 10.367875,
+            "max": 51.168401,
+            "med": 12.51911,
+            "p95": 30.442976099999925,
+            "p99": 46.60352152
+          },
+          "throughput_ok_per_s": 13.83,
+          "request_rate_per_s": 13.83,
+          "login_ms": {
+            "avg": 1139.6877510674703,
+            "min": 184.763906,
+            "max": 4246.450668,
+            "med": 1031.768106,
+            "p95": 2295.3461308,
+            "p99": 3388.1000395600054
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 419,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 419,
+            "login_total": 0,
+            "refresh_success": 419,
+            "refresh_failed": 0,
+            "refresh_total": 419
+          },
+          "token_generation_ms": {
+            "avg": 0.8124630071599045,
+            "min": 0.394,
+            "max": 10.722,
+            "med": 0.621,
+            "p95": 1.8984999999999994,
+            "p99": 3.262019999999997
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.8814415274463011,
+            "min": 0.338,
+            "max": 4.069,
+            "med": 0.531,
+            "p95": 2.4848,
+            "p99": 3.445899999999998
+          },
+          "refresh_ms": {
+            "avg": 1765.073646434369,
+            "min": 50.091804,
+            "max": 6491.319717,
+            "med": 1620.750459,
+            "p95": 3707.5502257999997,
+            "p99": 4863.801696019999
+          },
+          "e2e_ms": {
+            "avg": 16.702060985680184,
+            "min": 10.315892,
+            "max": 56.26662,
+            "med": 12.449142,
+            "p95": 51.18109079999994,
+            "p99": 55.508184539999995
+          },
+          "throughput_ok_per_s": 13.97,
+          "request_rate_per_s": 13.97,
+          "login_ms": {
+            "avg": 1902.0383643341268,
+            "min": 170.486984,
+            "max": 6030.465066,
+            "med": 1727.268535,
+            "p95": 3735.1426412,
+            "p99": 4578.18956922
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    },
+    {
+      "algorithm": "HS256",
+      "jws_alg": "HS256",
+      "category": "Classical",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 2,
+        "pure_signing_gc_contaminated_count": 0,
+        "pure_signing_ms": {
+          "avg": 0.0018611500000000007,
+          "min": 0.00086,
+          "max": 0.00756,
+          "p50": 0.00155,
+          "p95": 0.00315755,
+          "p99": 0.0048375000000000145,
+          "sd": 0.0009271311274571683
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 0.0018611500000000007,
+          "min": 0.00086,
+          "max": 0.00756,
+          "p50": 0.00155,
+          "p95": 0.00315755,
+          "p99": 0.0048375000000000145,
+          "sd": 0.0009271311274571683
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 2767.2734375,
+          "sd": 440.2075682277623
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 41403.64,
+          "sd": 368.20042150980765
+        },
+        "token_generation_ms": {
+          "avg": 0.014323610000000002,
+          "min": 0.005111,
+          "max": 0.10207,
+          "p50": 0.0118155,
+          "p95": 0.031348549999999996,
+          "p99": 0.09037711000000007,
+          "sd": 0.014389212003369052
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 0.01328868367346939,
+          "min": 0.005111,
+          "max": 0.090259,
+          "p50": 0.01148,
+          "p95": 0.028750349999999977,
+          "p99": 0.05954007000000004,
+          "sd": 0.0113898919120106
+        },
+        "refresh_token_generation_ms": {
+          "avg": 0.014359599999999998,
+          "min": 0.00515,
+          "max": 0.144578,
+          "p50": 0.0093455,
+          "p95": 0.023320999999999977,
+          "p99": 0.13640159000000004,
+          "sd": 0.02140550271729211
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 0.014027244897959184,
+          "min": 0.00515,
+          "max": 0.144578,
+          "p50": 0.00924,
+          "p95": 0.022055299999999993,
+          "p99": 0.13656677,
+          "sd": 0.02145043242752416
+        },
+        "total_ms": {
+          "avg": 0.028683209999999994,
+          "min": 0.010451,
+          "max": 0.226578,
+          "p50": 0.0217155,
+          "p95": 0.06882099999999997,
+          "p99": 0.15730770000000038,
+          "sd": 0.02995904981079841
+        },
+        "overhead_avg_ms": 0.014359599999999991,
+        "jwt_issuance_over_pure_avg_ms": 0.012462460000000002,
+        "jwt_issuance_over_pure_ratio": 7.696107245520241,
+        "jwt_issuance_over_pure_gc_free_avg_ms": 0.01142753367346939,
+        "jwt_issuance_over_pure_gc_free_ratio": 7.140039047615391,
+        "cpu_pct": {
+          "avg": 2073.9830261600996,
+          "min": 2073.9830261600996,
+          "max": 2073.9830261600996,
+          "p50": 2073.9830261600996,
+          "p95": 2073.9830261600996,
+          "p99": 2073.9830261600996,
+          "sd": 12131.676744906
+        },
+        "cpu_time_ms": {
+          "avg": 0.3,
+          "min": 0.3,
+          "max": 0.3,
+          "p50": 0.3,
+          "p95": 0.3,
+          "p99": 0.3,
+          "sd": 1.7058722109231979
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 0.15,
+          "min": 0.15,
+          "max": 0.15,
+          "p50": 0.15,
+          "p95": 0.15,
+          "p99": 0.15,
+          "sd": 0.8529361054615989
+        },
+        "memory_alloc_kb": {
+          "avg": 2963.1828125,
+          "min": 2963.1828125,
+          "max": 2963.1828125,
+          "p50": 2963.1828125,
+          "p95": 2963.1828125,
+          "p99": 2963.1828125,
+          "sd": 540.6174147532815
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 18.904140625,
+          "min": 18.904140625,
+          "max": 18.904140625,
+          "p50": 18.904140625,
+          "p95": 18.904140625,
+          "p99": 18.904140625,
+          "sd": 0.15307658274715594
+        },
+        "memory_sys_kb": {
+          "avg": 38486.2578125,
+          "min": 38486.2578125,
+          "max": 38486.2578125,
+          "p50": 38486.2578125,
+          "p95": 38486.2578125,
+          "p99": 38486.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 41843.44,
+          "min": 41843.44,
+          "max": 41843.44,
+          "p50": 41843.44,
+          "p95": 41843.44,
+          "p99": 41843.44,
+          "sd": 482.70703993208986
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 402,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 402,
+            "login_total": 0,
+            "refresh_success": 402,
+            "refresh_failed": 0,
+            "refresh_total": 402
+          },
+          "token_generation_ms": {
+            "avg": 0.08407213930348256,
+            "min": 0.008,
+            "max": 5.674,
+            "med": 0.056,
+            "p95": 0.10179999999999995,
+            "p99": 0.48717000000000077
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.011457711442786048,
+            "min": 0.005,
+            "max": 0.584,
+            "med": 0.008,
+            "p95": 0.015,
+            "p99": 0.11984000000000014
+          },
+          "refresh_ms": {
+            "avg": 281.1875341268658,
+            "min": 32.06816,
+            "max": 1146.146096,
+            "med": 253.6032245,
+            "p95": 550.97630475,
+            "p99": 890.8082447800001
+          },
+          "e2e_ms": {
+            "avg": 24.774848920398043,
+            "min": 9.600642,
+            "max": 862.023006,
+            "med": 11.4077155,
+            "p95": 19.279269149999998,
+            "p99": 855.0755472100009
+          },
+          "throughput_ok_per_s": 13.4,
+          "request_rate_per_s": 13.4,
+          "login_ms": {
+            "avg": 395.85186223880606,
+            "min": 118.14183,
+            "max": 1260.625323,
+            "med": 365.002432,
+            "p95": 726.0536867999998,
+            "p99": 989.6574057800004
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 395,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 395,
+            "login_total": 0,
+            "refresh_success": 395,
+            "refresh_failed": 0,
+            "refresh_total": 395
+          },
+          "token_generation_ms": {
+            "avg": 0.06673164556962027,
+            "min": 0.009,
+            "max": 0.979,
+            "med": 0.057,
+            "p95": 0.108,
+            "p99": 0.24924000000000013
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.013911392405063283,
+            "min": 0.005,
+            "max": 2.125,
+            "med": 0.007,
+            "p95": 0.013,
+            "p99": 0.03530000000000001
+          },
+          "refresh_ms": {
+            "avg": 1096.897299541773,
+            "min": 29.334411,
+            "max": 3594.71666,
+            "med": 975.100089,
+            "p95": 2351.1545010999953,
+            "p99": 3039.0930357800007
+          },
+          "e2e_ms": {
+            "avg": 14.881175293670882,
+            "min": 9.768146,
+            "max": 245.464364,
+            "med": 11.533319,
+            "p95": 33.51606299999991,
+            "p99": 50.67667410000001
+          },
+          "throughput_ok_per_s": 13.17,
+          "request_rate_per_s": 13.17,
+          "login_ms": {
+            "avg": 1146.6722439898729,
+            "min": 175.095358,
+            "max": 2892.532603,
+            "med": 1041.675614,
+            "p95": 2321.730918099999,
+            "p99": 2744.8024361800003
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 435,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 435,
+            "login_total": 0,
+            "refresh_success": 435,
+            "refresh_failed": 0,
+            "refresh_total": 435
+          },
+          "token_generation_ms": {
+            "avg": 0.0717609195402298,
+            "min": 0.009,
+            "max": 1.131,
+            "med": 0.056,
+            "p95": 0.11329999999999996,
+            "p99": 0.5895999999999981
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.01234482758620687,
+            "min": 0.005,
+            "max": 1.302,
+            "med": 0.008,
+            "p95": 0.013299999999999954,
+            "p99": 0.03
+          },
+          "refresh_ms": {
+            "avg": 1729.1860327241354,
+            "min": 105.18778,
+            "max": 5541.540474,
+            "med": 1559.077847,
+            "p95": 3611.3624644999995,
+            "p99": 4699.975231679995
+          },
+          "e2e_ms": {
+            "avg": 13.770972618390807,
+            "min": 9.918974,
+            "max": 35.599566,
+            "med": 11.77192,
+            "p95": 26.364695599999997,
+            "p99": 33.26115713999998
+          },
+          "throughput_ok_per_s": 14.5,
+          "request_rate_per_s": 14.5,
+          "login_ms": {
+            "avg": 1851.6543244413806,
+            "min": 160.25351,
+            "max": 8565.183572,
+            "med": 1651.212241,
+            "p95": 3689.2859905999994,
+            "p99": 5540.122208759998
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    },
+    {
+      "algorithm": "RS256",
+      "jws_alg": "RS256",
+      "category": "Classical",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 1,
+        "pure_signing_gc_contaminated_count": 0,
+        "pure_signing_ms": {
+          "avg": 1.1447535299999998,
+          "min": 0.945356,
+          "max": 1.554054,
+          "p50": 1.042401,
+          "p95": 1.39487055,
+          "p99": 1.4419473900000006,
+          "sd": 0.18443744316084273
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 1.1447535299999998,
+          "min": 0.945356,
+          "max": 1.554054,
+          "p50": 1.042401,
+          "p95": 1.39487055,
+          "p99": 1.4419473900000006,
+          "sd": 0.18443744316084273
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 2786.35859375,
+          "sd": 445.59899727110985
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 37240.4,
+          "sd": 389.8067213376393
+        },
+        "token_generation_ms": {
+          "avg": 1.0426405799999998,
+          "min": 0.951527,
+          "max": 1.393235,
+          "p50": 1.0211860000000001,
+          "p95": 1.17838795,
+          "p99": 1.3541785100000003,
+          "sd": 0.07074387948793592
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 1.0428739696969695,
+          "min": 0.951527,
+          "max": 1.393235,
+          "p50": 1.021266,
+          "p95": 1.1784199,
+          "p99": 1.35457302,
+          "sd": 0.07106195817514425
+        },
+        "refresh_token_generation_ms": {
+          "avg": 1.0521077699999997,
+          "min": 0.956697,
+          "max": 1.890583,
+          "p50": 1.024586,
+          "p95": 1.1542765499999998,
+          "p99": 1.4118298900000026,
+          "sd": 0.11127725996598362
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 1.0436383232323228,
+          "min": 0.956697,
+          "max": 1.406994,
+          "p50": 1.023616,
+          "p95": 1.149525,
+          "p99": 1.3439407999999997,
+          "sd": 0.07303802288469768
+        },
+        "total_ms": {
+          "avg": 2.09474835,
+          "min": 1.9082240000000001,
+          "max": 2.9101179999999998,
+          "p50": 2.0537065,
+          "p95": 2.34405905,
+          "p99": 2.698574800000001,
+          "sd": 0.15158128453884898
+        },
+        "overhead_avg_ms": 1.0521077700000003,
+        "jwt_issuance_over_pure_avg_ms": -0.10211294999999998,
+        "jwt_issuance_over_pure_ratio": 0.9107991831219774,
+        "jwt_issuance_over_pure_gc_free_avg_ms": -0.10187956030303025,
+        "jwt_issuance_over_pure_gc_free_ratio": 0.9110030608046867,
+        "cpu_pct": {
+          "avg": 106.48412751325318,
+          "min": 106.48412751325318,
+          "max": 106.48412751325318,
+          "p50": 106.48412751325318,
+          "p95": 106.48412751325318,
+          "p99": 106.48412751325318,
+          "sd": 201.08923449184664
+        },
+        "cpu_time_ms": {
+          "avg": 2.2,
+          "min": 2.2,
+          "max": 2.2,
+          "p50": 2.2,
+          "p95": 2.2,
+          "p99": 2.2,
+          "sd": 4.142463035441595
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 1.1,
+          "min": 1.1,
+          "max": 1.1,
+          "p50": 1.1,
+          "p95": 1.1,
+          "p99": 1.1,
+          "sd": 2.0712315177207974
+        },
+        "memory_alloc_kb": {
+          "avg": 3002.282890625,
+          "min": 3002.282890625,
+          "max": 3002.282890625,
+          "p50": 3002.282890625,
+          "p95": 3002.282890625,
+          "p99": 3002.282890625,
+          "sd": 571.301583753055
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 21.140703125,
+          "min": 21.140703125,
+          "max": 21.140703125,
+          "p50": 21.140703125,
+          "p95": 21.140703125,
+          "p99": 21.140703125,
+          "sd": 0.5034918293446249
+        },
+        "memory_sys_kb": {
+          "avg": 38486.2578125,
+          "min": 38486.2578125,
+          "max": 38486.2578125,
+          "p50": 38486.2578125,
+          "p95": 38486.2578125,
+          "p99": 38486.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 37835.44,
+          "min": 37835.44,
+          "max": 37835.44,
+          "p50": 37835.44,
+          "p95": 37835.44,
+          "p99": 37835.44,
+          "sd": 696.377833076269
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 378,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 378,
+            "login_total": 0,
+            "refresh_success": 378,
+            "refresh_failed": 0,
+            "refresh_total": 378
+          },
+          "token_generation_ms": {
+            "avg": 2.0452301587301585,
+            "min": 1.011,
+            "max": 18.185,
+            "med": 1.5825,
+            "p95": 4.523499999999999,
+            "p99": 8.669260000000014
+          },
+          "refresh_token_generation_ms": {
+            "avg": 2.3184576719576735,
+            "min": 0.975,
+            "max": 15.252,
+            "med": 2.0700000000000003,
+            "p95": 4.239399999999999,
+            "p99": 6.381740000000007
+          },
+          "refresh_ms": {
+            "avg": 318.2293909920634,
+            "min": 33.248828,
+            "max": 1341.527147,
+            "med": 281.422073,
+            "p95": 664.5140637999999,
+            "p99": 895.4124841700002
+          },
+          "e2e_ms": {
+            "avg": 14.574954298941798,
+            "min": 10.796445,
+            "max": 43.820301,
+            "med": 13.355129999999999,
+            "p95": 21.525169799999997,
+            "p99": 30.93810780000002
+          },
+          "throughput_ok_per_s": 12.6,
+          "request_rate_per_s": 12.6,
+          "login_ms": {
+            "avg": 418.93752913492045,
+            "min": 136.493698,
+            "max": 1092.71636,
+            "med": 375.812001,
+            "p95": 800.76570035,
+            "p99": 961.9168581200006
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 399,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 399,
+            "login_total": 0,
+            "refresh_success": 399,
+            "refresh_failed": 0,
+            "refresh_total": 399
+          },
+          "token_generation_ms": {
+            "avg": 1.9504786967418546,
+            "min": 0.997,
+            "max": 10.583,
+            "med": 1.532,
+            "p95": 4.262999999999994,
+            "p99": 6.271799999999961
+          },
+          "refresh_token_generation_ms": {
+            "avg": 2.3448270676691743,
+            "min": 0.971,
+            "max": 16.361,
+            "med": 2.085,
+            "p95": 4.440899999999998,
+            "p99": 5.813679999999997
+          },
+          "refresh_ms": {
+            "avg": 1067.9578288395985,
+            "min": 91.97601,
+            "max": 3526.5459,
+            "med": 960.260261,
+            "p95": 2216.133985099999,
+            "p99": 2769.0531879999976
+          },
+          "e2e_ms": {
+            "avg": 16.55326678446115,
+            "min": 10.822911,
+            "max": 59.983725,
+            "med": 13.741975,
+            "p95": 34.95959449999994,
+            "p99": 55.553895979999986
+          },
+          "throughput_ok_per_s": 13.3,
+          "request_rate_per_s": 13.3,
+          "login_ms": {
+            "avg": 1189.113917260651,
+            "min": 140.126222,
+            "max": 3727.147932,
+            "med": 1026.715092,
+            "p95": 2431.1948857999987,
+            "p99": 3142.5890069399998
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 417,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 417,
+            "login_total": 0,
+            "refresh_success": 417,
+            "refresh_failed": 0,
+            "refresh_total": 417
+          },
+          "token_generation_ms": {
+            "avg": 1.850400479616308,
+            "min": 0.999,
+            "max": 11.933,
+            "med": 1.51,
+            "p95": 3.4944,
+            "p99": 5.4116399999999985
+          },
+          "refresh_token_generation_ms": {
+            "avg": 2.3236306954436445,
+            "min": 0.979,
+            "max": 11.498,
+            "med": 2.119,
+            "p95": 4.3778,
+            "p99": 6.051119999999997
+          },
+          "refresh_ms": {
+            "avg": 1786.019279414868,
+            "min": 73.232043,
+            "max": 7531.589997,
+            "med": 1548.391078,
+            "p95": 3769.3402823999995,
+            "p99": 5238.378760439992
+          },
+          "e2e_ms": {
+            "avg": 18.7422599232614,
+            "min": 10.769948,
+            "max": 75.844879,
+            "med": 13.471377,
+            "p95": 64.08277559999999,
+            "p99": 70.65397368
+          },
+          "throughput_ok_per_s": 13.9,
+          "request_rate_per_s": 13.9,
+          "login_ms": {
+            "avg": 1942.3361524268585,
+            "min": 162.210955,
+            "max": 7608.394088,
+            "med": 1804.554143,
+            "p95": 3811.9986314,
+            "p99": 4541.363824399999
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    },
+    {
+      "algorithm": "ES256",
+      "jws_alg": "ES256",
+      "category": "Classical",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 1,
+        "pure_signing_gc_contaminated_count": 1,
+        "pure_signing_ms": {
+          "avg": 0.06082442000000002,
+          "min": 0.03092,
+          "max": 0.796016,
+          "p50": 0.0495095,
+          "p95": 0.06747599999999997,
+          "p99": 0.23846087000000288,
+          "sd": 0.078859786741175
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 0.053398242424242445,
+          "min": 0.03092,
+          "max": 0.232829,
+          "p50": 0.04933,
+          "p95": 0.06395609999999997,
+          "p99": 0.22322499999999998,
+          "sd": 0.02769244398970681
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 2980.55296875,
+          "sd": 597.6623873822741
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 37775.32,
+          "sd": 462.9253261596302
+        },
+        "token_generation_ms": {
+          "avg": 0.06216038000000001,
+          "min": 0.034609,
+          "max": 0.219779,
+          "p50": 0.05897,
+          "p95": 0.08653699999999999,
+          "p99": 0.1814254100000002,
+          "sd": 0.024031719946678805
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 0.061997262626262636,
+          "min": 0.034609,
+          "max": 0.219779,
+          "p50": 0.05893,
+          "p95": 0.086584,
+          "p99": 0.18181281999999985,
+          "sd": 0.024097643187323374
+        },
+        "refresh_token_generation_ms": {
+          "avg": 0.06358358,
+          "min": 0.03479,
+          "max": 0.21579,
+          "p50": 0.0620295,
+          "p95": 0.083451,
+          "p99": 0.21152112000000003,
+          "sd": 0.025079062856167494
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 0.062046141414141415,
+          "min": 0.03479,
+          "max": 0.211478,
+          "p50": 0.06179,
+          "p95": 0.08244589999999999,
+          "p99": 0.1121863599999996,
+          "sd": 0.019973501906381978
+        },
+        "total_ms": {
+          "avg": 0.12574395999999996,
+          "min": 0.0699,
+          "max": 0.29659800000000003,
+          "p50": 0.1214305,
+          "p95": 0.1778665,
+          "p99": 0.29412399,
+          "sd": 0.03809118221686484
+        },
+        "overhead_avg_ms": 0.06358357999999995,
+        "jwt_issuance_over_pure_avg_ms": 0.0013359599999999902,
+        "jwt_issuance_over_pure_ratio": 1.0219642045086494,
+        "jwt_issuance_over_pure_gc_free_avg_ms": 0.008599020202020191,
+        "jwt_issuance_over_pure_gc_free_ratio": 1.1610356410928666,
+        "cpu_pct": {
+          "avg": 96.45061728395062,
+          "min": 96.45061728395062,
+          "max": 96.45061728395062,
+          "p50": 96.45061728395062,
+          "p95": 96.45061728395062,
+          "p99": 96.45061728395062,
+          "sd": 959.6715249870949
+        },
+        "cpu_time_ms": {
+          "avg": 0.1,
+          "min": 0.1,
+          "max": 0.1,
+          "p50": 0.1,
+          "p95": 0.1,
+          "p99": 0.1,
+          "sd": 0.99498743710662
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 0.05,
+          "min": 0.05,
+          "max": 0.05,
+          "p50": 0.05,
+          "p95": 0.05,
+          "p99": 0.05,
+          "sd": 0.49749371855331
+        },
+        "memory_alloc_kb": {
+          "avg": 3098.07546875,
+          "min": 3098.07546875,
+          "max": 3098.07546875,
+          "p50": 3098.07546875,
+          "p95": 3098.07546875,
+          "p99": 3098.07546875,
+          "sd": 622.3219113248109
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 30.930390625,
+          "min": 30.930390625,
+          "max": 30.930390625,
+          "p50": 30.930390625,
+          "p95": 30.930390625,
+          "p99": 30.930390625,
+          "sd": 0.14203329120507938
+        },
+        "memory_sys_kb": {
+          "avg": 34390.2578125,
+          "min": 34390.2578125,
+          "max": 34390.2578125,
+          "p50": 34390.2578125,
+          "p95": 34390.2578125,
+          "p99": 34390.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 38497.24,
+          "min": 38497.24,
+          "max": 38497.24,
+          "p50": 38497.24,
+          "p95": 38497.24,
+          "p99": 38497.24,
+          "sd": 652.6729520977563
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 412,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 412,
+            "login_total": 0,
+            "refresh_success": 412,
+            "refresh_failed": 0,
+            "refresh_total": 412
+          },
+          "token_generation_ms": {
+            "avg": 0.159881067961165,
+            "min": 0.051,
+            "max": 1.073,
+            "med": 0.138,
+            "p95": 0.2564999999999999,
+            "p99": 0.55067
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.07419417475728157,
+            "min": 0.034,
+            "max": 1.721,
+            "med": 0.0465,
+            "p95": 0.12524999999999994,
+            "p99": 1.0663399999999998
+          },
+          "refresh_ms": {
+            "avg": 286.37336102669906,
+            "min": 21.96647,
+            "max": 858.221189,
+            "med": 260.2965275,
+            "p95": 575.4332272500001,
+            "p99": 730.4655238299997
+          },
+          "e2e_ms": {
+            "avg": 12.27342991019418,
+            "min": 9.431963,
+            "max": 31.402803,
+            "med": 11.4413135,
+            "p95": 17.0403964,
+            "p99": 24.57171687999999
+          },
+          "throughput_ok_per_s": 13.73,
+          "request_rate_per_s": 13.73,
+          "login_ms": {
+            "avg": 380.2564389757282,
+            "min": 135.34002,
+            "max": 1123.097275,
+            "med": 351.83306000000005,
+            "p95": 706.1472080499999,
+            "p99": 844.2684220999997
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 414,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 414,
+            "login_total": 0,
+            "refresh_success": 414,
+            "refresh_failed": 0,
+            "refresh_total": 414
+          },
+          "token_generation_ms": {
+            "avg": 0.23225603864734315,
+            "min": 0.07,
+            "max": 10.9,
+            "med": 0.152,
+            "p95": 0.3871999999999982,
+            "p99": 1.6528500000000002
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.06119806763285021,
+            "min": 0.033,
+            "max": 1.9,
+            "med": 0.046,
+            "p95": 0.0770999999999998,
+            "p99": 0.4650000000000009
+          },
+          "refresh_ms": {
+            "avg": 1030.4342226449282,
+            "min": 23.940199,
+            "max": 3295.138346,
+            "med": 965.736684,
+            "p95": 2087.0835766499995,
+            "p99": 2936.862233900001
+          },
+          "e2e_ms": {
+            "avg": 13.074831461352654,
+            "min": 9.673391,
+            "max": 38.586831,
+            "med": 11.540804000000001,
+            "p95": 22.807535599999976,
+            "p99": 30.18346016
+          },
+          "throughput_ok_per_s": 13.8,
+          "request_rate_per_s": 13.8,
+          "login_ms": {
+            "avg": 1130.13071347343,
+            "min": 180.282241,
+            "max": 3706.656155,
+            "med": 1034.5013055,
+            "p95": 2161.8313003,
+            "p99": 3148.6369985700007
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 427,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 427,
+            "login_total": 0,
+            "refresh_success": 427,
+            "refresh_failed": 0,
+            "refresh_total": 427
+          },
+          "token_generation_ms": {
+            "avg": 0.2003770491803282,
+            "min": 0.061,
+            "max": 2.596,
+            "med": 0.16,
+            "p95": 0.36309999999999987,
+            "p99": 1.0131600000000016
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.07895316159250572,
+            "min": 0.034,
+            "max": 2.092,
+            "med": 0.047,
+            "p95": 0.13209999999999986,
+            "p99": 1.136320000000002
+          },
+          "refresh_ms": {
+            "avg": 1719.9567279672142,
+            "min": 82.807348,
+            "max": 6215.71232,
+            "med": 1544.696147,
+            "p95": 3605.283223899999,
+            "p99": 4731.827831660003
+          },
+          "e2e_ms": {
+            "avg": 15.626178379391087,
+            "min": 9.720413,
+            "max": 81.071248,
+            "med": 11.852007,
+            "p95": 45.16892169999998,
+            "p99": 61.98674832000002
+          },
+          "throughput_ok_per_s": 14.23,
+          "request_rate_per_s": 14.23,
+          "login_ms": {
+            "avg": 1846.0144099273994,
+            "min": 164.681665,
+            "max": 6531.076197,
+            "med": 1670.546872,
+            "p95": 3611.0918311,
+            "p99": 4460.4145533
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    },
+    {
+      "algorithm": "EdDSA",
+      "jws_alg": "EdDSA",
+      "category": "Classical",
+      "isolated": {
+        "iterations": 100,
+        "endpoint": "/api/benchmark/jwt-issuance",
+        "pure_signing_endpoint": "/api/benchmark/pure-signing",
+        "metric_scope": "jwt_issuance",
+        "pure_signing_metric_scope": "pure_signing",
+        "jwt_issuance_success_count": 100,
+        "jwt_issuance_failed_count": 0,
+        "pure_signing_success_count": 100,
+        "pure_signing_failed_count": 0,
+        "gc_contaminated_count": 0,
+        "pure_signing_gc_contaminated_count": 0,
+        "pure_signing_ms": {
+          "avg": 0.02734856999999999,
+          "min": 0.021979,
+          "max": 0.050949,
+          "p50": 0.02469,
+          "p95": 0.040697499999999984,
+          "p99": 0.04980159000000001,
+          "sd": 0.006467314693526209
+        },
+        "pure_signing_gc_free_ms": {
+          "avg": 0.02734856999999999,
+          "min": 0.021979,
+          "max": 0.050949,
+          "p50": 0.02469,
+          "p95": 0.040697499999999984,
+          "p99": 0.04980159000000001,
+          "sd": 0.006467314693526209
+        },
+        "pure_signing_memory_alloc_kb": {
+          "avg": 2768.80078125,
+          "sd": 429.1572757876187
+        },
+        "pure_signing_memory_rss_kb": {
+          "avg": 37395.36,
+          "sd": 310.8021724505798
+        },
+        "token_generation_ms": {
+          "avg": 0.050790379999999996,
+          "min": 0.02725,
+          "max": 0.15491,
+          "p50": 0.044788999999999995,
+          "p95": 0.09610949999999997,
+          "p99": 0.12878291000000014,
+          "sd": 0.02289446246574922
+        },
+        "token_generation_gc_free_ms": {
+          "avg": 0.050790379999999996,
+          "min": 0.02725,
+          "max": 0.15491,
+          "p50": 0.044788999999999995,
+          "p95": 0.09610949999999997,
+          "p99": 0.12878291000000014,
+          "sd": 0.02289446246574922
+        },
+        "refresh_token_generation_ms": {
+          "avg": 0.04786096999999999,
+          "min": 0.027951,
+          "max": 0.244399,
+          "p50": 0.0426905,
+          "p95": 0.070684,
+          "p99": 0.1515261100000005,
+          "sd": 0.025479985418149283
+        },
+        "refresh_token_generation_gc_free_ms": {
+          "avg": 0.04786096999999999,
+          "min": 0.027951,
+          "max": 0.244399,
+          "p50": 0.0426905,
+          "p95": 0.070684,
+          "p99": 0.1515261100000005,
+          "sd": 0.025479985418149283
+        },
+        "total_ms": {
+          "avg": 0.09865135000000003,
+          "min": 0.05585,
+          "max": 0.370879,
+          "p50": 0.08863,
+          "p95": 0.159706,
+          "p99": 0.24744382000000065,
+          "sd": 0.04219091092270349
+        },
+        "overhead_avg_ms": 0.04786097000000003,
+        "jwt_issuance_over_pure_avg_ms": 0.023441810000000007,
+        "jwt_issuance_over_pure_ratio": 1.8571493866041267,
+        "jwt_issuance_over_pure_gc_free_avg_ms": 0.023441810000000007,
+        "jwt_issuance_over_pure_gc_free_ratio": 1.8571493866041267,
+        "cpu_pct": {
+          "avg": 91.69432778888299,
+          "min": 91.69432778888299,
+          "max": 91.69432778888299,
+          "p50": 91.69432778888299,
+          "p95": 91.69432778888299,
+          "p99": 91.69432778888299,
+          "sd": 912.3470420387501
+        },
+        "cpu_time_ms": {
+          "avg": 0.1,
+          "min": 0.1,
+          "max": 0.1,
+          "p50": 0.1,
+          "p95": 0.1,
+          "p99": 0.1,
+          "sd": 0.99498743710662
+        },
+        "cpu_time_per_token_ms": {
+          "avg": 0.05,
+          "min": 0.05,
+          "max": 0.05,
+          "p50": 0.05,
+          "p95": 0.05,
+          "p99": 0.05,
+          "sd": 0.49749371855331
+        },
+        "memory_alloc_kb": {
+          "avg": 3013.043671875,
+          "min": 3013.043671875,
+          "max": 3013.043671875,
+          "p50": 3013.043671875,
+          "p95": 3013.043671875,
+          "p99": 3013.043671875,
+          "sd": 555.0814685410108
+        },
+        "memory_alloc_delta_kb": {
+          "avg": 18.443046875,
+          "min": 18.443046875,
+          "max": 18.443046875,
+          "p50": 18.443046875,
+          "p95": 18.443046875,
+          "p99": 18.443046875,
+          "sd": 0.31639813839910924
+        },
+        "memory_sys_kb": {
+          "avg": 38486.2578125,
+          "min": 38486.2578125,
+          "max": 38486.2578125,
+          "p50": 38486.2578125,
+          "p95": 38486.2578125,
+          "p99": 38486.2578125,
+          "sd": 0
+        },
+        "memory_rss_kb": {
+          "avg": 38104.92,
+          "min": 38104.92,
+          "max": 38104.92,
+          "p50": 38104.92,
+          "p95": 38104.92,
+          "p99": 38104.92,
+          "sd": 636.4486103370795
+        }
+      },
+      "stress": [
+        {
+          "vus": 10,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 395,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 395,
+            "login_total": 0,
+            "refresh_success": 395,
+            "refresh_failed": 0,
+            "refresh_total": 395
+          },
+          "token_generation_ms": {
+            "avg": 0.13762025316455684,
+            "min": 0.037,
+            "max": 2.877,
+            "med": 0.1,
+            "p95": 0.2947999999999993,
+            "p99": 0.7959400000000006
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.04369620253164554,
+            "min": 0.026,
+            "max": 1.184,
+            "med": 0.036,
+            "p95": 0.0635999999999999,
+            "p99": 0.17666000000000037
+          },
+          "refresh_ms": {
+            "avg": 296.4228204455697,
+            "min": 22.56332,
+            "max": 963.748702,
+            "med": 259.684978,
+            "p95": 630.1760681999998,
+            "p99": 792.74321864
+          },
+          "e2e_ms": {
+            "avg": 13.344549541772137,
+            "min": 9.708625,
+            "max": 240.939222,
+            "med": 11.410424,
+            "p95": 19.446006799999992,
+            "p99": 30.980517440000014
+          },
+          "throughput_ok_per_s": 13.17,
+          "request_rate_per_s": 13.17,
+          "login_ms": {
+            "avg": 406.9543005772154,
+            "min": 114.451988,
+            "max": 1627.272317,
+            "med": 365.378663,
+            "p95": 764.0477251999995,
+            "p99": 1088.9540122600001
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 30,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 410,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 410,
+            "login_total": 0,
+            "refresh_success": 410,
+            "refresh_failed": 0,
+            "refresh_total": 410
+          },
+          "token_generation_ms": {
+            "avg": 0.12309512195121959,
+            "min": 0.039,
+            "max": 2.168,
+            "med": 0.098,
+            "p95": 0.19654999999999997,
+            "p99": 0.6774199999999948
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.045304878048780466,
+            "min": 0.027,
+            "max": 1.088,
+            "med": 0.036,
+            "p95": 0.061,
+            "p99": 0.18567999999999846
+          },
+          "refresh_ms": {
+            "avg": 1028.7551264365861,
+            "min": 82.082421,
+            "max": 3763.001245,
+            "med": 942.470239,
+            "p95": 2027.1876758499998,
+            "p99": 2427.0629365699983
+          },
+          "e2e_ms": {
+            "avg": 13.863576370731709,
+            "min": 9.772213,
+            "max": 54.525327,
+            "med": 11.705176,
+            "p95": 26.644735999999998,
+            "p99": 38.675199219999996
+          },
+          "throughput_ok_per_s": 13.67,
+          "request_rate_per_s": 13.67,
+          "login_ms": {
+            "avg": 1165.6394251658528,
+            "min": 177.790051,
+            "max": 3585.014147,
+            "med": 1059.1514565,
+            "p95": 2265.9796347999986,
+            "p99": 2887.5557789299955
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        },
+        {
+          "vus": 50,
+          "load": {
+            "executor": "constant-vus",
+            "load_model": "closed-loop",
+            "duration_seconds": 30,
+            "ramp_up_seconds": 0,
+            "steady_state_seconds": 30,
+            "ramp_down_seconds": 0,
+            "think_time_seconds": 0.05
+          },
+          "requests": {
+            "benchmark_token_success": 420,
+            "benchmark_token_failed": 0,
+            "benchmark_token_total": 420,
+            "login_total": 0,
+            "refresh_success": 420,
+            "refresh_failed": 0,
+            "refresh_total": 420
+          },
+          "token_generation_ms": {
+            "avg": 0.11803571428571434,
+            "min": 0.029,
+            "max": 1.359,
+            "med": 0.099,
+            "p95": 0.18204999999999996,
+            "p99": 0.9218800000000008
+          },
+          "refresh_token_generation_ms": {
+            "avg": 0.04670238095238098,
+            "min": 0.027,
+            "max": 1.466,
+            "med": 0.035,
+            "p95": 0.06004999999999995,
+            "p99": 0.21034000000000003
+          },
+          "refresh_ms": {
+            "avg": 1731.595238233334,
+            "min": 107.344787,
+            "max": 7508.547104,
+            "med": 1520.5517175,
+            "p95": 3832.6103137499945,
+            "p99": 5438.95529699
+          },
+          "e2e_ms": {
+            "avg": 15.493714061904768,
+            "min": 9.550437,
+            "max": 91.485072,
+            "med": 11.7526305,
+            "p95": 37.8445255,
+            "p99": 40.30348582
+          },
+          "throughput_ok_per_s": 14,
+          "request_rate_per_s": 14,
+          "login_ms": {
+            "avg": 1894.6372535428563,
+            "min": 178.433565,
+            "max": 5706.299514,
+            "med": 1738.541241,
+            "p95": 3928.8492580499965,
+            "p99": 4870.7156444600005
+          },
+          "error_rate_pct": 0,
+          "refresh_error_rate_pct": 0
+        }
+      ],
+      "attack": null
+    }
+  ]
+}
