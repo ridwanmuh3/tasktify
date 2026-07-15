@@ -157,6 +157,38 @@ Jawaban atas "seberapa besar efeknya?" — g ≈ 1,6 (besar) dengan CI sempit. T
 
 ---
 
+## P0-7 (temuan review #7) — Anomali stress 30 VU
+
+### Masalah
+
+Naskah mengutip Login E2E Avg 640ms(standard)/683ms(precomputed) di 30 VU, dengan P95 sampai 105% lebih lambat untuk precomputed — reversal drastis yang reviewer minta ditandai sebagai anomali penting, bukan variasi biasa, dan diulang 5–10 run independen.
+
+### Kenapa penting
+
+Kalau precomputed tiba-tiba jauh lebih lambat di beban tertentu, klaim manfaat precomputation di seluruh naskah jadi tak konsisten — perlu dijelaskan atau dibuktikan tidak reproduksibel.
+
+### Yang dikerjakan
+
+Cek 3 run independen di `benchmark-results/runs/` (data setelah commit `bb5915a`, perbaikan bug atribusi GC dan data basi — bukan run yang sama dengan yang dikutip naskah lama).
+
+### Hasil
+
+Reversal drastis di satu titik VU tidak teramati — kedua algoritma monoton naik penuh di 10→30→50 VU pada ketiga run, tanpa kecuali. Skala absolut juga beda ~1,7× dari naskah (1132–1153ms vs 640–683ms di 30 VU) — kuat indikasi data lama dari environment/run berbeda.
+
+**Tapi ditemukan pola lain yang harus dilaporkan, bukan disembunyikan:** FN-DSA-512 (dynamic) konsisten sedikit lebih cepat/tinggi-throughput daripada precomputed di *setiap* VU dan hampir setiap metrik — bukan reversal drastis di satu titik, melainkan gap kecil 0,2–9,3% yang searah di semua level (detail tabel di [revisi-todo.md](revisi-todo.md#p0-7-temuan-review-7-anomali-stress-30-vu--tidak-tereproduksi-di-data-saat-ini)).
+
+Gap ini **tidak bisa dijelaskan oleh signing**: isolated benchmark (P0-1) membuktikan precomputed lebih cepat ~24,57% (p=2,11e-22), tapi selisih absolutnya cuma ~0,1–0,2 ms — negligible terhadap E2E 300–4000 ms yang >99,9%-nya bcrypt + DB. Kalau signing satu-satunya sumber, gap E2E seharusnya <0,01%, bukan 1–9%.
+
+Root cause paling mungkin: `docker-compose.benchmark.yml` menjalankan 12 container (auth+gateway × 6 algoritma) plus postgres plus todo-service, semua berbagi 2 vCPU **tanpa `cpus:`/`deploy.resources.limits` apa pun** — persis validity threat yang sudah disebut reviewer sendiri di temuan #6 (VPS 2 vCPU, load generator co-located). Container mana yang kebetulan dapat jadwal CPU lebih baik pada jendela 30 detik itu bisa menghasilkan gap seperti ini, tanpa hubungan sebab-akibat dengan algoritma.
+
+### Untuk sidang
+
+Jangan klaim "FN-DSA-512 dynamic terbukti lebih cepat E2E". Klaim yang defensible: *"reversal drastis di 30 VU pada naskah lama tidak teramati ulang; gap kecil 0,2–9,3% yang konsisten mendukung dynamic signer tetap ada di semua level VU, tapi besarnya jauh melebihi yang dapat dijelaskan selisih signing murni (~24% dari ~0,1–0,2 ms), sehingga lebih mungkin variansi penjadwalan container pada 2 vCPU tanpa isolasi CPU daripada efek algoritma."* Ini memperkuat, bukan melemahkan, narasi inti tesis: optimasi primitif kriptografi terbukti di isolated, tapi tidak otomatis diterjemahkan ke performa E2E — dan noise arsitektur bisa menutupi atau membalik efek kecil itu.
+
+Perbaikan yang disarankan (opsional, P1): tambah `cpus:`/`deploy.resources.limits` per-container agar perbandingan E2E adil, dan tambah run sampai total 5–10 sesuai rekomendasi reviewer.
+
+---
+
 ## Bonus — bug p-value Mann-Whitney
 
 Saat regenerasi stats ditemukan `p_value = 2 * (1 − normal_cdf(|z|))`. Untuk z = −9,669, `normal_cdf(9,669)` dibulatkan floating-point ke tepat 1,0, sehingga `1 − 1,0 = 0` — catastrophic cancellation, p tercetak `<1e-300`. Diganti dengan `math.erfc(|z|/√2)` (survival function langsung, tanpa pengurangan). p sekarang 4,09e-22, konsisten dengan z. Jika naskah mengutip Mann-Whitney, angka lama itu keliru.

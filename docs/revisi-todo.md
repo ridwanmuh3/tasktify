@@ -77,6 +77,65 @@ hanya @100 signer valid. Detail + interpretasi sidang: [p0-penjelasan.md](p0-pen
 
 File lokal laptop (`fndsa_precompute_profile_local_dev.json`) disimpan sebagai jejak validasi metode, bukan angka tesis.
 
+### P0-7 (temuan review #7). Anomali stress 30 VU — TIDAK TEREPRODUKSI di data saat ini
+
+Naskah lama mengutip Login E2E Avg 640/683ms, P95 907/1395ms (gap sampai 105%) di 30 VU — precomputed
+lebih lambat drastis dari standard. Reviewer minta ini diperlakukan sebagai anomali penting, bukan variasi
+biasa, dan diulang 5–10 run independen.
+
+Dicek pada 3 run yang tersimpan di `benchmark-results/runs/` (bukan naskah lama — data lahir setelah commit
+`bb5915a`, "Fix stale benchmark data and GC-attribution bugs causing invalid results", 2026-07-09):
+**reversal drastis di satu titik (30 VU) tidak teramati** — kedua algoritma monoton naik penuh di 10→30→50 VU,
+di ketiga run tanpa kecuali, dan skala absolut beda ~1,7× dari yang dikutip naskah (1132–1153ms vs 640–683ms
+di 30 VU) — indikasi kuat data lama berasal dari run/environment berbeda (kemungkinan sebelum fix bug di atas).
+
+**Tapi ditemukan pola lain yang harus dilaporkan jujur:** FN-DSA-512 (dynamic/standard) sedikit tapi
+**konsisten** lebih cepat/tinggi-throughput daripada Precomputed di *setiap* VU dan *hampir setiap* metrik —
+bukan reversal drastis di satu titik seperti naskah lama, melainkan gap kecil (0,2–9,3%) yang searah di semua level:
+
+| VU | Metrik | Precomputed | FN-DSA-512 (dynamic) | Gap |
+|---|---|---|---|---|
+| 10 | login avg | 401,4 ± 36,2 | 397,4 ± 18,1 | Precomputed 1,0% lebih lambat |
+| 10 | login P95 | 750,9 ± 99,6 | 736,5 ± 48,0 | Precomputed 2,0% lebih lambat |
+| 10 | refresh avg | 318,5 ± 14,8 | 297,8 ± 18,1 | Precomputed 7,0% lebih lambat |
+| 10 | throughput | 12,81 ± 0,75 | 13,20 ± 0,58 | Precomputed 3,0% lebih rendah |
+| 30 | login avg | 1156,0 ± 21,7 | 1136,5 ± 3,8 | Precomputed 1,7% lebih lambat |
+| 30 | login P95 | 2338,3 ± 206,1 | 2319,3 ± 27,6 | Precomputed 0,8% lebih lambat |
+| 30 | refresh avg | 1054,8 ± 9,7 | 1051,5 ± 61,8 | Precomputed 0,3% lebih lambat |
+| 30 | throughput | 13,53 ± 0,21 | 13,50 ± 0,67 | Precomputed 0,2% lebih tinggi |
+| 50 | login avg | 1960,8 ± 154,3 | 1869,3 ± 62,2 | Precomputed 4,9% lebih lambat |
+| 50 | login P95 | 4082,8 ± 454,9 | 3736,1 ± 14,8 | Precomputed 9,3% lebih lambat |
+| 50 | refresh avg | 1793,4 ± 82,8 | 1786,5 ± 48,7 | Precomputed 0,4% lebih lambat |
+| 50 | throughput | 13,67 ± 0,86 | 13,99 ± 0,03 | Precomputed 2,3% lebih rendah |
+
+Throughput relatif datar (~12,8–14 req/s) di semua level VU untuk kedua algoritma — sistem 2 vCPU sudah
+saturasi sejak 10 VU (bcrypt + DB round-trip login penuh), sehingga latensi naik mengikuti Little's Law
+(antrean bertambah linear terhadap VU saat throughput mentok).
+
+**Kenapa gap ini bukan efek algoritma signing.** Isolated benchmark (P0-1) sudah membuktikan secara statistik
+precomputed *lebih cepat* di pure signing (−24,57%, p=2,11e-22) — tapi selisih absolutnya cuma ~0,1–0,2 ms/operasi.
+Login/refresh E2E totalnya 300–4000 ms, >99,9% di antaranya bcrypt + DB round-trip, bukan signing. Kalau selisih
+signing itu satu-satunya sumber, gap E2E seharusnya tak terdeteksi (<0,01%) — bukan 1–9% yang teramati.
+
+Root cause paling mungkin: `docker-compose.benchmark.yml` menjalankan **12 container** (`bench-auth-*` +
+`bench-gw-*` × 6 algoritma) plus `bench-postgres` plus `bench-backend`, seluruhnya berbagi **2 vCPU** tanpa
+`cpus:`/`deploy.resources.limits` apa pun — tak ada isolasi CPU antar-container. Ini persis validity threat
+yang sudah disebut reviewer di temuan #6 ("hanya tersedia 2 vCPU... CPU container tidak mewakili keseluruhan
+tekanan pada host"). Container mana yang kebetulan dapat jadwal CPU lebih baik pada jendela 30 detik itu bisa
+menghasilkan gap seperti ini — tanpa hubungan sebab-akibat dengan algoritma tanda tangan.
+
+Interpretasi untuk sidang: jangan klaim "FN-DSA-512 dynamic terbukti lebih cepat secara E2E" — klaim yang
+defensible: *"reversal drastis di 30 VU pada naskah lama tidak teramati ulang; namun gap kecil (0,2–9,3%) yang
+konsisten mendukung dynamic signer terlihat di semua level VU pada arsitektur multi-container yang berbagi
+2 vCPU tanpa isolasi CPU — besarnya jauh melebihi yang dapat dijelaskan oleh selisih signing murni (~24% dari
+~0,1–0,2 ms, negligible terhadap E2E 300–4000 ms), sehingga lebih mungkin mencerminkan variansi penjadwalan
+container pada host bersama daripada efek algoritma."* Ini konsisten dengan validity threat #6 yang sudah
+diakui, dan memperkuat (bukan melemahkan) narasi inti tesis: optimasi primitif kriptografi (terbukti, isolated)
+tidak otomatis diterjemahkan ke performa aplikasi E2E (tidak terbukti, dan noise host bisa menutupinya).
+
+Tersisa (opsional, P1): tambah `cpus:`/`deploy.resources.limits` per-container di compose agar perbandingan
+E2E antar-algoritma adil (CPU-isolated), dan tambah 2–7 run lagi agar total 5–10 run sesuai rekomendasi reviewer.
+
 ### P0-1. Satukan sumber kebenaran — SELESAI (opsi A: single-run headline)
 
 Keputusan: **opsi A** — headline dari satu run + CI/Hedges dari sampel run itu.
