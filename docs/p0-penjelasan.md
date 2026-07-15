@@ -57,16 +57,28 @@ Tanpa mengukur biaya inisialisasi dan memori persisten, klaim "precomputation me
 
 Rumus break-even: `N = T_init / (T_sign_dynamic − T_sign_precomputed)`.
 
-### Hasil (laptop 4-CPU, bukan VPS)
+### Hasil — VPS 2 vCPU, 3 run independen (angka tesis)
 
-- build/init: 0,385 ms
-- persistent: **110.712 B/signer** — lebih besar dari 57.344 B "expanded key" yang dikutip reviewer, karena signer penuh menyimpan basis FFT ditambah LDL tree lengkap, bukan hanya expanded key
-- break-even: **≈2,1 tanda tangan** — biaya build terbayar setelah ~2 signature
-- RSS: ~124 KB/signer pada skala 100
+Dijalankan dengan `EMIT_PROFILE=1 go test ./fndsa -run TestReportPrecomputeProfile -count=1`, 3× terpisah. Data mentah per-run: `fndsa_precompute_profile_run_1.json`–`run_3.json`. Headline (`fndsa_precompute_profile.json`) = median ketiganya.
+
+| Metrik | Run 1 | Run 2 | Run 3 | **Median (headline)** |
+|---|---|---|---|---|
+| build/init (ms) | 0,2153 | 0,2461 | 0,2787 | **0,2461** |
+| sign dynamic (ms) | 0,3767 | 0,5084 | 0,4942 | **0,4942** |
+| sign precomputed (ms) | 0,3281 | 0,3016 | 0,3229 | **0,3229** |
+| hemat/signature (ms) | 0,0485 | 0,2068 | 0,1713 | **0,1713** |
+| break-even (signature) | 4,436 | 1,190 | 1,627 | **1,627** |
+| RSS delta @100 signer (KB) | 12.836 | 13.752 | 15.452 | **13.752** (≈137,5 KB/signer) |
+
+Persistent bytes per key: **110.712 B (~108,1 KiB)**, identik di ketiga run (deterministik — ukuran struct+basis FFT+LDL tree tetap untuk degree 512) — lebih besar dari 57.344 B "expanded key" yang dikutip reviewer, karena signer penuh menyimpan basis FFT ditambah LDL tree lengkap, bukan hanya expanded key.
+
+**Run 1 adalah outlier** — hemat/signature-nya (0,0485 ms) jauh lebih kecil dari run 2/3 (0,17–0,21 ms) meski build cost serupa, mendorong break-even naik ke 4,4. Kemungkinan noisy-neighbor pada VPS 2 vCPU bersama (persis gejala yang disebut reviewer untuk stress test 30 VU) — bukan alasan untuk membuang run itu, tapi alasan untuk melaporkan rentang, bukan angka tunggal.
+
+RSS delta @1 dan @10 signer (tak ditampilkan di tabel) berosilasi di sekitar nol dan kadang negatif — pada skala sekecil itu, fluktuasi heap Go runtime sendiri lebih besar dari alokasi satu/sepuluh signer (~108 KiB–1,08 MiB), jadi sinyalnya tenggelam di noise. Hanya skala 100 signer (>10 MiB) yang RSS delta-nya reliabel.
 
 ### Untuk sidang
 
-Break-even ≈2 berarti biaya inisialisasi hampir sepadan satu operasi signing — trade-off startup sangat kecil untuk workload yang menerbitkan banyak token. **Wajib dijalankan ulang di VPS** karena break-even bergantung CPU (init dan selisih sign sama-sama menskala dengan kecepatan prosesor). Angka laptop hanya validasi metode.
+Break-even median ≈1,6 signature (rentang 1,2–4,4 dari 3 run) — biaya inisialisasi terbayar setelah 2–5 signature untuk kasus terburuk, dan lebih cepat lagi untuk kasus umum. Trade-off startup kecil untuk workload yang menerbitkan banyak token. Kalau ditanya kenapa rentangnya lebar: jawab jujur — 3 run pada VPS bersama menunjukkan variansi, konsisten dengan yang reviewer duga soal noisy-neighbor; median dipakai sebagai estimasi titik, bukan run tunggal yang kebetulan bagus.
 
 Perintah di VPS:
 

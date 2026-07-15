@@ -1,21 +1,26 @@
 {
-  "break_even_signatures": 2.14547499283203,
-  "build_median_ms": 0.385367,
-  "build_reps": 50,
-  "degree": 512,
+  "_note": "Headline = median of 3 independent runs on the target VPS (2 vCPU). Per-run raw data: fndsa_precompute_profile_run_1.json..run_3.json. run_1 is a low-saving outlier (see docs/p0-penjelasan.md P0-2/P0-3); local_dev file is a 4-core laptop run kept only for method validation, not a thesis figure.",
+  "aggregation": "median of 3 runs",
+  "runs": 3,
   "host": {
     "goarch": "amd64",
     "goos": "linux",
-    "num_cpu": 4
+    "num_cpu": 2
   },
+  "degree": 512,
+  "build_reps": 50,
+  "sign_reps": 200,
+  "build_median_ms": 0.2461195,
+  "sign_dynamic_median_ms": 0.494203,
+  "sign_precomputed_median_ms": 0.3229285,
+  "saving_per_signature_ms": 0.1712745,
+  "break_even_signatures": 1.6270548155154445,
+  "break_even_signatures_range": [1.1898452985255017, 4.435874189992479],
   "persistent_bytes_per_key": 110712,
-  "rss_delta_kb_by_signers": {
-    "1": 8,
-    "10": -292,
-    "100": 12404
+  "rss_delta_kb_by_signers_median": {
+    "1": 20,
+    "10": -552,
+    "100": 13752
   },
-  "saving_per_signature_ms": 0.17961850000000001,
-  "sign_dynamic_median_ms": 0.598777,
-  "sign_precomputed_median_ms": 0.4191585,
-  "sign_reps": 200
+  "rss_kb_per_signer_at_100": 137.52
 }

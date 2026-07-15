@@ -44,19 +44,29 @@ Divalidasi pada sampel nyata (`.2.ndjson`): **−24,57%, p = 2,11e-22, Hedges' g
 95% CI [0,0945, 0,1352]** — efek besar, membantah `welch.json` basi (−3,1% negligible).
 Tersisa: jalankan pada artefak resmi setelah P0-1 diputuskan; opsional bootstrap CI + Mann-Whitney (helper sudah ada).
 
-### P0-2 + P0-3. Startup cost, break-even, memori persisten — emitter SELESAI (angka butuh VPS)
+### P0-2 + P0-3. Startup cost, break-even, memori persisten — SELESAI (angka VPS diperoleh)
 
 `backend/pkg/fndsa/precompute_profile_test.go` — `TestReportPrecomputeProfile` (gated `EMIT_PROFILE=1`)
-emit `benchmark-results/fndsa_precompute_profile.json`: build/init ms, `persistent_bytes_per_key`,
-sign dynamic vs precomputed, `saving_per_signature_ms`, **`break_even_signatures`**, `rss_delta_kb_by_signers` (1/10/100).
-Rumus: `N = T_init / (T_sign_dyn − T_sign_pre)`.
+emit build/init ms, `persistent_bytes_per_key`, sign dynamic vs precomputed, `saving_per_signature_ms`,
+**`break_even_signatures`**, `rss_delta_kb_by_signers` (1/10/100). Rumus: `N = T_init / (T_sign_dyn − T_sign_pre)`.
 
-Hasil lokal (laptop 4-CPU, **bukan VPS** — hanya validasi metode):
-init 0,385 ms; persistent **110.712 B/key** (>57 KB expanded-key karena termasuk basis FFT + LDL tree penuh);
-sign 0,599 → 0,419 ms; **break-even ≈ 2,1 signature**; RSS ≈ 124 KB/signer (pada 100 signer).
+**Angka tesis — VPS 2 vCPU, 3 run independen** (`fndsa_precompute_profile_run_1..3.json`;
+headline median = `fndsa_precompute_profile.json`):
 
-Tersisa: **jalankan di VPS 2-vCPU** untuk angka tesis (`EMIT_PROFILE=1 go test ./fndsa -run TestReportPrecomputeProfile`).
-Break-even & init bergantung CPU → wajib per-lingkungan.
+| Metrik | Median (headline) | Rentang 3-run |
+|---|---|---|
+| build/init | 0,2461 ms | 0,2153–0,2787 |
+| persistent bytes/key | 110.712 B (~108,1 KiB) | identik di 3 run |
+| sign dynamic → precomputed | 0,4942 → 0,3229 ms | — |
+| hemat/signature | 0,1713 ms | 0,0485–0,2068 |
+| **break-even** | **1,627 signature** | 1,190–4,436 |
+| RSS delta @100 signer | 13.752 KB (≈137,5 KB/signer) | 12.836–15.452 |
+
+Run 1 outlier (break-even 4,4, hemat kecil) — kemungkinan noisy-neighbor VPS 2-vCPU bersama, dilaporkan
+sebagai rentang bukan dibuang. RSS @1/@10 signer terlalu kecil untuk terukur reliabel (noise heap Go > sinyal);
+hanya @100 signer valid. Detail + interpretasi sidang: [p0-penjelasan.md](p0-penjelasan.md#p0-2-dan-p0-3--startup-cost-break-even-memori-persisten).
+
+File lokal laptop (`fndsa_precompute_profile_local_dev.json`) disimpan sebagai jejak validasi metode, bukan angka tesis.
 
 ### P0-1. Satukan sumber kebenaran — SELESAI (opsi A: single-run headline)
 
