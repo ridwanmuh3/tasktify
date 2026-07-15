@@ -318,7 +318,8 @@ Setiap baris di bawah dipetakan ke bagian spesifik RFC 7519 [1] (JSON Web Token)
 | Cross-algorithm injection | Covered | k6 (#8) + `pkg/jwt` | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 |
 | RS256→HS256 key confusion (kunci publik dipakai sebagai HMAC secret) | Covered | k6 (#9) + `pkg/utils/jwtutils` (`TestAttack_RS256ToHS256KeyConfusion`) | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 (contoh literal di teks RFC) |
 | Issuer tidak valid / missing issuer | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.1; RFC 8725 [2] §3.8 |
-| Audience tidak valid / missing audience | Gap | Parser mendukung `WithAudience`, tetapi aplikasi belum mengatur `aud` | RFC 7519 [1] §4.1.3; RFC 8725 [2] §3.9 (gap belum ditutup) |
+| Audience tidak valid / missing audience | Covered | `pkg/utils/jwtutils` menerbitkan `aud` (`JWT_AUDIENCE`) dan memvalidasinya; `TestJWTUtilsValidatesAudience` | RFC 7519 [1] §4.1.3; RFC 8725 [2] §3.9 |
+| Header pembawa/rujukan kunci (`jku`/`jwk`/`x5u`/`x5c`/`x5t`) | Covered | `pkg/utils/jwtutils` menolak header pembawa kunci; `TestJWTUtilsRejectsUnsupportedJOSEHeaders` | RFC 7515 [8] §4.1.4–§4.1.8; RFC 8725 [2] §3.10 Do Not Trust Received Public Keys |
 | Subject kosong/tidak valid | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.2 |
 | `nbf` di masa depan | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.5 |
 | `iat` tidak logis | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.6; RFC 8725 [2] §3.10 |

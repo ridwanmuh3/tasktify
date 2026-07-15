@@ -12,6 +12,11 @@ import (
 )
 
 func newSecurityTestJWT(t *testing.T) (JwtUtil, *jwtlib.SigningMethodFNDSAPrecomputed) {
+	util, method, _ := newSecurityTestJWTAudience(t, "")
+	return util, method
+}
+
+func newSecurityTestJWTAudience(t *testing.T, audience string) (JwtUtil, *jwtlib.SigningMethodFNDSAPrecomputed, []byte) {
 	t.Helper()
 	skey, vkey, err := fndsa.KeyGen(9, nil)
 	if err != nil {
@@ -23,14 +28,14 @@ func newSecurityTestJWT(t *testing.T) (JwtUtil, *jwtlib.SigningMethodFNDSAPrecom
 	}
 	method := &jwtlib.SigningMethodFNDSAPrecomputed{Name: jwtlib.AlgFNDSA512}
 	method.SetPrecomputedSigner(signer)
-	util := NewMultiAlgJwtUtil("tasktify", 60, "FN-DSA-Precomputed-512", map[string]*AlgConfig{
+	util := NewMultiAlgJwtUtil("tasktify", audience, 60, "FN-DSA-Precomputed-512", map[string]*AlgConfig{
 		"FN-DSA-Precomputed-512": {
 			Method:    method,
 			SignKey:   nil,
 			VerifyKey: vkey,
 		},
 	})
-	return util, method
+	return util, method, vkey
 }
 
 func baseSecurityClaims(tokenUse string) JWTClaims {
@@ -145,6 +150,12 @@ func TestJWTUtilsRejectsUnsupportedJOSEHeaders(t *testing.T) {
 		{name: "altered typ", header: map[string]any{"typ": "JWT"}},
 		{name: "token type confusion", header: map[string]any{"typ": TokenTypeRefresh}},
 		{name: "algorithm case variation", header: map[string]any{"alg": "fn-dsa-512"}},
+		// RFC 8725 §3.10: headers that carry or reference a public key.
+		{name: "jku header", header: map[string]any{"jku": "https://evil.example/keys"}},
+		{name: "jwk header", header: map[string]any{"jwk": map[string]any{"kty": "oct", "k": "AAAA"}}},
+		{name: "x5u header", header: map[string]any{"x5u": "https://evil.example/cert"}},
+		{name: "x5c header", header: map[string]any{"x5c": []string{"MIIB"}}},
+		{name: "x5t header", header: map[string]any{"x5t": "thumbprint"}},
 	}
 
 	for _, tc := range tests {
@@ -162,5 +173,53 @@ func TestJWTUtilsRejectsOversizedCompactToken(t *testing.T) {
 	util, _ := newSecurityTestJWT(t)
 	if _, err := util.Parse(strings.Repeat("a", maxJWTCompactBytes+1)); err == nil {
 		t.Fatal("oversized token accepted")
+	}
+}
+
+// TestJWTUtilsValidatesAudience covers RFC 8725 §3.9: when an audience is
+// configured, the correct aud passes while a wrong or missing aud is rejected.
+func TestJWTUtilsValidatesAudience(t *testing.T) {
+	const aud = "tasktify-api"
+	util, method, _ := newSecurityTestJWTAudience(t, aud)
+
+	cases := []struct {
+		name       string
+		audience   jwtlib.ClaimStrings
+		wantReject bool
+	}{
+		{name: "correct audience", audience: jwtlib.ClaimStrings{aud}, wantReject: false},
+		{name: "wrong audience", audience: jwtlib.ClaimStrings{"other-service"}, wantReject: true},
+		{name: "missing audience", audience: nil, wantReject: true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			claims := baseSecurityClaims(TokenUseAccess)
+			claims.Audience = tc.audience
+			_, err := util.Parse(signSecurityClaims(t, method, claims, nil))
+			if tc.wantReject && err == nil {
+				t.Fatal("token with invalid audience accepted")
+			}
+			if !tc.wantReject && err != nil {
+				t.Fatalf("token with correct audience rejected: %v", err)
+			}
+		})
+	}
+}
+
+// TestJWTUtilsIssuesConfiguredAudience covers the sign side: a token issued by
+// Sign() carries the configured aud and round-trips through Parse().
+func TestJWTUtilsIssuesConfiguredAudience(t *testing.T) {
+	util, _, _ := newSecurityTestJWTAudience(t, "tasktify-api")
+	token, err := util.Sign(&JWTPayload{
+		UserID:   uuid.New(),
+		Email:    "issuer@example.test",
+		TokenUse: TokenUseAccess,
+	})
+	if err != nil {
+		t.Fatalf("sign failed: %v", err)
+	}
+	if _, err := util.Parse(token); err != nil {
+		t.Fatalf("self-issued token with audience rejected: %v", err)
 	}
 }

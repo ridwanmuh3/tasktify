@@ -66,6 +66,30 @@ func (c JWTClaims) Validate() error {
 	return nil
 }
 
+// audienceClaim returns the aud claim value, or nil when no audience is
+// configured so the (omitempty) claim is left off the token entirely.
+func audienceClaim(audience string) jwt.ClaimStrings {
+	if audience == "" {
+		return nil
+	}
+	return jwt.ClaimStrings{audience}
+}
+
+// parserOptions builds the shared parser validation options. Audience is
+// enforced only when configured (RFC 8725 §3.9); issuer and iat are always
+// validated.
+func parserOptions(issuer, audience string, algs []string) []jwt.ParserOption {
+	opts := []jwt.ParserOption{
+		jwt.WithValidMethods(algs),
+		jwt.WithIssuer(issuer),
+		jwt.WithIssuedAt(),
+	}
+	if audience != "" {
+		opts = append(opts, jwt.WithAudience(audience))
+	}
+	return opts
+}
+
 func TokenTypeForUse(tokenUse string) string {
 	switch tokenUse {
 	case TokenUseRefresh:
@@ -105,6 +129,7 @@ func normalizeAllowedAlgs(algs []string) []string {
 type jwtUtil struct {
 	allowedAlgs []string
 	issuer      string
+	audience    string
 	verifyKey   []byte
 	method      jwt.SigningMethod
 	duration    int
@@ -116,6 +141,7 @@ func NewJwtUtil(config *viper.Viper, verifyKey []byte) JwtUtil {
 	return &jwtUtil{
 		allowedAlgs: normalizeAllowedAlgs(config.GetStringSlice("JWT_ALLOWED_ALGS")),
 		issuer:      config.GetString("JWT_ISSUER"),
+		audience:    config.GetString("JWT_AUDIENCE"),
 		verifyKey:   verifyKey,
 		duration:    config.GetInt("JWT_TOKEN_DURATION"),
 	}
@@ -127,6 +153,7 @@ func NewJwtUtilWithSigner(config *viper.Viper, method jwt.SigningMethod, verifyK
 	return &jwtUtil{
 		allowedAlgs: normalizeAllowedAlgs(config.GetStringSlice("JWT_ALLOWED_ALGS")),
 		issuer:      config.GetString("JWT_ISSUER"),
+		audience:    config.GetString("JWT_AUDIENCE"),
 		verifyKey:   verifyKey,
 		method:      method,
 		duration:    config.GetInt("JWT_TOKEN_DURATION"),
@@ -151,6 +178,7 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
 			Subject:   payload.UserID.String(),
+			Audience:  audienceClaim(j.audience),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(currentTime.Add(time.Duration(j.duration) * time.Minute)),
 			Issuer:    j.issuer,
@@ -172,11 +200,7 @@ func (j *jwtUtil) Parse(token string) (*JWTClaims, error) {
 		return nil, errors.New("token exceeds maximum compact size")
 	}
 
-	parser := jwt.NewParser(
-		jwt.WithValidMethods(j.allowedAlgs),
-		jwt.WithIssuer(j.issuer),
-		jwt.WithIssuedAt(),
-	)
+	parser := jwt.NewParser(parserOptions(j.issuer, j.audience, j.allowedAlgs)...)
 
 	parsedToken, err := parser.ParseWithClaims(token, &JWTClaims{}, func(t *jwt.Token) (any, error) {
 		return j.verifyKey, nil
@@ -200,6 +224,7 @@ func (j *jwtUtil) Parse(token string) (*JWTClaims, error) {
 
 type multiAlgJwtUtil struct {
 	issuer     string
+	audience   string
 	duration   int
 	defaultAlg string
 	configs    map[string]*AlgConfig // alg name -> config
@@ -208,10 +233,12 @@ type multiAlgJwtUtil struct {
 // NewMultiAlgJwtUtil creates a JwtUtil that supports multiple signing algorithms.
 // defaultAlg is used when JWTPayload.Algorithm is empty.
 // For verification, the algorithm is read from the token header and the
-// corresponding verify key is returned.
-func NewMultiAlgJwtUtil(issuer string, duration int, defaultAlg string, configs map[string]*AlgConfig) JwtUtil {
+// corresponding verify key is returned. audience enables the aud claim
+// (RFC 8725 §3.9); pass "" to disable audience issuance and validation.
+func NewMultiAlgJwtUtil(issuer, audience string, duration int, defaultAlg string, configs map[string]*AlgConfig) JwtUtil {
 	return &multiAlgJwtUtil{
 		issuer:     issuer,
+		audience:   audience,
 		duration:   duration,
 		defaultAlg: defaultAlg,
 		configs:    configs,
@@ -242,6 +269,7 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
 			Subject:   payload.UserID.String(),
+			Audience:  audienceClaim(m.audience),
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(currentTime.Add(time.Duration(m.duration) * time.Minute)),
 			Issuer:    m.issuer,
@@ -263,11 +291,7 @@ func (m *multiAlgJwtUtil) Parse(tokenStr string) (*JWTClaims, error) {
 
 	allowedAlgs := m.allowedHeaderAlgs()
 
-	parser := jwt.NewParser(
-		jwt.WithValidMethods(allowedAlgs),
-		jwt.WithIssuer(m.issuer),
-		jwt.WithIssuedAt(),
-	)
+	parser := jwt.NewParser(parserOptions(m.issuer, m.audience, allowedAlgs)...)
 
 	parsedToken, err := parser.ParseWithClaims(tokenStr, &JWTClaims{}, func(t *jwt.Token) (any, error) {
 		// Return the correct verify key based on the token's algorithm
@@ -327,12 +351,23 @@ func (m *multiAlgJwtUtil) allowedHeaderAlgs() []string {
 	return algs
 }
 
+// keyBearingHeaders carry or reference a public key inside the token. Trusting
+// them lets an attacker point verification at a key they control. This service
+// resolves keys only from local configuration, so their presence is rejected
+// outright (RFC 8725 §3.10 Do Not Trust Received Public Keys).
+var keyBearingHeaders = []string{"jku", "jwk", "x5u", "x5c", "x5t", "x5t#S256"}
+
 func validateTokenTypeHeader(token *jwt.Token, tokenUse string) error {
 	if _, ok := token.Header["crit"]; ok {
 		return errors.New("crit header is not supported")
 	}
 	if _, ok := token.Header["kid"]; ok {
 		return errors.New("kid header is not supported")
+	}
+	for _, h := range keyBearingHeaders {
+		if _, ok := token.Header[h]; ok {
+			return fmt.Errorf("%s header is not supported", h)
+		}
 	}
 
 	expected := TokenTypeForUse(tokenUse)

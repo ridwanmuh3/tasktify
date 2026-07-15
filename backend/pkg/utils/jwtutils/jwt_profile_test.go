@@ -207,7 +207,7 @@ func newTestFNDSAJwtUtilWithMethod(t *testing.T, issuer string) (JwtUtil, *jwt.S
 			VerifyKey: vk,
 		},
 	}
-	return NewMultiAlgJwtUtil(issuer, 60, "FN-DSA-Precomputed-512", configs), method
+	return NewMultiAlgJwtUtil(issuer, "", 60, "FN-DSA-Precomputed-512", configs), method
 }
 
 func decodeJWTHeader(t *testing.T, tokenString string) map[string]any {

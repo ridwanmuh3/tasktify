@@ -72,6 +72,7 @@ services:
       JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
+      JWT_AUDIENCE: tasktify-api
       JWT_TOKEN_DURATION: 60
     volumes:
       - ./auth-service/keys:/app/keys
@@ -153,6 +154,7 @@ services:
       JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
       KEYS_DIR: /app/keys
       JWT_ISSUER: tasktify
+      JWT_AUDIENCE: tasktify-api
       JWT_TOKEN_DURATION: 60
     # Gateway shares the same public-key files as auth-service (verify-only).
     # auth-service/keys is populated by `make keygen`.
