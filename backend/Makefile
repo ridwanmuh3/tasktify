@@ -224,6 +224,12 @@ test:
 	cd todo-service && env GOCACHE=/tmp/go-build-cache go test ./...
 	cd cmd/keygen && env GOCACHE=/tmp/go-build-cache go test ./...
 	cd pkg && env GOCACHE=/tmp/go-build-cache go test ./utils/jwtutils
+	$(MAKE) test-race
+
+# Race detector on the concurrency-sensitive crypto/JWT packages: the
+# precomputed signer is shared global state signed from many goroutines.
+test-race:
+	cd pkg && env GOCACHE=$(GOCACHE) go test -race ./fndsa ./jwt ./utils/jwtutils
 
 falcon-kat:
 	cd pkg && env GOCACHE=$(GOCACHE) go test ./fndsa -run 'TestFNDSA_(Precomputed_)?KAT$$'
@@ -385,4 +391,4 @@ attack-adversarial-compare-bench: bench-up wait-bench
 attack-adversarial-compare-remote:
 	$(MAKE) attack-adversarial-compare COMPARE_BENCH_HOST=$(HOSTINGER_BENCH_HOST)
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test falcon-kat falcon-check check prepare-bench-output bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote attack-adversarial-compare attack-adversarial-compare-bench attack-adversarial-compare-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test test-race falcon-kat falcon-check check prepare-bench-output bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote attack-adversarial-compare attack-adversarial-compare-bench attack-adversarial-compare-remote

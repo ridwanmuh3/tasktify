@@ -1,0 +1,4838 @@
+{
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [
+      {
+        "name": "stress FN-DSA-Precomputed-512 10VU",
+        "path": "::stress FN-DSA-Precomputed-512 10VU",
+        "id": "0d7954426d0c99aa83fdb8178163ca1a",
+        "groups": [],
+        "checks": [
+            {
+              "name": "[stress|FN-DSA-Precomputed-512|10VU] sign 200",
+              "path": "::stress FN-DSA-Precomputed-512 10VU::[stress|FN-DSA-Precomputed-512|10VU] sign 200",
+              "id": "d38a0beef120f417e4b265fe55a5143b",
+              "passes": 386,
+              "fails": 0
+            },
+            {
+              "name": "[stress|FN-DSA-Precomputed-512|10VU] has token",
+              "path": "::stress FN-DSA-Precomputed-512 10VU::[stress|FN-DSA-Precomputed-512|10VU] has token",
+              "id": "076a6e436c1404d06d73653bc5465915",
+              "passes": 386,
+              "fails": 0
+            }
+          ]
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "path": "::stress FN-DSA-Precomputed-512 30VU::[stress|FN-DSA-Precomputed-512|30VU] sign 200",
+              "id": "abc1a2615cc6ebbc370a0196c0f71057",
+              "passes": 389,
+              "fails": 0,
+              "name": "[stress|FN-DSA-Precomputed-512|30VU] sign 200"
+            },
+            {
+              "passes": 389,
+              "fails": 0,
+              "name": "[stress|FN-DSA-Precomputed-512|30VU] has token",
+              "path": "::stress FN-DSA-Precomputed-512 30VU::[stress|FN-DSA-Precomputed-512|30VU] has token",
+              "id": "3ce19209188b9a24a20cbaff84de5329"
+            }
+          ],
+        "name": "stress FN-DSA-Precomputed-512 30VU",
+        "path": "::stress FN-DSA-Precomputed-512 30VU",
+        "id": "5a78ddacc372c24e625014517bc8febd"
+      },
+      {
+        "name": "stress FN-DSA-Precomputed-512 50VU",
+        "path": "::stress FN-DSA-Precomputed-512 50VU",
+        "id": "c09d2a947f8be82c6157d748765cb7bc",
+        "groups": [],
+        "checks": [
+            {
+              "name": "[stress|FN-DSA-Precomputed-512|50VU] sign 200",
+              "path": "::stress FN-DSA-Precomputed-512 50VU::[stress|FN-DSA-Precomputed-512|50VU] sign 200",
+              "id": "99564e8960b36f2c44f52df93af5ce25",
+              "passes": 416,
+              "fails": 0
+            },
+            {
+              "fails": 0,
+              "name": "[stress|FN-DSA-Precomputed-512|50VU] has token",
+              "path": "::stress FN-DSA-Precomputed-512 50VU::[stress|FN-DSA-Precomputed-512|50VU] has token",
+              "id": "1169f8bbb5af789635de8f4946a05a2c",
+              "passes": 416
+            }
+          ]
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "id": "b8995553c7000f9daab113e83c469710",
+              "passes": 380,
+              "fails": 0,
+              "name": "[stress|FN-DSA-512|10VU] sign 200",
+              "path": "::stress FN-DSA-512 10VU::[stress|FN-DSA-512|10VU] sign 200"
+            },
+            {
+              "name": "[stress|FN-DSA-512|10VU] has token",
+              "path": "::stress FN-DSA-512 10VU::[stress|FN-DSA-512|10VU] has token",
+              "id": "45d20837d9b2a61dd57b7f30e5def697",
+              "passes": 380,
+              "fails": 0
+            }
+          ],
+        "name": "stress FN-DSA-512 10VU",
+        "path": "::stress FN-DSA-512 10VU",
+        "id": "bf4823043bcd855c30862e27bfe976f7"
+      },
+      {
+        "name": "stress FN-DSA-512 30VU",
+        "path": "::stress FN-DSA-512 30VU",
+        "id": "9c8cb49e60ea042394f4c1d543a292ca",
+        "groups": [],
+        "checks": [
+            {
+              "passes": 381,
+              "fails": 0,
+              "name": "[stress|FN-DSA-512|30VU] sign 200",
+              "path": "::stress FN-DSA-512 30VU::[stress|FN-DSA-512|30VU] sign 200",
+              "id": "2e71bd00eb27f40c0233881486e107ac"
+            },
+            {
+              "fails": 0,
+              "name": "[stress|FN-DSA-512|30VU] has token",
+              "path": "::stress FN-DSA-512 30VU::[stress|FN-DSA-512|30VU] has token",
+              "id": "e410d09e067904314f829cf05d191d64",
+              "passes": 381
+            }
+          ]
+      },
+      {
+        "name": "stress FN-DSA-512 50VU",
+        "path": "::stress FN-DSA-512 50VU",
+        "id": "7e252ebaf48e0410a8ec69498a682b73",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 0,
+              "name": "[stress|FN-DSA-512|50VU] sign 200",
+              "path": "::stress FN-DSA-512 50VU::[stress|FN-DSA-512|50VU] sign 200",
+              "id": "799a3a3c0421bcc7c90671e255902560",
+              "passes": 395
+            },
+            {
+              "name": "[stress|FN-DSA-512|50VU] has token",
+              "path": "::stress FN-DSA-512 50VU::[stress|FN-DSA-512|50VU] has token",
+              "id": "49c25eaf5dd3f14a48d31c5b647f1afc",
+              "passes": 395,
+              "fails": 0
+            }
+          ]
+      }
+    ],
+    "checks": [
+      {
+        "passes": 1,
+        "fails": 0,
+        "name": "[isolated|FN-DSA-Precomputed-512] 200",
+        "path": "::[isolated|FN-DSA-Precomputed-512] 200",
+        "id": "77c782518a56bc474b6f65b69fb65cc5"
+      },
+      {
+        "name": "[isolated|FN-DSA-Precomputed-512] has stats",
+        "path": "::[isolated|FN-DSA-Precomputed-512] has stats",
+        "id": "b1eab707a2474b6c1a1e712df62850e6",
+        "passes": 1,
+        "fails": 0
+      },
+      {
+        "path": "::[pure-signing|FN-DSA-Precomputed-512] 200",
+        "id": "1c6657af14194f2d4b1a7bcecff6740f",
+        "passes": 1,
+        "fails": 0,
+        "name": "[pure-signing|FN-DSA-Precomputed-512] 200"
+      },
+      {
+        "path": "::[pure-signing|FN-DSA-Precomputed-512] has stats",
+        "id": "b9def23405f9ddec6ca33d4749a992fc",
+        "passes": 1,
+        "fails": 0,
+        "name": "[pure-signing|FN-DSA-Precomputed-512] has stats"
+      },
+      {
+        "name": "[isolated|FN-DSA-512] 200",
+        "path": "::[isolated|FN-DSA-512] 200",
+        "id": "8fa3047bc1dfbea452c3799d0d6f224d",
+        "passes": 1,
+        "fails": 0
+      },
+      {
+        "name": "[isolated|FN-DSA-512] has stats",
+        "path": "::[isolated|FN-DSA-512] has stats",
+        "id": "5c5633ed12c1fc770f1734f4fec42bbb",
+        "passes": 1,
+        "fails": 0
+      },
+      {
+        "path": "::[pure-signing|FN-DSA-512] 200",
+        "id": "52e47c550f9304b761c7a8c96b819921",
+        "passes": 1,
+        "fails": 0,
+        "name": "[pure-signing|FN-DSA-512] 200"
+      },
+      {
+        "name": "[pure-signing|FN-DSA-512] has stats",
+        "path": "::[pure-signing|FN-DSA-512] has stats",
+        "id": "e1c45af506c1f6a29a63b458857102cb",
+        "passes": 1,
+        "fails": 0
+      },
+      {
+        "name": "[refresh|FN-DSA-Precomputed-512|10VU] 200",
+        "path": "::[refresh|FN-DSA-Precomputed-512|10VU] 200",
+        "id": "f22f4e4c238bd7056c0e5902996a6d68",
+        "passes": 386,
+        "fails": 0
+      },
+      {
+        "path": "::[refresh|FN-DSA-Precomputed-512|10VU] has token pair",
+        "id": "6412c7162c95ffb55ff64c13c7f8fe60",
+        "passes": 386,
+        "fails": 0,
+        "name": "[refresh|FN-DSA-Precomputed-512|10VU] has token pair"
+      },
+      {
+        "passes": 389,
+        "fails": 0,
+        "name": "[refresh|FN-DSA-Precomputed-512|30VU] 200",
+        "path": "::[refresh|FN-DSA-Precomputed-512|30VU] 200",
+        "id": "410b347525e171e644ede3190062a888"
+      },
+      {
+        "name": "[refresh|FN-DSA-Precomputed-512|30VU] has token pair",
+        "path": "::[refresh|FN-DSA-Precomputed-512|30VU] has token pair",
+        "id": "aff79a1d140c04b47d6fc71cb3ad8f1d",
+        "passes": 389,
+        "fails": 0
+      },
+      {
+        "name": "[refresh|FN-DSA-Precomputed-512|50VU] 200",
+        "path": "::[refresh|FN-DSA-Precomputed-512|50VU] 200",
+        "id": "4ac7f80a97cbb05558b5cbae40c9fa0a",
+        "passes": 416,
+        "fails": 0
+      },
+      {
+        "name": "[refresh|FN-DSA-Precomputed-512|50VU] has token pair",
+        "path": "::[refresh|FN-DSA-Precomputed-512|50VU] has token pair",
+        "id": "bfee95927b595994ad85dc397310aa54",
+        "passes": 416,
+        "fails": 0
+      },
+      {
+        "path": "::[refresh|FN-DSA-512|10VU] 200",
+        "id": "ce1b271af6148fca9a67cd6c36d71578",
+        "passes": 380,
+        "fails": 0,
+        "name": "[refresh|FN-DSA-512|10VU] 200"
+      },
+      {
+        "passes": 380,
+        "fails": 0,
+        "name": "[refresh|FN-DSA-512|10VU] has token pair",
+        "path": "::[refresh|FN-DSA-512|10VU] has token pair",
+        "id": "44d2291fdef7ef0b7906b9956ee5514e"
+      },
+      {
+        "name": "[refresh|FN-DSA-512|30VU] 200",
+        "path": "::[refresh|FN-DSA-512|30VU] 200",
+        "id": "c48a6f3294f997596d3d026ec3658193",
+        "passes": 381,
+        "fails": 0
+      },
+      {
+        "name": "[refresh|FN-DSA-512|30VU] has token pair",
+        "path": "::[refresh|FN-DSA-512|30VU] has token pair",
+        "id": "f66b4c3e80c87ba08da8c3512cda7b32",
+        "passes": 381,
+        "fails": 0
+      },
+      {
+        "id": "b20e202098719b3821d92510b7282438",
+        "passes": 395,
+        "fails": 0,
+        "name": "[refresh|FN-DSA-512|50VU] 200",
+        "path": "::[refresh|FN-DSA-512|50VU] 200"
+      },
+      {
+        "name": "[refresh|FN-DSA-512|50VU] has token pair",
+        "path": "::[refresh|FN-DSA-512|50VU] has token pair",
+        "id": "4273b9e0009587bf19de7aef44faeb05",
+        "passes": 395,
+        "fails": 0
+      },
+      {
+        "fails": 0,
+        "name": "[attack|FN-DSA-Precomputed-512] tampered token blocked",
+        "path": "::[attack|FN-DSA-Precomputed-512] tampered token blocked",
+        "id": "2ae534e27c3a2c50f8162b4af43ec644",
+        "passes": 25
+      },
+      {
+        "name": "[attack|FN-DSA-512] tampered token blocked",
+        "path": "::[attack|FN-DSA-512] tampered token blocked",
+        "id": "38b5c6588f49e12ade2185ee5815106b",
+        "passes": 25,
+        "fails": 0
+      }
+    ]
+  },
+  "options": {
+    "summaryTimeUnit": "",
+    "noColor": false,
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)",
+      "p(99)"
+    ]
+  },
+  "state": {
+    "isStdOutTTY": true,
+    "isStdErrTTY": true,
+    "testRunDurationMs": 465944.227754
+  },
+  "metrics": {
+    "bench_total_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.9676896800000003,
+        "med": 0.9676896800000003,
+        "max": 0.9676896800000003,
+        "p(90)": 0.9676896800000003,
+        "p(95)": 0.9676896800000003,
+        "p(99)": 0.9676896800000003,
+        "avg": 0.9676896800000003
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_gc_contaminated_count": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.025754155294172937,
+        "count": 12
+      }
+    },
+    "bench_refresh_token_generation_gc_free_avg{alg:FN-DSA-Precomputed-512}": {
+      "values": {
+        "avg": 0.31513151578947357,
+        "min": 0.31513151578947357,
+        "med": 0.31513151578947357,
+        "max": 0.31513151578947357,
+        "p(90)": 0.31513151578947357,
+        "p(95)": 0.31513151578947357,
+        "p(99)": 0.31513151578947357
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_req_failed{alg:FN-DSA-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 945.645814,
+        "p(90)": 2.1364647000000008,
+        "p(95)": 3.575349749999998,
+        "p(99)": 9.612105260000009,
+        "avg": 1.6170383030718583,
+        "min": 0.023127,
+        "med": 0.5477665
+      }
+    },
+    "bench_pure_signing_p95{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.3841673999999998,
+        "med": 0.3841673999999998,
+        "max": 0.3841673999999998,
+        "p(90)": 0.3841673999999998,
+        "p(95)": 0.3841673999999998,
+        "p(99)": 0.3841673999999998,
+        "avg": 0.3841673999999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "attack_blocked": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.10730898039238725,
+        "count": 50
+      }
+    },
+    "bench_refresh_token_generation_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.3934827041312958,
+        "min": 0.31513151578947357,
+        "med": 0.3934827041312958,
+        "max": 0.47183389247311813,
+        "p(90)": 0.4561636548047537,
+        "p(95)": 0.46399877363893594,
+        "p(99)": 0.47026686870628165
+      }
+    },
+    "bench_pure_signing_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.4025112270408165,
+        "p(99)": 0.40656960867346953,
+        "avg": 0.3568544336734695,
+        "min": 0.30612466326530613,
+        "med": 0.3568544336734695,
+        "max": 0.4075842040816328,
+        "p(90)": 0.39743825000000016
+      }
+    },
+    "bench_auth_memory_alloc_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 2905.43109375,
+        "p(90)": 2905.43109375,
+        "p(95)": 2905.43109375,
+        "p(99)": 2905.43109375,
+        "avg": 2905.43109375,
+        "min": 2905.43109375,
+        "med": 2905.43109375
+      }
+    },
+    "bench_auth_memory_rss_kb_stdev": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 558.1643858219547,
+        "p(90)": 550.1533025882974,
+        "p(95)": 554.158844205126,
+        "p(99)": 557.363277498589,
+        "avg": 518.1089696536677,
+        "min": 478.05355348538075,
+        "med": 518.1089696536677
+      }
+    },
+    "bench_token_generation_gc_free_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.08519502880323557,
+        "avg": 0.08519502880323557,
+        "min": 0.08519502880323557,
+        "med": 0.08519502880323557,
+        "max": 0.08519502880323557,
+        "p(90)": 0.08519502880323557,
+        "p(95)": 0.08519502880323557
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_rss_kb_avg{alg:FN-DSA-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(99)": 28303.76,
+        "avg": 28303.76,
+        "min": 28303.76,
+        "med": 28303.76,
+        "max": 28303.76,
+        "p(90)": 28303.76,
+        "p(95)": 28303.76
+      }
+    },
+    "bench_refresh_token_generation_gc_free_p95{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.5966615999999996,
+        "p(95)": 0.5966615999999996,
+        "p(99)": 0.5966615999999996,
+        "avg": 0.5966615999999996,
+        "min": 0.5966615999999996,
+        "med": 0.5966615999999996,
+        "max": 0.5966615999999996
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_avg": {
+      "contains": "default",
+      "values": {
+        "med": 2844.7244921875,
+        "max": 2905.43109375,
+        "p(90)": 2893.2897734375,
+        "p(95)": 2899.36043359375,
+        "p(99)": 2904.21696171875,
+        "avg": 2844.7244921875,
+        "min": 2784.017890625
+      },
+      "type": "trend"
+    },
+    "bench_token_generation_p95{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.6832866,
+        "avg": 0.6832866,
+        "min": 0.6832866,
+        "med": 0.6832866,
+        "max": 0.6832866,
+        "p(90)": 0.6832866,
+        "p(95)": 0.6832866
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_p95{alg:FN-DSA-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 1.0175774499999999,
+        "p(95)": 1.0175774499999999,
+        "p(99)": 1.0175774499999999,
+        "avg": 1.0175774499999999,
+        "min": 1.0175774499999999,
+        "med": 1.0175774499999999,
+        "max": 1.0175774499999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_auth_cpu_time_per_token_ms_stdev{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.3564659966250536,
+        "min": 1.3564659966250536,
+        "med": 1.3564659966250536,
+        "max": 1.3564659966250536,
+        "p(90)": 1.3564659966250536,
+        "p(95)": 1.3564659966250536,
+        "p(99)": 1.3564659966250536
+      }
+    },
+    "bench_pure_signing_memory_alloc_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 552.0941727867609,
+        "p(90)": 552.0941727867609,
+        "p(95)": 552.0941727867609,
+        "p(99)": 552.0941727867609,
+        "avg": 552.0941727867609,
+        "min": 552.0941727867609,
+        "med": 552.0941727867609
+      }
+    },
+    "bench_token_generation_p95{alg:FN-DSA-Precomputed-512}": {
+      "values": {
+        "max": 0.4254929499999998,
+        "p(90)": 0.4254929499999998,
+        "p(95)": 0.4254929499999998,
+        "p(99)": 0.4254929499999998,
+        "avg": 0.4254929499999998,
+        "min": 0.4254929499999998,
+        "med": 0.4254929499999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_total_stdev{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.16840564764765906,
+        "med": 0.16840564764765906,
+        "max": 0.16840564764765906,
+        "p(90)": 0.16840564764765906,
+        "p(95)": 0.16840564764765906,
+        "p(99)": 0.16840564764765906,
+        "avg": 0.16840564764765906
+      }
+    },
+    "stress_req_success{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.8284253286292295,
+        "count": 386
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_p95{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.46320649999999997,
+        "avg": 0.46320649999999997,
+        "min": 0.46320649999999997,
+        "med": 0.46320649999999997,
+        "max": 0.46320649999999997,
+        "p(90)": 0.46320649999999997,
+        "p(95)": 0.46320649999999997
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 25.182784324050655,
+        "min": 10.139252,
+        "med": 14.457253,
+        "max": 147.969355,
+        "p(90)": 64.13119760000005,
+        "p(95)": 99.54441129999998,
+        "p(99)": 138.6939878
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_rss_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(99)": 29611.3592,
+        "avg": 28929.239999999998,
+        "min": 28233.2,
+        "med": 28929.239999999998,
+        "max": 29625.28,
+        "p(90)": 29486.072,
+        "p(95)": 29555.676
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_stdev": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 0.3855853894136769,
+        "med": 0.4021582349548921,
+        "max": 0.4187310804961073,
+        "p(90)": 0.4154165113878643,
+        "p(95)": 0.4170737959419858,
+        "p(99)": 0.418399623585283,
+        "avg": 0.4021582349548921
+      }
+    },
+    "bench_pure_signing_gc_free_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.30612466326530613,
+        "med": 0.30612466326530613,
+        "max": 0.30612466326530613,
+        "p(90)": 0.30612466326530613,
+        "p(95)": 0.30612466326530613,
+        "p(99)": 0.30612466326530613,
+        "avg": 0.30612466326530613
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.3010835,
+        "max": 0.494549,
+        "p(90)": 0.34617200000000004,
+        "p(95)": 0.36019249999999997,
+        "p(99)": 0.48947493,
+        "avg": 0.30612466326530613,
+        "min": 0.235519
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_rss_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 251.54438495025073,
+        "min": 251.54438495025073,
+        "med": 251.54438495025073,
+        "max": 251.54438495025073,
+        "p(90)": 251.54438495025073,
+        "p(95)": 251.54438495025073,
+        "p(99)": 251.54438495025073
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 389
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "stress_sign_network{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "values": {
+        "max": 11.765862999999996,
+        "p(90)": 1.4104265000000007,
+        "p(95)": 2.371523,
+        "p(99)": 4.818426950000006,
+        "avg": 0.6165603317307695,
+        "min": 0.04309200000000146,
+        "med": 0.31370450000000005
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_pure_signing_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.10526279910525656,
+        "max": 0.10526279910525656,
+        "p(90)": 0.10526279910525656,
+        "p(95)": 0.10526279910525656,
+        "p(99)": 0.10526279910525656,
+        "avg": 0.10526279910525656,
+        "min": 0.10526279910525656
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "stress_refresh_success{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 389,
+        "rate": 0.8348638674527727
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_sys_kb_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.9676896800000003,
+        "p(90)": 0.9358406970000004,
+        "p(95)": 0.9517651885000002,
+        "p(99)": 0.9645047817000003,
+        "avg": 0.8084447650000002,
+        "min": 0.64919985,
+        "med": 0.8084447650000002
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 0,
+        "max": 50
+      }
+    },
+    "stress_req_failed{alg:FN-DSA-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 18.1444175,
+        "p(95)": 22.355623,
+        "p(99)": 44.687589349999975,
+        "avg": 14.533534121761653,
+        "min": 10.485522,
+        "med": 12.597394000000001,
+        "max": 123.963535
+      },
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_p95{alg:FN-DSA-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.5349649999999999,
+        "p(99)": 0.5349649999999999,
+        "avg": 0.5349649999999999,
+        "min": 0.5349649999999999,
+        "med": 0.5349649999999999,
+        "max": 0.5349649999999999,
+        "p(90)": 0.5349649999999999
+      }
+    },
+    "bench_pure_signing_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.3654819250000001,
+        "max": 0.4125107700000001,
+        "p(90)": 0.4031050010000001,
+        "p(95)": 0.4078078855000001,
+        "p(99)": 0.4115701931000001,
+        "avg": 0.3654819250000001,
+        "min": 0.31845308000000005
+      }
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 0,
+        "fails": 386,
+        "rate": 0
+      }
+    },
+    "stress_login_dirty{alg:FN-DSA-512,vus:10}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 887.3852223499999,
+        "avg": 401.7684543263156,
+        "min": 135.830293,
+        "med": 372.0263095,
+        "max": 1155.333404,
+        "p(90)": 625.4800438000003,
+        "p(95)": 715.7566298
+      }
+    },
+    "bench_token_generation_gc_free_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.298138,
+        "max": 0.566198,
+        "p(90)": 0.3655184,
+        "p(95)": 0.38058829999999993,
+        "p(99)": 0.43098934000000033,
+        "avg": 0.3054405157894737,
+        "min": 0.244219
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success{alg:FN-DSA-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 381,
+        "rate": 0.8176944305899908
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.5189915843525386,
+        "min": 1.3564659966250536,
+        "med": 1.5189915843525386,
+        "max": 1.6815171720800233,
+        "p(90)": 1.6490120545345264,
+        "p(95)": 1.6652646133072748,
+        "p(99)": 1.6782666603254737
+      }
+    },
+    "bench_total_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 1.688453,
+        "p(90)": 1.1002791,
+        "p(95)": 1.2816010999999996,
+        "p(99)": 1.4541862999999988,
+        "avg": 0.8084447650000002,
+        "min": 0.509358,
+        "med": 0.750141
+      }
+    },
+    "bench_sign_p95{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.4254929499999998,
+        "p(95)": 0.4254929499999998,
+        "p(99)": 0.4254929499999998,
+        "avg": 0.4254929499999998,
+        "min": 0.4254929499999998,
+        "med": 0.4254929499999998,
+        "max": 0.4254929499999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_success{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.0021461796078477446,
+        "count": 1
+      },
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 10.139252,
+        "med": 13.646232,
+        "max": 1554.984757,
+        "p(90)": 56.07674280000003,
+        "p(95)": 103.96360139999996,
+        "p(99)": 478.6029911199996,
+        "avg": 32.25574579718793
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "contains": "time",
+      "values": {
+        "med": 0.397,
+        "max": 3.83,
+        "p(90)": 1.7965999999999995,
+        "p(95)": 2.3299999999999987,
+        "p(99)": 2.739240000000001,
+        "avg": 0.6654241645244211,
+        "min": 0.235
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_sign_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.32030365999999993,
+        "min": 0.32030365999999993,
+        "med": 0.32030365999999993,
+        "max": 0.32030365999999993,
+        "p(90)": 0.32030365999999993,
+        "p(95)": 0.32030365999999993,
+        "p(99)": 0.32030365999999993
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate{alg:FN-DSA-Precomputed-512}": {
+      "values": {
+        "passes": 25,
+        "fails": 0,
+        "rate": 1
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "bench_refresh_token_generation_avg{alg:FN-DSA-512}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.4794170499999999,
+        "p(99)": 0.4794170499999999,
+        "avg": 0.4794170499999999,
+        "min": 0.4794170499999999,
+        "med": 0.4794170499999999,
+        "max": 0.4794170499999999,
+        "p(90)": 0.4794170499999999
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_sign_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.7646543,
+        "avg": 0.32030366,
+        "min": 0.244219,
+        "med": 0.300729,
+        "max": 0.777257,
+        "p(90)": 0.36983600000000005,
+        "p(95)": 0.4254929499999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:FN-DSA-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 395,
+        "rate": 0.8477409450998592
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_alloc_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 2714.996015625,
+        "min": 2615.79453125,
+        "med": 2714.996015625,
+        "max": 2814.1975,
+        "p(90)": 2794.357203125,
+        "p(95)": 2804.2773515625004,
+        "p(99)": 2812.2134703125002
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.1592517218869995,
+        "min": 0.009697,
+        "med": 0.041708,
+        "max": 73.098753,
+        "p(90)": 0.12450540000000011,
+        "p(95)": 0.2511352999999999,
+        "p(99)": 2.076901820000002
+      }
+    },
+    "bench_refresh_token_generation_gc_free_sample{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.939466,
+        "p(90)": 0.562231,
+        "p(95)": 0.5966615999999996,
+        "p(99)": 0.7742441199999998,
+        "avg": 0.47183389247311824,
+        "min": 0.350699,
+        "med": 0.461149
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_sys_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 13398.2578125,
+        "p(95)": 13398.2578125,
+        "p(99)": 13398.2578125,
+        "avg": 13398.2578125,
+        "min": 13398.2578125,
+        "med": 13398.2578125,
+        "max": 13398.2578125
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 15.649941700425755,
+        "count": 7292
+      }
+    },
+    "bench_token_generation_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.6832866,
+        "p(90)": 0.657507235,
+        "p(95)": 0.6703969175,
+        "p(99)": 0.6807086634999999,
+        "avg": 0.5543897749999999,
+        "min": 0.4254929499999998,
+        "med": 0.5543897749999999
+      }
+    },
+    "bench_sign_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.11935614945302611,
+        "max": 0.11935614945302611,
+        "p(90)": 0.11935614945302611,
+        "p(95)": 0.11935614945302611,
+        "p(99)": 0.11935614945302611,
+        "avg": 0.11935614945302611,
+        "min": 0.11935614945302611
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.11780154809431975,
+        "p(99)": 0.11904522918128484,
+        "avg": 0.10381013586596245,
+        "min": 0.0882641222788988,
+        "med": 0.10381013586596245,
+        "max": 0.11935614945302611,
+        "p(90)": 0.11624694673561338
+      }
+    },
+    "bench_pure_signing_iteration_failed": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 81.60707027999987,
+        "avg": 17.174864492105254,
+        "min": 9.870561,
+        "med": 12.5651835,
+        "max": 212.866057,
+        "p(90)": 27.074810400000004,
+        "p(95)": 40.19681615000001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty": {
+      "contains": "time",
+      "values": {
+        "min": 51.051116,
+        "med": 794.956071,
+        "max": 6472.31868,
+        "p(90)": 2444.9782448,
+        "p(95)": 3066.809815099996,
+        "p(99)": 4545.99516292,
+        "avg": 1101.510715518962
+      },
+      "type": "trend"
+    },
+    "bench_refresh_token_generation_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.1124309896418238,
+        "max": 0.11287655860484896,
+        "p(90)": 0.11278744481224393,
+        "p(95)": 0.11283200170854644,
+        "p(99)": 0.11286764722558847,
+        "avg": 0.1124309896418238,
+        "min": 0.11198542067879863
+      }
+    },
+    "bench_auth_cpu_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 359.4030100389509,
+        "p(90)": 359.4030100389509,
+        "p(95)": 359.4030100389509,
+        "p(99)": 359.4030100389509,
+        "avg": 359.4030100389509,
+        "min": 359.4030100389509,
+        "med": 359.4030100389509
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-512,vus:10}": {
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 380
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "stress_error_rate{alg:FN-DSA-512,vus:50}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 395,
+        "rate": 0,
+        "passes": 0
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 862.9468217200025,
+        "avg": 78.36183541902315,
+        "min": 9.914697,
+        "med": 14.321334,
+        "max": 1554.865596,
+        "p(90)": 154.6167256,
+        "p(95)": 485.5892146
+      }
+    },
+    "bench_token_generation_gc_free_p95{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.3805883,
+        "p(90)": 0.3805883,
+        "p(95)": 0.3805883,
+        "p(99)": 0.3805883,
+        "avg": 0.3805883,
+        "min": 0.3805883,
+        "med": 0.3805883
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 379.0668095,
+        "max": 7561.856303,
+        "p(90)": 2080.2891623,
+        "p(95)": 2715.8407701,
+        "p(99)": 4139.820295090002,
+        "avg": 757.9760712815497,
+        "min": 10.139252
+      }
+    },
+    "bench_refresh_token_generation_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.11198542067879863,
+        "p(95)": 0.11198542067879863,
+        "p(99)": 0.11198542067879863,
+        "avg": 0.11198542067879863,
+        "min": 0.11198542067879863,
+        "med": 0.11198542067879863,
+        "max": 0.11198542067879863
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 428.2503571782269,
+        "p(95)": 428.2503571782269,
+        "p(99)": 428.2503571782269,
+        "avg": 428.2503571782269,
+        "min": 428.2503571782269,
+        "med": 428.2503571782269,
+        "max": 428.2503571782269
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_rss_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 29212.22,
+        "max": 30120.68,
+        "p(90)": 29938.988,
+        "p(95)": 30029.834,
+        "p(99)": 30102.5108,
+        "avg": 29212.22,
+        "min": 28303.76
+      }
+    },
+    "bench_pure_signing_gc_free_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.4423942499999999,
+        "max": 0.5245959999999998,
+        "p(90)": 0.5081556499999998,
+        "p(95)": 0.5163758249999999,
+        "p(99)": 0.5229519649999999,
+        "avg": 0.4423942499999999,
+        "min": 0.3601924999999999
+      }
+    },
+    "stress_error_rate{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 386
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.32030366,
+        "min": 0.244219,
+        "med": 0.300729,
+        "max": 0.777257,
+        "p(90)": 0.36983600000000005,
+        "p(95)": 0.4254929499999998,
+        "p(99)": 0.7646543
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_stdev": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "avg": 570.0074262652943,
+        "min": 567.1845210088564,
+        "med": 570.0074262652943,
+        "max": 572.8303315217322,
+        "p(90)": 572.2657504704446,
+        "p(95)": 572.5480409960884,
+        "p(99)": 572.7738734166035
+      }
+    },
+    "bench_refresh_token_generation_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.304889,
+        "max": 1.084315,
+        "p(90)": 0.39371400000000006,
+        "p(95)": 0.4632065,
+        "p(99)": 0.8256695800000013,
+        "avg": 0.32889619000000003,
+        "min": 0.243879
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 567.1845210088564,
+        "p(90)": 567.1845210088564,
+        "p(95)": 567.1845210088564,
+        "p(99)": 567.1845210088564,
+        "avg": 567.1845210088564,
+        "min": 567.1845210088564,
+        "med": 567.1845210088564
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.64919985,
+        "min": 0.64919985,
+        "med": 0.64919985,
+        "max": 0.64919985,
+        "p(90)": 0.64919985,
+        "p(95)": 0.64919985,
+        "p(99)": 0.64919985
+      }
+    },
+    "stress_sign_network": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1.309139999999995,
+        "p(95)": 2.217659599999997,
+        "p(99)": 6.206649219999996,
+        "avg": 0.7686438461866207,
+        "min": 0.04309200000000146,
+        "med": 0.30427300000002333,
+        "max": 74.38488999999998
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-512,vus:30}": {
+      "contains": "time",
+      "values": {
+        "min": 9.826525,
+        "med": 13.661181,
+        "max": 411.801565,
+        "p(90)": 40.342281,
+        "p(95)": 75.315254,
+        "p(99)": 318.1966142,
+        "avg": 26.380700748031508
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_auth_cpu_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 421.36562246429935,
+        "p(95)": 424.8079898212631,
+        "p(99)": 427.5618837068342,
+        "avg": 393.82668360858895,
+        "min": 359.4030100389509,
+        "med": 393.82668360858895,
+        "max": 428.2503571782269
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_avg{alg:FN-DSA-512}": {
+      "contains": "default",
+      "values": {
+        "max": 117.51671875,
+        "p(90)": 117.51671875,
+        "p(95)": 117.51671875,
+        "p(99)": 117.51671875,
+        "avg": 117.51671875,
+        "min": 117.51671875,
+        "med": 117.51671875
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_total_sample{alg:FN-DSA-512}": {
+      "contains": "time",
+      "values": {
+        "p(99)": 1.4553773000000012,
+        "avg": 0.9676896800000004,
+        "min": 0.708717,
+        "med": 0.9193375,
+        "max": 1.688453,
+        "p(90)": 1.1767570000000007,
+        "p(95)": 1.3500260499999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_sign_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.404288145,
+        "max": 0.4882726300000001,
+        "p(90)": 0.4714757330000001,
+        "p(95)": 0.47987418150000005,
+        "p(99)": 0.4865929403000001,
+        "avg": 0.404288145,
+        "min": 0.32030365999999993
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 243.8155843500008,
+        "avg": 29.078182475961526,
+        "min": 10.004587,
+        "med": 12.749198499999999,
+        "max": 338.374242,
+        "p(90)": 80.7646095,
+        "p(95)": 117.946347
+      }
+    },
+    "bench_auth_memory_sys_kb_stdev": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(99)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_stdev{alg:FN-DSA-512}": {
+      "contains": "default",
+      "values": {
+        "p(99)": 0.4187310804961073,
+        "avg": 0.4187310804961073,
+        "min": 0.4187310804961073,
+        "med": 0.4187310804961073,
+        "max": 0.4187310804961073,
+        "p(90)": 0.4187310804961073,
+        "p(95)": 0.4187310804961073
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 50,
+        "min": 50,
+        "max": 50
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-512,vus:30}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2409.057983,
+        "p(99)": 3219.4118703999993,
+        "avg": 1145.1409893884513,
+        "min": 113.581471,
+        "med": 1024.295347,
+        "max": 4580.346015,
+        "p(90)": 1962.950818
+      }
+    },
+    "bench_auth_cpu_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 123.11947869766605,
+        "med": 128.885424256495,
+        "max": 134.651369815324,
+        "p(90)": 133.4981807035582,
+        "p(95)": 134.07477525944108,
+        "p(99)": 134.5360509041474,
+        "avg": 128.885424256495
+      }
+    },
+    "bench_auth_cpu_time_ms_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 1.3,
+        "p(90)": 1.25,
+        "p(95)": 1.275,
+        "p(99)": 1.295,
+        "avg": 1.05,
+        "min": 0.8,
+        "med": 1.05
+      }
+    },
+    "bench_pure_signing_sample{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.41251076999999986,
+        "min": 0.332068,
+        "med": 0.38554900000000003,
+        "max": 0.806647,
+        "p(90)": 0.508558,
+        "p(95)": 0.5349649999999999,
+        "p(99)": 0.6873916000000007
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_alloc_kb_stdev": {
+      "contains": "default",
+      "values": {
+        "avg": 512.2000049707425,
+        "min": 472.3058371547242,
+        "med": 512.2000049707425,
+        "max": 552.0941727867609,
+        "p(90)": 544.1153392235572,
+        "p(95)": 548.1047560051591,
+        "p(99)": 551.2962894304405
+      },
+      "type": "trend"
+    },
+    "stress_refresh_success{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "values": {
+        "count": 386,
+        "rate": 0.8284253286292295
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "stress_error_rate": {
+      "thresholds": {
+        "rate<0.01": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2347
+      }
+    },
+    "bench_token_generation_gc_free_avg{alg:FN-DSA-Precomputed-512}": {
+      "values": {
+        "max": 0.3054405157894736,
+        "p(90)": 0.3054405157894736,
+        "p(95)": 0.3054405157894736,
+        "p(99)": 0.3054405157894736,
+        "avg": 0.3054405157894736,
+        "min": 0.3054405157894736,
+        "med": 0.3054405157894736
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_iteration_success{alg:FN-DSA-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 100,
+        "rate": 0.2146179607847745
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:FN-DSA-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_sample{alg:FN-DSA-512}": {
+      "values": {
+        "p(95)": 0.6832866,
+        "p(99)": 0.9629899800000004,
+        "avg": 0.4882726299999999,
+        "min": 0.346359,
+        "med": 0.469403,
+        "max": 1.033674,
+        "p(90)": 0.5701951
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "stress_login_dirty{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 963.9416651,
+        "avg": 401.8968861968912,
+        "min": 127.636678,
+        "med": 381.09421399999997,
+        "max": 1093.886417,
+        "p(90)": 628.168553,
+        "p(95)": 699.98661625
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.527,
+        "max": 3.053,
+        "p(90)": 0.9445999999999999,
+        "p(95)": 1.5271999999999994,
+        "p(99)": 2.5026000000000006,
+        "avg": 0.6412442159383036,
+        "min": 0.262
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.404288145,
+        "min": 0.32030365999999993,
+        "med": 0.404288145,
+        "max": 0.4882726300000001,
+        "p(90)": 0.4714757330000001,
+        "p(95)": 0.47987418150000005,
+        "p(99)": 0.4865929403000001
+      }
+    },
+    "bench_refresh_token_generation_p95{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.6298030499999998,
+        "p(90)": 0.6298030499999998,
+        "p(95)": 0.6298030499999998,
+        "p(99)": 0.6298030499999998,
+        "avg": 0.6298030499999998,
+        "min": 0.6298030499999998,
+        "med": 0.6298030499999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_iteration_failed{alg:FN-DSA-512}": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "stress_refresh_success": {
+      "values": {
+        "count": 2347,
+        "rate": 5.037083539618657
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "bench_pure_signing_gc_free_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.4075842040816328,
+        "p(90)": 0.4075842040816328,
+        "p(95)": 0.4075842040816328,
+        "p(99)": 0.4075842040816328,
+        "avg": 0.4075842040816328,
+        "min": 0.4075842040816328,
+        "med": 0.4075842040816328
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 93.500234375,
+        "p(99)": 93.500234375,
+        "avg": 93.500234375,
+        "min": 93.500234375,
+        "med": 93.500234375,
+        "max": 93.500234375,
+        "p(90)": 93.500234375
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.65,
+        "p(99)": 0.65,
+        "avg": 0.65,
+        "min": 0.65,
+        "med": 0.65,
+        "max": 0.65,
+        "p(90)": 0.65
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2347,
+        "rate": 5.037083539618657
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.4,
+        "p(95)": 0.4,
+        "p(99)": 0.4,
+        "avg": 0.4,
+        "min": 0.4,
+        "med": 0.4,
+        "max": 0.4
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success{alg:FN-DSA-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 395,
+        "rate": 0.8477409450998592
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2,
+        "rate": 0.004292359215695489
+      },
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_ms_stdev": {
+      "contains": "time",
+      "values": {
+        "min": 2.7129319932501073,
+        "med": 3.037983168705077,
+        "max": 3.3630343441600465,
+        "p(90)": 3.2980241090690527,
+        "p(95)": 3.3305292266145496,
+        "p(99)": 3.3565333206509473,
+        "avg": 3.037983168705077
+      },
+      "type": "trend"
+    },
+    "bench_auth_memory_alloc_delta_kb_avg": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 115.1150703125,
+        "p(95)": 116.31589453125,
+        "p(99)": 117.27655390625,
+        "avg": 105.5084765625,
+        "min": 93.500234375,
+        "med": 105.5084765625,
+        "max": 117.51671875
+      }
+    },
+    "stress_req_failed": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "bench_auth_memory_sys_kb_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 13398.2578125,
+        "p(90)": 13398.2578125,
+        "p(95)": 13398.2578125,
+        "p(99)": 13398.2578125,
+        "avg": 13398.2578125,
+        "min": 13398.2578125,
+        "med": 13398.2578125
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:FN-DSA-512,vus:10}": {
+      "values": {
+        "med": 0.6185,
+        "max": 5.836,
+        "p(90)": 1.4513000000000011,
+        "p(95)": 1.9498000000000006,
+        "p(99)": 3.01442,
+        "avg": 0.794581578947368,
+        "min": 0.407
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_pure_signing_memory_rss_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 30120.68,
+        "p(90)": 30120.68,
+        "p(95)": 30120.68,
+        "p(99)": 30120.68,
+        "avg": 30120.68,
+        "min": 30120.68,
+        "med": 30120.68
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_stdev{alg:FN-DSA-Precomputed-512}": {
+      "values": {
+        "p(99)": 0.11287655860484896,
+        "avg": 0.11287655860484896,
+        "min": 0.11287655860484896,
+        "med": 0.11287655860484896,
+        "max": 0.11287655860484896,
+        "p(90)": 0.11287655860484896,
+        "p(95)": 0.11287655860484896
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 4546106,
+        "rate": 9756.759992314279
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.6630569948186531,
+        "min": 0.231,
+        "med": 0.3825,
+        "max": 4.056,
+        "p(90)": 1.621,
+        "p(95)": 2.39025,
+        "p(99)": 3.411049999999999
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.7220240384615383,
+        "min": 0.282,
+        "med": 0.528,
+        "max": 10.527,
+        "p(90)": 1.254,
+        "p(95)": 1.705,
+        "p(99)": 3.6834000000000127
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.36548192500000015,
+        "min": 0.235519,
+        "med": 0.3501645,
+        "max": 1.217905,
+        "p(90)": 0.486432,
+        "p(95)": 0.51713095,
+        "p(99)": 0.6873915999999989
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 5661.88925952,
+        "avg": 1926.05499952152,
+        "min": 135.225158,
+        "med": 1702.698054,
+        "max": 6472.31868,
+        "p(90)": 3411.2979410000003,
+        "p(95)": 4170.425493999994
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.4882726300000001,
+        "max": 0.4882726300000001,
+        "p(90)": 0.4882726300000001,
+        "p(95)": 0.4882726300000001,
+        "p(99)": 0.4882726300000001,
+        "avg": 0.4882726300000001,
+        "min": 0.4882726300000001
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.5863719499999992,
+        "p(99)": 0.9096574999999995,
+        "avg": 0.4042881450000002,
+        "min": 0.244219,
+        "med": 0.37395849999999997,
+        "max": 1.033674,
+        "p(90)": 0.547434
+      }
+    },
+    "stress_token_generation_clean{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.9498000000000006,
+        "p(99)": 3.01442,
+        "avg": 0.794581578947368,
+        "min": 0.407,
+        "med": 0.6185,
+        "max": 5.836,
+        "p(90)": 1.4513000000000011
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.4125107700000001,
+        "p(90)": 0.4125107700000001,
+        "p(95)": 0.4125107700000001,
+        "p(99)": 0.4125107700000001,
+        "avg": 0.4125107700000001,
+        "min": 0.4125107700000001,
+        "med": 0.4125107700000001
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1807.1929833269216,
+        "min": 117.055233,
+        "med": 1651.547959,
+        "max": 6157.07259,
+        "p(90)": 3274.8699755,
+        "p(95)": 3893.827717,
+        "p(99)": 4708.991093950001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_contaminated_count{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2,
+        "rate": 0.004292359215695489
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 123.11947869766605,
+        "p(99)": 123.11947869766605,
+        "avg": 123.11947869766605,
+        "min": 123.11947869766605,
+        "med": 123.11947869766605,
+        "max": 123.11947869766605,
+        "p(90)": 123.11947869766605
+      }
+    },
+    "bench_auth_cpu_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 134.651369815324,
+        "p(99)": 134.651369815324,
+        "avg": 134.651369815324,
+        "min": 134.651369815324,
+        "med": 134.651369815324,
+        "max": 134.651369815324,
+        "p(90)": 134.651369815324
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_stdev{alg:FN-DSA-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.0483855839280697,
+        "p(99)": 0.0483855839280697,
+        "avg": 0.0483855839280697,
+        "min": 0.0483855839280697,
+        "med": 0.0483855839280697,
+        "max": 0.0483855839280697,
+        "p(90)": 0.0483855839280697
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "max": 186.441543,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 17.650991800000007,
+        "avg": 0.5151158739714755
+      }
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-512,vus:30}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 381
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate": {
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 50,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "bench_pure_signing_gc_contaminated_count": {
+      "contains": "default",
+      "values": {
+        "count": 4,
+        "rate": 0.008584718431390978
+      },
+      "type": "counter"
+    },
+    "bench_pure_signing_gc_free_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.04389236708594125,
+        "min": 0.04389236708594125,
+        "med": 0.04389236708594125,
+        "max": 0.04389236708594125,
+        "p(90)": 0.04389236708594125,
+        "p(95)": 0.04389236708594125,
+        "p(99)": 0.04389236708594125
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_per_token_ms_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1.6815171720800233,
+        "p(99)": 1.6815171720800233,
+        "avg": 1.6815171720800233,
+        "min": 1.6815171720800233,
+        "med": 1.6815171720800233,
+        "max": 1.6815171720800233,
+        "p(90)": 1.6815171720800233
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_p95{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.40814699999999987,
+        "med": 0.40814699999999987,
+        "max": 0.40814699999999987,
+        "p(90)": 0.40814699999999987,
+        "p(95)": 0.40814699999999987,
+        "p(99)": 0.40814699999999987,
+        "avg": 0.40814699999999987
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "count": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_success{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021461796078477446
+      },
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_iteration_success{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 100,
+        "rate": 0.2146179607847745
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.40415662,
+        "min": 0.243879,
+        "med": 0.372749,
+        "max": 1.084315,
+        "p(90)": 0.5542411,
+        "p(95)": 0.5888064499999999,
+        "p(99)": 0.940608799999999
+      }
+    },
+    "bench_pure_signing_memory_rss_kb_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 455.9009787223532,
+        "p(90)": 455.9009787223532,
+        "p(95)": 455.9009787223532,
+        "p(99)": 455.9009787223532,
+        "avg": 455.9009787223532,
+        "min": 455.9009787223532,
+        "med": 455.9009787223532
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_error_rate{alg:FN-DSA-512,vus:30}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 381
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "bench_pure_signing_success{alg:FN-DSA-512}": {
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021461796078477446
+      }
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 479.2550425799996,
+        "avg": 34.86499626118441,
+        "min": 10.555528,
+        "med": 14.869103,
+        "max": 1555.421605,
+        "p(90)": 64.42666740000001,
+        "p(95)": 113.3091492
+      }
+    },
+    "bench_token_generation_gc_free_p95": {
+      "values": {
+        "p(90)": 0.5475556699999999,
+        "p(95)": 0.556831635,
+        "p(99)": 0.5642524069999999,
+        "avg": 0.47334794999999996,
+        "min": 0.3805883,
+        "med": 0.47334794999999996,
+        "max": 0.5661075999999999
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_refresh_token_generation_p95": {
+      "values": {
+        "p(90)": 0.6131433949999998,
+        "p(95)": 0.6214732224999998,
+        "p(99)": 0.6281370844999998,
+        "avg": 0.5465047749999998,
+        "min": 0.46320649999999997,
+        "med": 0.5465047749999998,
+        "max": 0.6298030499999998
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_refresh_token_generation_gc_free_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.47183389247311813,
+        "p(95)": 0.47183389247311813,
+        "p(99)": 0.47183389247311813,
+        "avg": 0.47183389247311813,
+        "min": 0.47183389247311813,
+        "med": 0.47183389247311813,
+        "max": 0.47183389247311813
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 4.2023600000000005,
+        "avg": 1.059822784810126,
+        "min": 0.335,
+        "med": 0.618,
+        "max": 11.579,
+        "p(90)": 2.4478000000000004,
+        "p(95)": 2.667
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_success{alg:FN-DSA-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1,
+        "rate": 0.0021461796078477446
+      },
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_sample{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.506961,
+        "p(95)": 0.524596,
+        "p(99)": 0.6108083000000001,
+        "avg": 0.4075842040816326,
+        "min": 0.332068,
+        "med": 0.38493900000000003,
+        "max": 0.686187
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "data_received": {
+      "contains": "data",
+      "values": {
+        "count": 18107095,
+        "rate": 38861.07804636186
+      },
+      "type": "counter"
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 9446,
+        "fails": 0,
+        "rate": 1
+      }
+    },
+    "stress_sign_network{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 4.565913779999981,
+        "avg": 0.6302671552631578,
+        "min": 0.09076100000000054,
+        "med": 0.31858949999999897,
+        "max": 12.369004,
+        "p(90)": 1.2031569999999998,
+        "p(95)": 1.8772647999999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_rss_kb_stdev": {
+      "values": {
+        "p(90)": 435.465319345143,
+        "p(95)": 445.6831490337481,
+        "p(99)": 453.8574127846322,
+        "avg": 353.72268183630194,
+        "min": 251.54438495025073,
+        "med": 353.72268183630194,
+        "max": 455.9009787223532
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "stress_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 2.5026000000000006,
+        "avg": 0.6412442159383036,
+        "min": 0.262,
+        "med": 0.527,
+        "max": 3.053,
+        "p(90)": 0.9445999999999999,
+        "p(95)": 1.5271999999999994
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 572.8303315217322,
+        "max": 572.8303315217322,
+        "p(90)": 572.8303315217322,
+        "p(95)": 572.8303315217322,
+        "p(99)": 572.8303315217322,
+        "avg": 572.8303315217322,
+        "min": 572.8303315217322
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.1915399903522437,
+        "p(99)": 0.1915399903522437,
+        "avg": 0.1915399903522437,
+        "min": 0.1915399903522437,
+        "med": 0.1915399903522437,
+        "max": 0.1915399903522437,
+        "p(90)": 0.1915399903522437
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-512,vus:30}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "bench_refresh_token_generation_gc_free_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.939466,
+        "p(90)": 0.5457513,
+        "p(95)": 0.5687191500000001,
+        "p(99)": 0.7680903999999997,
+        "avg": 0.3926491808510639,
+        "min": 0.243879,
+        "med": 0.36452850000000003
+      }
+    },
+    "bench_sign_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.11935614945302611,
+        "p(90)": 0.11624694673561338,
+        "p(95)": 0.11780154809431975,
+        "p(99)": 0.11904522918128484,
+        "avg": 0.10381013586596245,
+        "min": 0.0882641222788988,
+        "med": 0.10381013586596245
+      }
+    },
+    "bench_token_generation_avg{alg:FN-DSA-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "min": 0.32030365999999993,
+        "med": 0.32030365999999993,
+        "max": 0.32030365999999993,
+        "p(90)": 0.32030365999999993,
+        "p(95)": 0.32030365999999993,
+        "p(99)": 0.32030365999999993,
+        "avg": 0.32030365999999993
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2.06025,
+        "p(99)": 2.8931500000000017,
+        "avg": 0.6366995192307693,
+        "min": 0.233,
+        "med": 0.389,
+        "max": 6.654,
+        "p(90)": 1.458
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_p95{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.5661075999999999,
+        "avg": 0.5661075999999999,
+        "min": 0.5661075999999999,
+        "med": 0.5661075999999999,
+        "max": 0.5661075999999999,
+        "p(90)": 0.5661075999999999,
+        "p(95)": 0.5661075999999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.08519502880323557,
+        "p(90)": 0.08151408431571898,
+        "p(95)": 0.08335455655947727,
+        "p(99)": 0.08482693435448391,
+        "avg": 0.06679030636565264,
+        "min": 0.0483855839280697,
+        "med": 0.06679030636565264
+      }
+    },
+    "attack_block_rate{alg:FN-DSA-512}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 25,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_blocked": {
+      "contains": "time",
+      "values": {
+        "p(99)": 17.715769840000004,
+        "avg": 0.5380101103949524,
+        "min": 0.002712,
+        "med": 0.0097305,
+        "max": 186.524394,
+        "p(90)": 0.02696580000000001,
+        "p(95)": 0.03241424999999998
+      },
+      "type": "trend"
+    },
+    "bench_auth_cpu_time_ms_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.8,
+        "avg": 0.8,
+        "min": 0.8,
+        "med": 0.8,
+        "max": 0.8,
+        "p(90)": 0.8,
+        "p(95)": 0.8
+      }
+    },
+    "http_req_duration": {
+      "contains": "time",
+      "values": {
+        "med": 374.4296805,
+        "max": 7561.856303,
+        "p(90)": 2071.7219401,
+        "p(95)": 2701.153148149999,
+        "p(99)": 4130.960069590003,
+        "avg": 752.8715797217478,
+        "min": 9.968977
+      },
+      "type": "trend"
+    },
+    "bench_sign_p95{alg:FN-DSA-512}": {
+      "values": {
+        "avg": 0.6832866,
+        "min": 0.6832866,
+        "med": 0.6832866,
+        "max": 0.6832866,
+        "p(90)": 0.6832866,
+        "p(95)": 0.6832866,
+        "p(99)": 0.6832866
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 751.0952896967913,
+        "min": 9.784189,
+        "med": 373.4164915,
+        "max": 7561.68358,
+        "p(90)": 2067.495041100003,
+        "p(95)": 2694.1875682499985,
+        "p(99)": 4129.804301340002
+      }
+    },
+    "bench_auth_memory_rss_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(90)": 558.1643858219547,
+        "p(95)": 558.1643858219547,
+        "p(99)": 558.1643858219547,
+        "avg": 558.1643858219547,
+        "min": 558.1643858219547,
+        "med": 558.1643858219547,
+        "max": 558.1643858219547
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2347
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "stress_sign_actual{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.334,
+        "med": 0.533,
+        "max": 3.284,
+        "p(90)": 1.0685,
+        "p(95)": 1.57075,
+        "p(99)": 2.854449999999999,
+        "avg": 0.669424870466321
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 5.512290400000004,
+        "avg": 0.6248255218508999,
+        "min": 0.05257999999999896,
+        "med": 0.2906809999999993,
+        "max": 7.64189,
+        "p(90)": 1.2767751999999983,
+        "p(95)": 2.463866999999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 104.28043,
+        "med": 860.51223,
+        "max": 3456.844075,
+        "p(90)": 1869.493282,
+        "p(95)": 2287.6770463999983,
+        "p(99)": 3147.50165212,
+        "avg": 1017.900820506426
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.17997281899995138,
+        "min": 0.16840564764765906,
+        "med": 0.17997281899995138,
+        "max": 0.1915399903522437,
+        "p(90)": 0.18922655608178524,
+        "p(95)": 0.19038327321701448,
+        "p(99)": 0.19130864692519786
+      }
+    },
+    "stress_sign_actual": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.262,
+        "med": 0.592,
+        "max": 15.633,
+        "p(90)": 1.4464000000000001,
+        "p(95)": 2.037499999999997,
+        "p(99)": 5.00824,
+        "avg": 0.8221312313591814
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 80.9813335,
+        "p(95)": 118.22065225,
+        "p(99)": 244.14676495000077,
+        "avg": 29.694742807692293,
+        "min": 10.303899,
+        "med": 13.453446,
+        "max": 338.663379
+      },
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.0882641222788988,
+        "min": 0.0882641222788988,
+        "med": 0.0882641222788988,
+        "max": 0.0882641222788988,
+        "p(90)": 0.0882641222788988,
+        "p(95)": 0.0882641222788988,
+        "p(99)": 0.0882641222788988
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.06407433571850785,
+        "p(95)": 0.06519555619809488,
+        "p(99)": 0.0660925325817645,
+        "avg": 0.05510457188181157,
+        "min": 0.04389236708594125,
+        "med": 0.05510457188181157,
+        "max": 0.0663167766776819
+      }
+    },
+    "stress_token_generation_clean{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.1992835443037984,
+        "min": 0.413,
+        "med": 0.698,
+        "max": 15.633,
+        "p(90)": 1.9688000000000017,
+        "p(95)": 3.6960999999999524,
+        "p(99)": 10.516280000000004
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_p95{alg:FN-DSA-512}": {
+      "contains": "time",
+      "values": {
+        "med": 1.3500260499999999,
+        "max": 1.3500260499999999,
+        "p(90)": 1.3500260499999999,
+        "p(95)": 1.3500260499999999,
+        "p(99)": 1.3500260499999999,
+        "avg": 1.3500260499999999,
+        "min": 1.3500260499999999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_refresh_token_generation_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.47189100699999986,
+        "p(99)": 0.47791184139999987,
+        "avg": 0.40415661999999986,
+        "min": 0.32889618999999987,
+        "med": 0.40415661999999986,
+        "max": 0.4794170499999999,
+        "p(90)": 0.46436496399999994
+      }
+    },
+    "bench_token_generation_gc_free_avg{alg:FN-DSA-512}": {
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.46850555913978514,
+        "p(99)": 0.46850555913978514,
+        "avg": 0.46850555913978514,
+        "min": 0.46850555913978514,
+        "med": 0.46850555913978514,
+        "max": 0.46850555913978514,
+        "p(90)": 0.46850555913978514
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-512,vus:30}": {
+      "contains": "time",
+      "values": {
+        "max": 412.043807,
+        "p(90)": 41.588767,
+        "p(95)": 75.881579,
+        "p(99)": 318.43250279999995,
+        "avg": 27.040202800524906,
+        "min": 10.33876,
+        "med": 14.456413
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_login_dirty{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1885.330173723557,
+        "min": 270.186421,
+        "med": 1670.917322,
+        "max": 7561.856303,
+        "p(90)": 3233.181417,
+        "p(95)": 3838.428321,
+        "p(99)": 5590.196500100006
+      }
+    },
+    "stress_error_rate{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 416
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "bench_auth_cpu_time_per_token_ms_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.525,
+        "max": 0.65,
+        "p(90)": 0.625,
+        "p(95)": 0.6375,
+        "p(99)": 0.6475,
+        "avg": 0.525,
+        "min": 0.4
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "med": 2048.149861,
+        "max": 12244.548708,
+        "p(90)": 4684.7156904,
+        "p(95)": 5519.455385999998,
+        "p(99)": 7353.2140952,
+        "avg": 2344.6830955010505,
+        "min": 21.542275
+      },
+      "type": "trend"
+    },
+    "stress_token_generation_clean{alg:FN-DSA-512,vus:30}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 2.555,
+        "p(99)": 6.140799999999997,
+        "avg": 0.9072965879265085,
+        "min": 0.377,
+        "med": 0.647,
+        "max": 8.591,
+        "p(90)": 1.601
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "bench_pure_signing_memory_alloc_kb_stdev{alg:FN-DSA-512}": {
+      "values": {
+        "avg": 472.3058371547242,
+        "min": 472.3058371547242,
+        "med": 472.3058371547242,
+        "max": 472.3058371547242,
+        "p(90)": 472.3058371547242,
+        "p(95)": 472.3058371547242,
+        "p(99)": 472.3058371547242
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default"
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 416,
+        "rate": 0,
+        "passes": 0
+      }
+    },
+    "bench_auth_memory_sys_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(99)": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 3.569929999999997,
+        "avg": 0.9013263157894743,
+        "min": 0.338,
+        "med": 0.5325,
+        "max": 4.468,
+        "p(90)": 1.9757000000000007,
+        "p(95)": 2.5435000000000003
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 803.1265073999996,
+        "avg": 309.5244559248704,
+        "min": 52.41881,
+        "med": 276.506355,
+        "max": 1011.814886,
+        "p(90)": 533.3600895,
+        "p(95)": 593.71983775
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_req_success{alg:FN-DSA-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 380,
+        "rate": 0.815548250982143
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_success{alg:FN-DSA-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 381,
+        "rate": 0.8176944305899908
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2.4966999999999997,
+        "p(99)": 3.650879999999999,
+        "avg": 0.8145151256923736,
+        "min": 0.231,
+        "med": 0.49,
+        "max": 11.579,
+        "p(90)": 1.9070000000000005
+      }
+    },
+    "stress_login_dirty{alg:FN-DSA-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1195.0258669527552,
+        "min": 133.598242,
+        "med": 1109.310538,
+        "max": 4204.340325,
+        "p(90)": 2071.736057,
+        "p(95)": 2435.512504,
+        "p(99)": 3318.874571199999
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 195.562742,
+        "med": 1115.622076,
+        "max": 4991.907173,
+        "p(90)": 2091.8145446,
+        "p(95)": 2392.8806957999986,
+        "p(99)": 3449.048007480001,
+        "avg": 1220.715712143959
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.4882726300000001,
+        "min": 0.4882726300000001,
+        "med": 0.4882726300000001,
+        "max": 0.4882726300000001,
+        "p(90)": 0.4882726300000001,
+        "p(95)": 0.4882726300000001,
+        "p(99)": 0.4882726300000001
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:FN-DSA-512,vus:50}": {
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.1992835443037981,
+        "min": 0.413,
+        "med": 0.698,
+        "max": 15.633,
+        "p(90)": 1.9688000000000017,
+        "p(95)": 3.6960999999999524,
+        "p(99)": 10.516280000000004
+      }
+    },
+    "bench_iteration_failed{alg:FN-DSA-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_login_dirty": {
+      "contains": "time",
+      "values": {
+        "max": 7561.856303,
+        "p(90)": 2511.0941114,
+        "p(95)": 3171.8182474999994,
+        "p(99)": 4545.744588719999,
+        "avg": 1201.8310538943329,
+        "min": 127.636678,
+        "med": 913.99783
+      },
+      "type": "trend"
+    },
+    "stress_sign_network{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1.5369910000000035,
+        "p(95)": 3.0770630999999953,
+        "p(99)": 43.11381516000002,
+        "avg": 1.5112824405063308,
+        "min": 0.06779500000000382,
+        "med": 0.2961940000000016,
+        "max": 74.38488999999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.09739115218335462,
+        "p(90)": 0.0950257488094577,
+        "p(95)": 0.09620845049640617,
+        "p(99)": 0.09715461184596492,
+        "avg": 0.08556413531387004,
+        "min": 0.07373711844438546,
+        "med": 0.08556413531387004
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 17.258888,
+        "p(95)": 21.89323025,
+        "p(99)": 44.41783579999997,
+        "avg": 13.972050919689137,
+        "min": 10.012695,
+        "med": 12.055222,
+        "max": 123.693789
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.334,
+        "med": 0.533,
+        "max": 3.284,
+        "p(90)": 1.0685,
+        "p(95)": 1.57075,
+        "p(99)": 2.854449999999999,
+        "avg": 0.669424870466321
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:FN-DSA-Precomputed-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 3.458146149999974,
+        "avg": 0.5614832020725385,
+        "min": 0.07345800000000047,
+        "med": 0.30432900000000096,
+        "max": 8.612088,
+        "p(90)": 1.1795135000000014,
+        "p(95)": 1.7847444999999995
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_success{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 389,
+        "rate": 0.8348638674527727
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_total_p95": {
+      "contains": "time",
+      "values": {
+        "med": 1.1838017499999998,
+        "max": 1.3500260499999999,
+        "p(90)": 1.31678119,
+        "p(95)": 1.33340362,
+        "p(99)": 1.346701564,
+        "avg": 1.1838017499999998,
+        "min": 1.0175774499999999
+      },
+      "type": "trend"
+    },
+    "bench_token_generation_sample{alg:FN-DSA-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.5701951,
+        "p(95)": 0.6832866,
+        "p(99)": 0.9629899800000004,
+        "avg": 0.4882726299999999,
+        "min": 0.346359,
+        "med": 0.469403,
+        "max": 1.033674
+      }
+    },
+    "bench_refresh_token_generation_gc_free_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.40814699999999987,
+        "p(99)": 0.5997609400000006,
+        "avg": 0.3151315157894738,
+        "min": 0.243879,
+        "med": 0.30443,
+        "max": 0.823057,
+        "p(90)": 0.37086660000000005
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_dirty{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 51.051116,
+        "med": 286.83896200000004,
+        "max": 1405.105065,
+        "p(90)": 524.2465084,
+        "p(95)": 570.4786358000001,
+        "p(99)": 831.75607767,
+        "avg": 318.21859822894737
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_ms_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 3.3630343441600465,
+        "p(90)": 3.3630343441600465,
+        "p(95)": 3.3630343441600465,
+        "p(99)": 3.3630343441600465,
+        "avg": 3.3630343441600465,
+        "min": 3.3630343441600465,
+        "med": 3.3630343441600465
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_sample": {
+      "values": {
+        "p(90)": 0.547434,
+        "p(95)": 0.5863719499999992,
+        "p(99)": 0.9096574999999995,
+        "avg": 0.4042881450000002,
+        "min": 0.244219,
+        "med": 0.37395849999999997,
+        "max": 1.033674
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_iteration_failed": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_token_generation_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.8221312313591814,
+        "min": 0.262,
+        "med": 0.592,
+        "max": 15.633,
+        "p(90)": 1.4464000000000001,
+        "p(95)": 2.037499999999997,
+        "p(99)": 5.00824
+      }
+    },
+    "bench_auth_memory_rss_kb_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "min": 478.05355348538075,
+        "med": 478.05355348538075,
+        "max": 478.05355348538075,
+        "p(90)": 478.05355348538075,
+        "p(95)": 478.05355348538075,
+        "p(99)": 478.05355348538075,
+        "avg": 478.05355348538075
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_error_rate{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "values": {
+        "fails": 389,
+        "rate": 0,
+        "passes": 0
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "bench_pure_signing_gc_free_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.5952929000000001,
+        "avg": 0.3568544336734694,
+        "min": 0.235519,
+        "med": 0.349543,
+        "max": 0.686187,
+        "p(90)": 0.4616125,
+        "p(95)": 0.5068555
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-512,vus:10}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 17.80513164736841,
+        "min": 10.254648,
+        "med": 13.138227,
+        "max": 213.669811,
+        "p(90)": 27.41124300000005,
+        "p(95)": 40.47930010000001,
+        "p(99)": 82.02062169999985
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_rss_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 29625.28,
+        "p(99)": 29625.28,
+        "avg": 29625.28,
+        "min": 29625.28,
+        "med": 29625.28,
+        "max": 29625.28,
+        "p(90)": 29625.28
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_iteration_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 200,
+        "rate": 0.429235921569549
+      }
+    },
+    "bench_pure_signing_gc_free_p95{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.3601924999999999,
+        "p(90)": 0.3601924999999999,
+        "p(95)": 0.3601924999999999,
+        "p(99)": 0.3601924999999999,
+        "avg": 0.3601924999999999,
+        "min": 0.3601924999999999,
+        "med": 0.3601924999999999
+      }
+    },
+    "bench_token_generation_stdev{alg:FN-DSA-512}": {
+      "values": {
+        "med": 0.11935614945302611,
+        "max": 0.11935614945302611,
+        "p(90)": 0.11935614945302611,
+        "p(95)": 0.11935614945302611,
+        "p(99)": 0.11935614945302611,
+        "avg": 0.11935614945302611,
+        "min": 0.11935614945302611
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "bench_iteration_success{alg:FN-DSA-Precomputed-512}": {
+      "contains": "default",
+      "values": {
+        "count": 100,
+        "rate": 0.2146179607847745
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "stress_token_generation_clean{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 3.6834000000000127,
+        "avg": 0.7220240384615383,
+        "min": 0.282,
+        "med": 0.528,
+        "max": 10.527,
+        "p(90)": 1.254,
+        "p(95)": 1.705
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_sample{alg:FN-DSA-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.4685055591397849,
+        "min": 0.346359,
+        "med": 0.464138,
+        "max": 0.909126,
+        "p(90)": 0.550206,
+        "p(95)": 0.5661075999999999,
+        "p(99)": 0.7039862399999997
+      }
+    },
+    "bench_pure_signing_iteration_success{alg:FN-DSA-512}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 100,
+        "rate": 0.2146179607847745
+      }
+    },
+    "bench_pure_signing_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.31845308000000005,
+        "p(90)": 0.31845308000000005,
+        "p(95)": 0.31845308000000005,
+        "p(99)": 0.31845308000000005,
+        "avg": 0.31845308000000005,
+        "min": 0.31845308000000005,
+        "med": 0.31845308000000005
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.09739115218335462,
+        "max": 0.09739115218335462,
+        "p(90)": 0.09739115218335462,
+        "p(95)": 0.09739115218335462,
+        "p(99)": 0.09739115218335462,
+        "avg": 0.09739115218335462,
+        "min": 0.09739115218335462
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_iteration_failed{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "stress_refresh_success{alg:FN-DSA-512,vus:10}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 380,
+        "rate": 0.815548250982143
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_dirty{alg:FN-DSA-Precomputed-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 15.075901,
+        "max": 1554.984757,
+        "p(90)": 155.8757142,
+        "p(95)": 485.9187634,
+        "p(99)": 863.0572286400026,
+        "avg": 78.98666094087406,
+        "min": 10.257081
+      },
+      "thresholds": {
+        "p(95)<5000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_max": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.9054655,
+        "min": 0.777257,
+        "med": 0.9054655,
+        "max": 1.033674,
+        "p(90)": 1.0080323,
+        "p(95)": 1.02085315,
+        "p(99)": 1.0311098300000001
+      }
+    },
+    "bench_refresh_token_generation_gc_free_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.5024042999999997,
+        "max": 0.5966615999999996,
+        "p(90)": 0.5778101399999996,
+        "p(95)": 0.5872358699999995,
+        "p(99)": 0.5947764539999996,
+        "avg": 0.5024042999999997,
+        "min": 0.40814699999999987
+      }
+    },
+    "bench_refresh_token_generation_sample{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.47941705000000007,
+        "min": 0.350699,
+        "med": 0.46328400000000003,
+        "max": 1.053746,
+        "p(90)": 0.571897,
+        "p(95)": 0.6298030499999998,
+        "p(99)": 0.9406088000000006
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2399,
+        "rate": 5.14868487922674
+      }
+    },
+    "stress_req_success{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.8928107168646618,
+        "count": 416
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.0663167766776819,
+        "p(99)": 0.0663167766776819,
+        "avg": 0.0663167766776819,
+        "min": 0.0663167766776819,
+        "med": 0.0663167766776819,
+        "max": 0.0663167766776819,
+        "p(90)": 0.0663167766776819
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_error_rate{alg:FN-DSA-512,vus:50}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 395
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.0882641222788988,
+        "min": 0.0882641222788988,
+        "med": 0.0882641222788988,
+        "max": 0.0882641222788988,
+        "p(90)": 0.0882641222788988,
+        "p(95)": 0.0882641222788988,
+        "p(99)": 0.0882641222788988
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_delta_kb_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "max": 0.3855853894136769,
+        "p(90)": 0.3855853894136769,
+        "p(95)": 0.3855853894136769,
+        "p(99)": 0.3855853894136769,
+        "avg": 0.3855853894136769,
+        "min": 0.3855853894136769,
+        "med": 0.3855853894136769
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_alloc_kb_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 2784.017890625,
+        "p(99)": 2784.017890625,
+        "avg": 2784.017890625,
+        "min": 2784.017890625,
+        "med": 2784.017890625,
+        "max": 2784.017890625,
+        "p(90)": 2784.017890625
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0.5349649999999999,
+        "p(90)": 0.5198852399999999,
+        "p(95)": 0.52742512,
+        "p(99)": 0.533457024,
+        "avg": 0.45956619999999987,
+        "min": 0.3841673999999998,
+        "med": 0.45956619999999987
+      }
+    },
+    "bench_total_sample{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.6491998500000002,
+        "min": 0.509358,
+        "med": 0.611283,
+        "max": 1.569353,
+        "p(90)": 0.7488030000000006,
+        "p(95)": 1.0175774499999999,
+        "p(99)": 1.344969500000001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_min": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.33614499999999997,
+        "p(95)": 0.341252,
+        "p(99)": 0.34533759999999997,
+        "avg": 0.29528899999999997,
+        "min": 0.244219,
+        "med": 0.29528899999999997,
+        "max": 0.346359
+      }
+    },
+    "bench_pure_signing_stdev{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.07723855680291482,
+        "min": 0.07723855680291482,
+        "med": 0.07723855680291482,
+        "max": 0.07723855680291482,
+        "p(90)": 0.07723855680291482,
+        "p(95)": 0.07723855680291482,
+        "p(99)": 0.07723855680291482
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_gc_contaminated_count{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 5,
+        "rate": 0.010730898039238724
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_gc_free_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.07373711844438546,
+        "max": 0.07373711844438546,
+        "p(90)": 0.07373711844438546,
+        "p(95)": 0.07373711844438546,
+        "p(99)": 0.07373711844438546,
+        "avg": 0.07373711844438546,
+        "min": 0.07373711844438546
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_refresh_token_generation_avg{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.32889618999999987,
+        "p(99)": 0.32889618999999987,
+        "avg": 0.32889618999999987,
+        "min": 0.32889618999999987,
+        "med": 0.32889618999999987,
+        "max": 0.32889618999999987,
+        "p(90)": 0.32889618999999987
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_req_failed{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "count": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "bench_pure_signing_gc_contaminated_count{alg:FN-DSA-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2,
+        "rate": 0.004292359215695489
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_actual{alg:FN-DSA-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.9072965879265085,
+        "min": 0.377,
+        "med": 0.647,
+        "max": 8.591,
+        "p(90)": 1.601,
+        "p(95)": 2.555,
+        "p(99)": 6.140799999999997
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_clean{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 58.56281380000012,
+        "p(95)": 85.82911209999995,
+        "p(99)": 110.74991862,
+        "avg": 23.6715018835443,
+        "min": 9.846163,
+        "med": 13.658926,
+        "max": 147.695177
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_token_generation_clean{alg:FN-DSA-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.57,
+        "max": 7.516,
+        "p(90)": 2.115,
+        "p(95)": 2.61,
+        "p(99)": 4.489,
+        "avg": 0.9734278215223097,
+        "min": 0.339
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_stdev": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.09125067795408569,
+        "max": 0.10526279910525656,
+        "p(90)": 0.10246037487502238,
+        "p(95)": 0.10386158699013948,
+        "p(99)": 0.10498255668223314,
+        "avg": 0.09125067795408569,
+        "min": 0.07723855680291482
+      }
+    },
+    "stress_login_dirty{alg:FN-DSA-512,vus:50}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2021.3484890430384,
+        "min": 230.86183,
+        "med": 1859.856479,
+        "max": 6804.031962,
+        "p(90)": 3564.1009364000006,
+        "p(95)": 3953.1697601999986,
+        "p(99)": 5248.823363060001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_sample{alg:FN-DSA-Precomputed-512}": {
+      "contains": "time",
+      "values": {
+        "p(95)": 0.3841673999999998,
+        "p(99)": 0.6330931900000031,
+        "avg": 0.31845308000000005,
+        "min": 0.235519,
+        "med": 0.30272350000000003,
+        "max": 1.217905,
+        "p(90)": 0.3504190000000001
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_error_rate{alg:FN-DSA-512,vus:10}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 380
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_memory_rss_kb_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 28233.2,
+        "p(99)": 28233.2,
+        "avg": 28233.2,
+        "min": 28233.2,
+        "med": 28233.2,
+        "max": 28233.2,
+        "p(90)": 28233.2
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_network{alg:FN-DSA-512,vus:30}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 2.221195999999999,
+        "p(99)": 6.306333399999998,
+        "avg": 0.6595020524934387,
+        "min": 0.06921999999999962,
+        "med": 0.29846600000000123,
+        "max": 16.353502,
+        "p(90)": 1.3652730000000002
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_auth_cpu_time_ms_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 1.3,
+        "med": 1.3,
+        "max": 1.3,
+        "p(90)": 1.3,
+        "p(95)": 1.3,
+        "p(99)": 1.3,
+        "avg": 1.3
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_gc_contaminated_count{alg:FN-DSA-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 7,
+        "rate": 0.015023257254934214
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_success": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2,
+        "rate": 0.004292359215695489
+      },
+      "thresholds": {
+        "count>0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_iteration_failed{alg:FN-DSA-Precomputed-512}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_gc_free_p95{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.5245959999999998,
+        "p(99)": 0.5245959999999998,
+        "avg": 0.5245959999999998,
+        "min": 0.5245959999999998,
+        "med": 0.5245959999999998,
+        "max": 0.5245959999999998,
+        "p(90)": 0.5245959999999998
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "bench_sign_p95": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.6807086634999999,
+        "avg": 0.5543897749999999,
+        "min": 0.4254929499999998,
+        "med": 0.5543897749999999,
+        "max": 0.6832866,
+        "p(90)": 0.657507235,
+        "p(95)": 0.6703969175
+      }
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.006856829402084476,
+        "passes": 50,
+        "fails": 7242
+      }
+    },
+    "bench_auth_cpu_time_ms_stdev{alg:FN-DSA-Precomputed-512}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2.7129319932501073,
+        "min": 2.7129319932501073,
+        "med": 2.7129319932501073,
+        "max": 2.7129319932501073,
+        "p(90)": 2.7129319932501073,
+        "p(95)": 2.7129319932501073,
+        "p(99)": 2.7129319932501073
+      },
+      "thresholds": {
+        "avg>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_pure_signing_memory_alloc_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "contains": "default",
+      "values": {
+        "p(95)": 2814.1975,
+        "p(99)": 2814.1975,
+        "avg": 2814.1975,
+        "min": 2814.1975,
+        "med": 2814.1975,
+        "max": 2814.1975,
+        "p(90)": 2814.1975
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "stress_refresh_success{alg:FN-DSA-Precomputed-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 416,
+        "rate": 0.8928107168646618
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "bench_token_generation_gc_free_sample": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.5512515,
+        "p(99)": 0.5925960299999995,
+        "avg": 0.38610567021276604,
+        "min": 0.244219,
+        "med": 0.365958,
+        "max": 0.909126,
+        "p(90)": 0.541802
+      }
+    },
+    "bench_pure_signing_memory_alloc_kb_avg{alg:FN-DSA-512}": {
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "p(95)": 2615.79453125,
+        "p(99)": 2615.79453125,
+        "avg": 2615.79453125,
+        "min": 2615.79453125,
+        "med": 2615.79453125,
+        "max": 2615.79453125,
+        "p(90)": 2615.79453125
+      },
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      }
+    },
+    "stress_refresh_failed{alg:FN-DSA-512,vus:50}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "stress_sign_clean": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 478.4551290599996,
+        "avg": 31.487101951001154,
+        "min": 9.826525,
+        "med": 13.004977,
+        "max": 1554.865596,
+        "p(90)": 55.42695900000002,
+        "p(95)": 103.1572925
+      }
+    },
+    "bench_pure_signing_iteration_success": {
+      "values": {
+        "count": 200,
+        "rate": 0.429235921569549
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "bench_auth_memory_sys_kb_avg{alg:FN-DSA-Precomputed-512}": {
+      "thresholds": {
+        "p(95)<9999999": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "default",
+      "values": {
+        "med": 13398.2578125,
+        "max": 13398.2578125,
+        "p(90)": 13398.2578125,
+        "p(95)": 13398.2578125,
+        "p(99)": 13398.2578125,
+        "avg": 13398.2578125,
+        "min": 13398.2578125
+      }
+    },
+    "bench_token_generation_gc_free_avg": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.3054405157894736,
+        "med": 0.3869730374646294,
+        "max": 0.46850555913978514,
+        "p(90)": 0.452199054804754,
+        "p(95)": 0.4603523069722696,
+        "p(99)": 0.466874908706282,
+        "avg": 0.3869730374646294
+      }
+    }
+  },
+  "setup_data": {
+    "user": {
+      "password": "BenchPass!123",
+      "email": "bench-lmfemddw@bench.test",
+      "name": "bench-lmfemddw"
+    }
+  }
+}

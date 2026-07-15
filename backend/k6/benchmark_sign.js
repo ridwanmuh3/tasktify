@@ -112,13 +112,14 @@ const RUN_ISOLATED = !STRESS_ONLY && !ATTACK_ONLY;
 const RUN_STRESS = !ISOLATED_ONLY && !ATTACK_ONLY;
 const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
 
+// Classical baselines (HS256/RS256/ES256/EdDSA) disabled for now — their
+// gateway containers are removed from docker-compose.benchmark.yml to avoid
+// noisy-neighbor CPU contention on a shared 2-vCPU host between the two
+// FN-DSA variants under direct comparison (see docs/p0-penjelasan.md P0-7).
+// Restore both this array and the compose services together.
 const ALGORITHMS = [
   { id: "FNP512", name: "FN-DSA-Precomputed-512", category: "PQC", port: 5001 },
   { id: "FN512", name: "FN-DSA-512", category: "PQC", port: 5002 },
-  { id: "HS256", name: "HS256", category: "Classical", port: 5003 },
-  { id: "RS256", name: "RS256", category: "Classical", port: 5004 },
-  { id: "ES256", name: "ES256", category: "Classical", port: 5005 },
-  { id: "EdDSA", name: "EdDSA", category: "Classical", port: 5006 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
@@ -126,10 +127,6 @@ const ALGORITHMS = [
 const STRESS_BUDGET = {
   "FN-DSA-Precomputed-512": { dirty: 5000, actual: 500 },
   "FN-DSA-512": { dirty: 10000, actual: 1000 },
-  HS256: { dirty: 3000, actual: 100 },
-  RS256: { dirty: 3000, actual: 200 },
-  ES256: { dirty: 3000, actual: 100 },
-  EdDSA: { dirty: 3000, actual: 100 },
 };
 const DEFAULT_STRESS_BUDGET = { dirty: 300000, actual: 120000 };
 
@@ -161,6 +158,24 @@ function endpointUsesTLS() {
   return base.startsWith("https://");
 }
 
+// Fisher-Yates shuffle. Used only for the scenario execution ORDER (below),
+// not for ALGORITHMS itself — lookups by id/name and report tables must stay
+// stable/canonical; only which algorithm's isolated/stress/attack scenarios
+// run first should vary between invocations, so a fixed order doesn't let
+// one algorithm systematically benefit (or suffer) from cache/DB warmth left
+// over from whichever algorithm always ran immediately before it (P1-6).
+function shuffle(array) {
+  const copy = array.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+const RUN_ORDER = shuffle(ALGORITHMS);
+console.log(`Randomized algorithm execution order for this run: ${RUN_ORDER.map((a) => a.id).join(" -> ")}`);
+
 // ═══════════════════════════════════════════════════════════════
 // Scenarios
 // ═══════════════════════════════════════════════════════════════
@@ -170,7 +185,7 @@ let startDelay = 0;
 
 // ── Phase 1: Isolated (1 VU, server loops ITERATIONS times) ──
 if (RUN_ISOLATED) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     // Conservative timeout: each signing iteration can take up to 1s for slow algs
     const timeoutS = Math.max(60, Math.ceil(ITERATIONS * 0.01) + 30);
     scenarios[`isolated_${alg.id}`] = {
@@ -190,7 +205,7 @@ if (RUN_ISOLATED) {
 
 // ── Phase 2: Stress Test (10 / 30 / 50 VU, constant-vus) ────
 if (RUN_STRESS) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     for (const vus of CONCURRENCY_LEVELS) {
       scenarios[`stress_${alg.id}_${vus}VU`] = {
         executor: "constant-vus",
@@ -208,7 +223,7 @@ if (RUN_STRESS) {
 
 // ── Phase 3: Attack block-rate check ──────────────────────────
 if (RUN_ATTACKS) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     scenarios[`attack_${alg.id}`] = {
       executor: "shared-iterations",
       vus: 1,

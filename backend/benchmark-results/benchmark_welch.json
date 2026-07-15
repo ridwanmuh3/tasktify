@@ -1,27 +1,31 @@
 {
   "source": "backend/benchmark-results/benchmark_sign_result.json",
   "samples": "backend/benchmark-results/benchmark_sign_samples.ndjson",
-  "sample_count": 191,
+  "sample_count": 589,
   "metric": "isolated.token_generation_gc_free_ms",
-  "target": "Falcon-Precomputed-512",
+  "target": "FN-DSA-Precomputed-512",
   "direction": "lower_is_better",
   "rows": [
     {
-      "target": "Falcon-Precomputed-512",
-      "baseline": "Falcon-512",
-      "target_n": "95",
+      "target": "FN-DSA-Precomputed-512",
+      "baseline": "FN-DSA-512",
+      "target_n": "97",
       "baseline_n": "96",
-      "target_mean": "0.3369",
-      "baseline_mean": "0.3477",
-      "target_sd": "0.05853",
-      "baseline_sd": "0.05077",
+      "target_mean": "0.3526",
+      "baseline_mean": "0.4674",
+      "target_sd": "0.06841",
+      "baseline_sd": "0.07497",
       "test": "welch_independent_t",
-      "t_statistic": "-1.362",
-      "p_value": "0.1749",
-      "cohen_d": "0.1973",
-      "effect_label": "negligible",
-      "improvement_pct": "3.107",
-      "detail": "df=184.75"
+      "t_statistic": "-11.11",
+      "p_value": "2.11e-22",
+      "cohen_d": "1.601",
+      "hedges_g": "1.594",
+      "effect_label": "large",
+      "mean_diff": "0.1148",
+      "ci95_low": "0.09445",
+      "ci95_high": "0.1352",
+      "improvement_pct": "24.57",
+      "detail": "df=189.05"
     }
   ]
 }

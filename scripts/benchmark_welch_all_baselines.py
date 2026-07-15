@@ -18,8 +18,10 @@ from benchmark_stat_tests import (
     find_sample_file,
     fmt_num,
     fmt_p,
+    hedges_g,
     improvement_pct,
     load_k6_samples,
+    mean_diff_ci,
     read_json,
     welch_t_test,
 )
@@ -102,6 +104,8 @@ def result_row(
 ) -> dict[str, str]:
     test = welch_t_test(target, baseline)
     effect = cohen_d(target, baseline, higher_is_better)
+    g = hedges_g(target, baseline, higher_is_better)
+    ci = mean_diff_ci(target, baseline, higher_is_better)
     return {
         "target": target.algorithm,
         "baseline": baseline.algorithm,
@@ -115,7 +119,11 @@ def result_row(
         "t_statistic": fmt_num(test.statistic),
         "p_value": fmt_p(test.p_value),
         "cohen_d": fmt_num(effect),
-        "effect_label": effect_label(effect, "cohen_d"),
+        "hedges_g": fmt_num(g),
+        "effect_label": effect_label(g if g is not None else effect, "cohen_d"),
+        "mean_diff": fmt_num(ci[0]) if ci else "n/a",
+        "ci95_low": fmt_num(ci[1]) if ci else "n/a",
+        "ci95_high": fmt_num(ci[2]) if ci else "n/a",
         "improvement_pct": fmt_num(improvement_pct(target, baseline, higher_is_better)),
         "detail": test.detail,
     }
@@ -175,8 +183,11 @@ def print_markdown(
         print(f"| mean (ms) | {row['target_mean']} | {row['baseline_mean']} |")
         print(f"| sd (ms) | {row['target_sd']} | {row['baseline_sd']} |")
         print()
-        print("| Welch t | df | p-value | Cohen's d | Effect | Target change |")
-        print("| --- | --- | --- | --- | --- | --- |")
+        print(
+            "| Welch t | df | p-value | Cohen's d | Hedges' g | Effect "
+            "| Mean diff (ms) | 95% CI (ms) | Target change |"
+        )
+        print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         print(
             "| "
             + " | ".join(
@@ -185,7 +196,10 @@ def print_markdown(
                     df_text(row["detail"]),
                     row["p_value"],
                     row["cohen_d"],
+                    row["hedges_g"],
                     row["effect_label"],
+                    row["mean_diff"],
+                    f"[{row['ci95_low']}, {row['ci95_high']}]",
                     change_text(row["improvement_pct"], higher_is_better),
                 ]
             )
