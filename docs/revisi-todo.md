@@ -51,16 +51,19 @@ emit build/init ms, `persistent_bytes_per_key`, sign dynamic vs precomputed, `sa
 **`break_even_signatures`**, `rss_delta_kb_by_signers` (1/10/100). Rumus: `N = T_init / (T_sign_dyn − T_sign_pre)`.
 
 **Angka tesis — VPS 2 vCPU, 3 run independen** (`fndsa_precompute_profile_run_1..3.json`;
-headline median = `fndsa_precompute_profile.json`):
+headline **mean** = `fndsa_precompute_profile.json` — bukan median: dengan n=3, median cuma nilai run
+tengah/run 3, membuang 2 run lain; mean memakai ketiganya, konvensi standar untuk rata-rata beberapa run):
 
-| Metrik | Median (headline) | Rentang 3-run |
+| Metrik | Mean (headline) | Rentang 3-run |
 |---|---|---|
-| build/init | 0,2461 ms | 0,2153–0,2787 |
+| build/init | 0,2467 ms | 0,2153–0,2787 |
 | persistent bytes/key | 110.712 B (~108,1 KiB) | identik di 3 run |
-| sign dynamic → precomputed | 0,4942 → 0,3229 ms | — |
-| hemat/signature | 0,1713 ms | 0,0485–0,2068 |
-| **break-even** | **1,627 signature** | 1,190–4,436 |
-| RSS delta @100 signer | 13.752 KB (≈137,5 KB/signer) | 12.836–15.452 |
+| sign dynamic → precomputed | 0,4598 → 0,3175 ms | — |
+| hemat/signature | 0,1422 ms | 0,0485–0,2068 |
+| **break-even** | **2,418 ± 1,762 signature** | 1,190–4,436 |
+| RSS delta @100 signer | 14.013 KB (≈140,1 KB/signer) | 12.836–15.452 |
+
+stdev break-even 1,762 (≈73% relatif) besar — variansi nyata VPS 2-vCPU bersama (noisy-neighbor), bukan bug.
 
 Run 1 outlier (break-even 4,4, hemat kecil) — kemungkinan noisy-neighbor VPS 2-vCPU bersama, dilaporkan
 sebagai rentang bukan dibuang. RSS @1/@10 signer terlalu kecil untuk terukur reliabel (noise heap Go > sinyal);
