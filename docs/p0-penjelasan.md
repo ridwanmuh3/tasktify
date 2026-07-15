@@ -74,7 +74,22 @@ Persistent bytes per key: **110.712 B (~108,1 KiB)**, identik di ketiga run (det
 
 **Run 1 adalah outlier** — hemat/signature-nya (0,0485 ms) jauh lebih kecil dari run 2/3 (0,17–0,21 ms) meski build cost serupa, menarik mean break-even naik ke 2,42 (stdev 1,76, ≈73% relatif — besar). Kemungkinan noisy-neighbor pada VPS 2 vCPU bersama (persis gejala yang disebut reviewer untuk stress test 30 VU). Mean sengaja **tidak** membuang run ini — stdev besar itu sendiri adalah temuan (variansi nyata pada VPS bersama), bukan cacat pengukuran yang harus disembunyikan.
 
-RSS delta @1 dan @10 signer (tak ditampilkan di tabel) berosilasi di sekitar nol dan kadang negatif — pada skala sekecil itu, fluktuasi heap Go runtime sendiri lebih besar dari alokasi satu/sepuluh signer (~108 KiB–1,08 MiB), jadi sinyalnya tenggelam di noise. Hanya skala 100 signer (>10 MiB) yang RSS delta-nya reliabel.
+RSS delta @1 dan @10 signer berosilasi di sekitar nol dan kadang negatif — pada skala sekecil itu, fluktuasi heap Go runtime sendiri lebih besar dari alokasi satu/sepuluh signer (~108 KiB–1,08 MiB), jadi sinyalnya tenggelam di noise. Hanya skala 100 signer (>10 MiB) yang RSS delta-nya reliabel. Nilai lengkap:
+
+| Metrik | Run 1 | Run 2 | Run 3 | Mean | Stdev | Min | Max |
+|---|---|---|---|---|---|---|---|
+| build/init (ms) | 0,2153 | 0,2461 | 0,2787 | 0,2467 | 0,0317 | 0,2153 | 0,2787 |
+| sign dynamic (ms) | 0,3767 | 0,5084 | 0,4942 | 0,4598 | 0,0723 | 0,3767 | 0,5084 |
+| sign precomputed (ms) | 0,3281 | 0,3016 | 0,3229 | 0,3175 | 0,0141 | 0,3016 | 0,3281 |
+| hemat/signature (ms) | 0,0485 | 0,2068 | 0,1713 | 0,1422 | 0,0831 | 0,0485 | 0,2068 |
+| break-even (signature) | 4,4359 | 1,1898 | 1,6271 | 2,4176 | 1,7615 | 1,1898 | 4,4359 |
+| RSS delta @1 signer (KB) | −32 | 20 | 148 | 45,3 | 92,6 | −32 | 148 |
+| RSS delta @10 signer (KB) | −552 | −496 | −880 | −642,7 | 207,4 | −880 | −496 |
+| RSS delta @100 signer (KB) | 12.836 | 13.752 | 15.452 | 14.013,3 | 1.327,4 | 12.836 | 15.452 |
+
+RSS @1 dan @10 punya stdev lebih besar dari mean-nya sendiri (atau tanda berubah-ubah) — konfirmasi kuantitatif bahwa kedua skala itu tidak reliabel untuk diklaim sebagai pertumbuhan memori per-signer. RSS @100 stdev ≈9,5% relatif terhadap mean — jauh lebih stabil.
+
+Sebagai catatan metodologis tambahan: cara lain menghitung break-even adalah rasio dari mean komponen (`mean(build)/mean(save)` = 0,2467/0,1422 = **1,735**) alih-alih mean dari rasio per-run (2,418). Keduanya berbeda karena pembagian tidak linear (ketimpangan Jensen). Dokumen ini melaporkan **mean dari rasio per-run** (2,418) sebagai headline karena break-even dihitung sekali per run dari pasangan build/save yang benar-benar diukur bersama pada run itu — bukan mencampur build run A dengan save run B.
 
 ### Untuk sidang
 

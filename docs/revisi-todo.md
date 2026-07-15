@@ -54,14 +54,20 @@ emit build/init ms, `persistent_bytes_per_key`, sign dynamic vs precomputed, `sa
 headline **mean** = `fndsa_precompute_profile.json` — bukan median: dengan n=3, median cuma nilai run
 tengah/run 3, membuang 2 run lain; mean memakai ketiganya, konvensi standar untuk rata-rata beberapa run):
 
-| Metrik | Mean (headline) | Rentang 3-run |
-|---|---|---|
-| build/init | 0,2467 ms | 0,2153–0,2787 |
-| persistent bytes/key | 110.712 B (~108,1 KiB) | identik di 3 run |
-| sign dynamic → precomputed | 0,4598 → 0,3175 ms | — |
-| hemat/signature | 0,1422 ms | 0,0485–0,2068 |
-| **break-even** | **2,418 ± 1,762 signature** | 1,190–4,436 |
-| RSS delta @100 signer | 14.013 KB (≈140,1 KB/signer) | 12.836–15.452 |
+| Metrik | Run 1 | Run 2 | Run 3 | Mean | Stdev |
+|---|---|---|---|---|---|
+| build/init (ms) | 0,2153 | 0,2461 | 0,2787 | **0,2467** | 0,0317 |
+| sign dynamic (ms) | 0,3767 | 0,5084 | 0,4942 | **0,4598** | 0,0723 |
+| sign precomputed (ms) | 0,3281 | 0,3016 | 0,3229 | **0,3175** | 0,0141 |
+| hemat/signature (ms) | 0,0485 | 0,2068 | 0,1713 | **0,1422** | 0,0831 |
+| **break-even (signature)** | 4,4359 | 1,1898 | 1,6271 | **2,4176** | 1,7615 |
+| RSS delta @1 signer (KB) | −32 | 20 | 148 | 45,3 | 92,6 |
+| RSS delta @10 signer (KB) | −552 | −496 | −880 | −642,7 | 207,4 |
+| RSS delta @100 signer (KB) | 12.836 | 13.752 | 15.452 | **14.013,3** | 1.327,4 |
+
+persistent bytes/key: **110.712 B (~108,1 KiB)**, identik di 3 run (deterministik). RSS @1/@10 tidak reliabel
+(stdev sebanding atau lebih besar dari mean, tanda berubah) — hanya @100 signer valid (stdev ≈9,5% relatif).
+Detail interpretasi + alasan mean-vs-median: [p0-penjelasan.md](p0-penjelasan.md#hasil--vps-2-vcpu-3-run-independen-angka-tesis).
 
 stdev break-even 1,762 (≈73% relatif) besar — variansi nyata VPS 2-vCPU bersama (noisy-neighbor), bukan bug.
 
