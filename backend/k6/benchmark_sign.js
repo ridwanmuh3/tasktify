@@ -158,6 +158,24 @@ function endpointUsesTLS() {
   return base.startsWith("https://");
 }
 
+// Fisher-Yates shuffle. Used only for the scenario execution ORDER (below),
+// not for ALGORITHMS itself — lookups by id/name and report tables must stay
+// stable/canonical; only which algorithm's isolated/stress/attack scenarios
+// run first should vary between invocations, so a fixed order doesn't let
+// one algorithm systematically benefit (or suffer) from cache/DB warmth left
+// over from whichever algorithm always ran immediately before it (P1-6).
+function shuffle(array) {
+  const copy = array.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+const RUN_ORDER = shuffle(ALGORITHMS);
+console.log(`Randomized algorithm execution order for this run: ${RUN_ORDER.map((a) => a.id).join(" -> ")}`);
+
 // ═══════════════════════════════════════════════════════════════
 // Scenarios
 // ═══════════════════════════════════════════════════════════════
@@ -167,7 +185,7 @@ let startDelay = 0;
 
 // ── Phase 1: Isolated (1 VU, server loops ITERATIONS times) ──
 if (RUN_ISOLATED) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     // Conservative timeout: each signing iteration can take up to 1s for slow algs
     const timeoutS = Math.max(60, Math.ceil(ITERATIONS * 0.01) + 30);
     scenarios[`isolated_${alg.id}`] = {
@@ -187,7 +205,7 @@ if (RUN_ISOLATED) {
 
 // ── Phase 2: Stress Test (10 / 30 / 50 VU, constant-vus) ────
 if (RUN_STRESS) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     for (const vus of CONCURRENCY_LEVELS) {
       scenarios[`stress_${alg.id}_${vus}VU`] = {
         executor: "constant-vus",
@@ -205,7 +223,7 @@ if (RUN_STRESS) {
 
 // ── Phase 3: Attack block-rate check ──────────────────────────
 if (RUN_ATTACKS) {
-  for (const alg of ALGORITHMS) {
+  for (const alg of RUN_ORDER) {
     scenarios[`attack_${alg.id}`] = {
       executor: "shared-iterations",
       vus: 1,

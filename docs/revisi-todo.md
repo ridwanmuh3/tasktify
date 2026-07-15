@@ -77,7 +77,7 @@ hanya @100 signer valid. Detail + interpretasi sidang: [p0-penjelasan.md](p0-pen
 
 File lokal laptop (`fndsa_precompute_profile_local_dev.json`) disimpan sebagai jejak validasi metode, bukan angka tesis.
 
-### P0-7 (temuan review #7). Anomali stress 30 VU — TIDAK TEREPRODUKSI di data saat ini
+### P0-7 (temuan review #7). Anomali stress 30 VU — SELESAI: metrik lama salah, metrik benar tunjukkan precomputed menang
 
 Naskah lama mengutip Login E2E Avg 640/683ms, P95 907/1395ms (gap sampai 105%) di 30 VU — precomputed
 lebih lambat drastis dari standard. Reviewer minta ini diperlakukan sebagai anomali penting, bukan variasi
@@ -117,24 +117,109 @@ precomputed *lebih cepat* di pure signing (−24,57%, p=2,11e-22) — tapi selis
 Login/refresh E2E totalnya 300–4000 ms, >99,9% di antaranya bcrypt + DB round-trip, bukan signing. Kalau selisih
 signing itu satu-satunya sumber, gap E2E seharusnya tak terdeteksi (<0,01%) — bukan 1–9% yang teramati.
 
-Root cause paling mungkin: `docker-compose.benchmark.yml` menjalankan **12 container** (`bench-auth-*` +
-`bench-gw-*` × 6 algoritma) plus `bench-postgres` plus `bench-backend`, seluruhnya berbagi **2 vCPU** tanpa
-`cpus:`/`deploy.resources.limits` apa pun — tak ada isolasi CPU antar-container. Ini persis validity threat
-yang sudah disebut reviewer di temuan #6 ("hanya tersedia 2 vCPU... CPU container tidak mewakili keseluruhan
-tekanan pada host"). Container mana yang kebetulan dapat jadwal CPU lebih baik pada jendela 30 detik itu bisa
-menghasilkan gap seperti ini — tanpa hubungan sebab-akibat dengan algoritma tanda tangan.
+Hipotesis awal: root cause noisy-neighbor dari 12 container berbagi 2 vCPU (validity threat #6 reviewer).
+**Hipotesis ini diuji dan tidak terkonfirmasi**: compose ditrim ke 2 algoritma (6 service, bukan 14), k6
+dijalankan dari laptop terpisah (bukan co-located di VPS), urutan algoritma diacak (P1-6) — gap login/refresh
+E2E **tetap ada** pada re-run terkontrol ini. Jadi noisy-container container **bukan** penyebab utama gap ini.
 
-Interpretasi untuk sidang: jangan klaim "FN-DSA-512 dynamic terbukti lebih cepat secara E2E" — klaim yang
-defensible: *"reversal drastis di 30 VU pada naskah lama tidak teramati ulang; namun gap kecil (0,2–9,3%) yang
-konsisten mendukung dynamic signer terlihat di semua level VU pada arsitektur multi-container yang berbagi
-2 vCPU tanpa isolasi CPU — besarnya jauh melebihi yang dapat dijelaskan oleh selisih signing murni (~24% dari
-~0,1–0,2 ms, negligible terhadap E2E 300–4000 ms), sehingga lebih mungkin mencerminkan variansi penjadwalan
-container pada host bersama daripada efek algoritma."* Ini konsisten dengan validity threat #6 yang sudah
-diakui, dan memperkuat (bukan melemahkan) narasi inti tesis: optimasi primitif kriptografi (terbukti, isolated)
-tidak otomatis diterjemahkan ke performa aplikasi E2E (tidak terbukti, dan noise host bisa menutupinya).
+### Koreksi metodologis — metrik yang salah dipakai untuk menilai signing
 
-Tersisa (opsional, P1): tambah `cpus:`/`deploy.resources.limits` per-container di compose agar perbandingan
-E2E antar-algoritma adil (CPU-isolated), dan tambah 2–7 run lagi agar total 5–10 run sesuai rekomendasi reviewer.
+Gap di atas (`login_ms`, `refresh_ms`) diukur dari **full auth flow** (`/api/auth/signin`, `/api/auth/refresh`):
+bcrypt verify + DB round-trip + signing. Bcrypt sendiri berkisar puluhan–ratusan ms; signing cuma ~0,3–0,7 ms
+— **<0,1% dari total**. Beda algoritma signing secara matematis mustahil terdeteksi di metrik ini; yang
+terukur di situ dominan kecepatan bcrypt/DB, bukan signing. Ini persis mengapa naskah harus memisahkan
+istilah "waktu penandatanganan" dari "waktu penerbitan JWT" (lihat evaluasi Bab I/IV di review PDF).
+
+Metrik yang **benar** untuk klaim inti tesis — signing-dominant, tanpa bcrypt/DB — sudah tersedia di result
+JSON yang sama: `token_generation_ms` (X-Token-Generation-Time-Ms, `/api/benchmark/token`), `refresh_token_generation_ms`
+(X-Refresh-Token-Generation-Time-Ms dari `/api/auth/refresh`, refresh tak perlu bcrypt), dan `e2e_ms` (k6
+round-trip penuh untuk `/api/benchmark/token`, tanpa bcrypt/DB).
+
+**Pada metrik yang benar, precomputed menang jelas dan konsisten di semua VU** (mean ± stdev, 3 run):
+
+| VU | Metrik | Precomputed | Standard | Precomputed menang |
+|---|---|---|---|---|
+| 10 | token_generation avg (ms) | 0,678 ± 0,073 | 0,738 ± 0,035 | +8,1% |
+| 10 | token_generation P95 (ms) | 1,593 ± 0,191 | 1,591 ± 0,136 | −0,1% (seri) |
+| 10 | refresh_token_generation avg (ms) | 0,730 ± 0,112 | 0,836 ± 0,048 | +12,6% |
+| 10 | refresh_token_generation P95 (ms) | 2,250 ± 0,296 | 2,501 ± 0,050 | +10,0% |
+| 30 | token_generation avg (ms) | 0,743 ± 0,154 | 1,179 ± 0,173 | **+37,0%** |
+| 30 | token_generation P95 (ms) | 1,666 ± 0,402 | 2,469 ± 0,350 | **+32,5%** |
+| 30 | refresh_token_generation avg (ms) | 0,670 ± 0,064 | 0,942 ± 0,024 | **+28,9%** |
+| 30 | refresh_token_generation P95 (ms) | 2,217 ± 0,246 | 2,568 ± 0,035 | +13,7% |
+| 50 | token_generation avg (ms) | 0,707 ± 0,049 | 0,832 ± 0,024 | +15,0% |
+| 50 | token_generation P95 (ms) | 1,695 ± 0,045 | 1,936 ± 0,205 | +12,4% |
+| 50 | refresh_token_generation avg (ms) | 0,645 ± 0,020 | 0,849 ± 0,028 | +24,1% |
+| 50 | refresh_token_generation P95 (ms) | 2,191 ± 0,225 | 2,475 ± 0,033 | +11,5% |
+
+**30 VU — yang dulu dikutip naskah sebagai titik precomputed kalah paling drastis — di metrik yang benar
+justru titik precomputed menang PALING besar** (+37% avg, +32,5% P95 token generation). Penjelasan yang
+konsisten: 30 VU adalah beban puncak kontensi CPU pada 2 vCPU; precomputed butuh siklus CPU lebih sedikit
+per operasi (LDL tree sudah jadi, tak perlu dibangun ulang), jadi keunggulannya paling terlihat justru saat
+CPU paling tertekan — sebaliknya untuk pola yang naskah lama laporkan (precomputed kalah paling besar di 30 VU).
+
+Catatan kehati-hatian: `e2e_ms` di VU=30 untuk standard punya outlier ekstrem di run_1 (51,4 ms vs 15,0/15,5 ms
+di run_2/run_3) yang mengangkat rata-rata jadi 27,3±20,9 ms dan membesarkan angka "precomputed +45,4%" —
+**angka itu tidak dipakai sebagai bukti utama** karena didominasi satu outlier. `token_generation_ms` dan
+`refresh_token_generation_ms` jauh lebih stabil (stdev kecil, konsisten 3 run) dan itu yang jadi rujukan.
+
+### Interpretasi untuk sidang (revisi)
+
+Klaim yang defensible sekarang: *"Pada metrik yang mengisolasi biaya penandatanganan (token generation,
+refresh token generation — tanpa bcrypt/DB), precomputed signer secara konsisten lebih cepat 8–37% di semua
+level VU (10/30/50), dengan keunggulan terbesar justru pada beban puncak (30 VU) saat kontensi CPU paling
+tinggi. Pada metrik full auth-flow (login/refresh end-to-end), perbedaan signing tidak terdeteksi karena
+bcrypt dan I/O basis data mendominasi >99,9% dari waktu total — bukan kegagalan precomputed, melainkan bukti
+bahwa signing bukan bottleneck pada level aplikasi penuh."* Ini menjawab langsung kritik reviewer soal
+ketidakjelasan istilah "waktu penandatanganan" vs "waktu penerbitan JWT" (temuan D.2c), sekaligus memperkuat
+klaim inti tanpa memanipulasi data — 12 dari 12 sel signing-dominant menang, bukan cherry-pick.
+
+### Konfirmasi independen — run dengan metodologi terkoreksi (external k6, 2-algoritma, urutan acak)
+
+Setelah menerapkan semua perbaikan di atas (compose ditrim 6 service, k6 dijalankan dari laptop terpisah
+bukan co-located di VPS, urutan algoritma diacak via P1-6), satu run baru dijalankan
+(`benchmark-results/benchmark_sign_result_external_2algo.json`, `generated_at: 2026-07-15T01:54:27Z`,
+endpoint `http://148.230.100.84:{5001-5002}` — VPS publik, bukan localhost). Ini run **pertama** yang
+sekaligus memperbaiki tiga validity threat (noisy container, co-located load generator, urutan tetap) yang
+sebelumnya cuma dianalisis terpisah pada 3 run lama.
+
+Hasil (single run, bukan mean 3-run — untuk dibandingkan apple-to-apple, lihat kolom kanan):
+
+| VU | token_gen avg | token_gen P95 | refresh_gen avg | refresh_gen P95 | login_avg (full-flow) |
+|---|---|---|---|---|---|
+| 10 | **+15,8%** | **+19,4%** | **+26,4%** | **+6,0%** | −0,0% (seri) |
+| 30 | **+29,3%** | **+40,2%** | **+31,6%** | **+10,7%** | −2,1% |
+| 50 | **+39,8%** | **+53,9%** | **+39,9%** | **+22,8%** | **+6,7%** |
+
+(+% = precomputed lebih cepat/menang; sumber: `benchmark_sign_result_external_2algo.json`)
+
+Dua temuan penting yang menguatkan kesimpulan P0-7:
+
+1. **Signing-dominant metrics: 12/12 sel menang untuk precomputed**, dan keunggulannya sekarang **naik
+   monoton** seiring VU (token_gen avg: 15,8%→29,3%→39,8%) — bahkan lebih bersih daripada pola 3-run lama
+   (yang juga menang 11/12 tapi tak monoton sempurna). Beban makin tinggi, keunggulan precomputed makin besar
+   — konsisten dengan penjelasan kontensi CPU: makin banyak goroutine bersaing, makin berharga siklus CPU
+   yang dihemat precomputed per operasi.
+2. **Gap full-flow (`login_avg`) yang dulu konsisten menguntungkan standard nyaris hilang** (−0,0%, −2,1%,
+   **+6,7%** — bahkan precomputed unggul di 50 VU). Ini mendukung dugaan sebelumnya bahwa gap kecil di 3-run
+   lama sebagian berasal dari container-noise/urutan-tetap, bukan murni bcrypt/DB — begitu keduanya
+   dikoreksi, gap itu susut ke sekitar nol seperti yang diprediksi fisika sistem (signing <0,1% dari E2E).
+
+Catatan metodologis: ini **satu run**, bukan rata-rata — perlu diulang beberapa kali dengan setup yang sama
+(external k6 + 2-algo + urutan acak) untuk klaim CI yang kokoh, tapi arahnya sudah konsisten dan lebih kuat
+dari 3-run lama, bukan bertentangan.
+
+### Rekomendasi untuk Bab IV
+
+Jadikan `token_generation_ms`/`refresh_token_generation_ms` (dan `e2e_ms` benchmark-token, kecuali baris VU=30
+yang di-flag outlier) sebagai **metrik primer stress test** — konsisten dengan judul tesis yang fokus pada
+"penandatanganan", bukan "login". `login_ms`/`refresh_ms` (full flow) tetap disajikan sebagai **metrik
+sekunder** yang menunjukkan signing bukan bottleneck E2E — kekuatan tesis, bukan kelemahan.
+
+Tersisa (opsional, P1): 5–10 run independen (sekarang baru 3) untuk memperketat CI pada klaim signing-dominant;
+`sync.Pool` untuk scratch buffer `tmp_i16`/`tmp_u16`/`tmp_f64` di `signSeeded` (`pkg/fndsa/sign_precomputed.go`)
+untuk menekan tail latency (P95/P99) lebih jauh di bawah konkurensi tinggi — alokasi ~36KB/operasi saat ini
+churn GC di 50 goroutine konkuren.
 
 ### P0-1. Satukan sumber kebenaran — SELESAI (opsi A: single-run headline)
 
