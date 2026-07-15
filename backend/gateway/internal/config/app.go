@@ -84,11 +84,12 @@ func Bootstrap(config *BootstrapConfig) {
 	}
 
 	issuer := config.Config.GetString("JWT_ISSUER")
+	audience := config.Config.GetString("JWT_AUDIENCE")
 	duration := config.Config.GetInt("JWT_TOKEN_DURATION")
 
 	// Multi-algorithm JWT util for token verification
-	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, algConfigs)
-	benchmarkJWT := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, benchmarkAlgConfigs)
+	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, audience, duration, defaultAlg, algConfigs)
+	benchmarkJWT := jwtutils.NewMultiAlgJwtUtil(issuer, audience, duration, defaultAlg, benchmarkAlgConfigs)
 
 	// gRPC clients
 	authClient := model.NewAuthServiceClient(config.AuthServiceConn)

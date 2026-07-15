@@ -52,7 +52,7 @@ func newKeyConfusionTestJWT(t *testing.T) (JwtUtil, *rsa.PublicKey) {
 		t.Fatalf("hmac secret generation failed: %v", err)
 	}
 
-	util := NewMultiAlgJwtUtil("tasktify", 60, "RS256", map[string]*AlgConfig{
+	util := NewMultiAlgJwtUtil("tasktify", "", 60, "RS256", map[string]*AlgConfig{
 		"RS256": {
 			Method:    jwtlib.SigningMethodRS256,
 			SignKey:   rsaKey,

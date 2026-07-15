@@ -20,7 +20,7 @@ func BenchmarkJWTSign(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "FN-DSA-Precomputed-512", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", "", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",
@@ -48,7 +48,7 @@ func BenchmarkJWTVerify(b *testing.B) {
 		b.Fatalf("Gagal memuat konfigurasi kunci: %v. Pastikan path keysDir benar.", err)
 	}
 
-	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", 60, "FN-DSA-Precomputed-512", configs)
+	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", "", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
 		Email:  "bench-gxiulagx@bench.test",

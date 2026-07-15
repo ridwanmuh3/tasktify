@@ -69,10 +69,11 @@ func Bootstrap(config *BootstrapConfig) {
 	}
 
 	issuer := config.Config.GetString("JWT_ISSUER")
+	audience := config.Config.GetString("JWT_AUDIENCE")
 	duration := config.Config.GetInt("JWT_TOKEN_DURATION")
 
 	// Multi-algorithm JWT utility
-	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, duration, defaultAlg, algConfigs)
+	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, audience, duration, defaultAlg, algConfigs)
 
 	// repositories
 	userRepository := repository.NewUserRepository()
