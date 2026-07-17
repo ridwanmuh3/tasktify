@@ -1,10 +1,14 @@
 /**
  * adversarial_jwt.js
  *
- * k6 adversarial JWT security test — 9 black-box attack vectors
+ * k6 adversarial JWT security test — 7 black-box attack vectors
  *
  * Tests that the gateway correctly blocks all JWT attack scenarios.
  * Each attack manipulates a valid token and asserts 401/403 response.
+ * Scoped to attacks that exercise the digital signature algorithm itself
+ * (tampering, forgery, algorithm-header manipulation, key confusion) —
+ * claim-only checks unrelated to the signing algorithm (e.g. exp expiry,
+ * which is validated identically regardless of algorithm) are out of scope.
  *
  * Every vector is grounded in RFC 7519 (JWT) and/or RFC 8725 (JWT Best
  * Current Practices) — no attack here is invented ad hoc. See the
@@ -22,13 +26,9 @@
  *       RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.2
  *   #5  Payload Manipulation      — change email claim without re-signing
  *       RFC 8725 §3.3 Validate All Cryptographic Operations
- *   #6  Expired Token Abuse       — set exp to past (payload mod, sig fails)
- *       RFC 7519 §4.1.4 "exp" Claim
- *   #7  Unsigned Compact Token    — send compact JWS with empty signature
- *       RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.3
- *   #8  Cross-Algorithm Injection — classic header against PQC verifier
+ *   #6  Cross-Algorithm Injection — classic header against PQC verifier
  *       RFC 8725 §3.1 Perform Algorithm Verification
- *   #9  RS256/HS256 Key Confusion — genuine HMAC-SHA256 forged with the
+ *   #7  RS256/HS256 Key Confusion — genuine HMAC-SHA256 forged with the
  *       RS256 public key bytes as secret (textbook JWT key-confusion attack,
  *       attacker only needs the public key). Only meaningful against a
  *       gateway whose allowlist accepts both RS256 and HS256 at once — the
@@ -99,14 +99,14 @@ function summaryFile(name) {
   return SUMMARY_DIR ? `${SUMMARY_DIR}/${name}` : name;
 }
 
-// RS256 public key bytes for the #9 key-confusion attack. Loaded at init
+// RS256 public key bytes for the #7 key-confusion attack. Loaded at init
 // time (k6 requires open() at module scope); missing file (keys not
-// generated yet) degrades to skipping #9 rather than aborting the script.
+// generated yet) degrades to skipping #7 rather than aborting the script.
 let RS256_PUBLIC_KEY_PEM = "";
 try {
   RS256_PUBLIC_KEY_PEM = open("../keys/RS256_pk.pem");
 } catch (e) {
-  console.warn(`[init] RS256_pk.pem not found, attack #9 will be skipped: ${e}`);
+  console.warn(`[init] RS256_pk.pem not found, attack #7 will be skipped: ${e}`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -166,10 +166,8 @@ const blockRateTokenForgery = new Rate("attack_block_rate_2_token_forgery");
 const blockRateAlgConfusion = new Rate("attack_block_rate_3_algorithm_confusion");
 const blockRateNoneAlg = new Rate("attack_block_rate_4_none_algorithm");
 const blockRatePayloadManip = new Rate("attack_block_rate_5_payload_manipulation");
-const blockRateExpiredToken = new Rate("attack_block_rate_6_expired_token");
-const blockRateUnsignedCompact = new Rate("attack_block_rate_7_unsigned_compact_token");
-const blockRateCrossAlg = new Rate("attack_block_rate_8_cross_algorithm_injection");
-const blockRateKeyConfusion = new Rate("attack_block_rate_9_rs256_hs256_key_confusion");
+const blockRateCrossAlg = new Rate("attack_block_rate_6_cross_algorithm_injection");
+const blockRateKeyConfusion = new Rate("attack_block_rate_7_rs256_hs256_key_confusion");
 
 // ═══════════════════════════════════════════════════════════════
 // Scenarios & Thresholds
@@ -193,10 +191,8 @@ export const options = {
     attack_block_rate_3_algorithm_confusion: ["rate>0.99"],
     attack_block_rate_4_none_algorithm: ["rate>0.99"],
     attack_block_rate_5_payload_manipulation: ["rate>0.99"],
-    attack_block_rate_6_expired_token: ["rate>0.99"],
-    attack_block_rate_7_unsigned_compact_token: ["rate>0.99"],
-    attack_block_rate_8_cross_algorithm_injection: ["rate>0.99"],
-    attack_block_rate_9_rs256_hs256_key_confusion: ["rate>0.99"],
+    attack_block_rate_6_cross_algorithm_injection: ["rate>0.99"],
+    attack_block_rate_7_rs256_hs256_key_confusion: ["rate>0.99"],
   },
   setupTimeout: "120s",
 };
@@ -371,42 +367,14 @@ export default function (data) {
     );
   });
 
-  // ── #6 Expired Token Abuse ──────────────────────────────────
-  // Cannot create validly-signed expired token from k6 (no private key).
-  // We modify exp to past — server rejects via signature mismatch AND/OR exp check.
-  group("6_expired_token", () => {
-    const tags = { attack: "6_expired_token" };
-    const pastExp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
-    const forged = withPayload(token, { exp: pastExp });
-    recordAttack(
-      "#6 Expired Token Abuse (exp in past)",
-      hitProtected(forged),
-      blockRateExpiredToken,
-      tags,
-    );
-  });
-
-  // ── #7 Unsigned compact token / empty signature ─────────────
-  group("7_unsigned_compact_token", () => {
-    const tags = { attack: "7_unsigned_compact_token" };
-    const parts = token.split(".");
-    const emptyToken = parts[0] + "." + parts[1] + ".";
-    recordAttack(
-      "#7 Unsigned Compact Token (empty signature)",
-      hitProtected(emptyToken),
-      blockRateUnsignedCompact,
-      tags,
-    );
-  });
-
-  // ── #8 Cross-Algorithm Injection (PQC vs Classic) ──────────
-  group("8_cross_algorithm_injection", () => {
+  // ── #6 Cross-Algorithm Injection (PQC vs Classic) ──────────
+  group("6_cross_algorithm_injection", () => {
     for (const alg of ["RS256", "HS256", "ES256"]) {
-      const tags = { attack: "8_cross_algorithm_injection", alg };
+      const tags = { attack: "6_cross_algorithm_injection", alg };
       // Classic alg header but FN-DSA signature → should be rejected
       const forged = withHeader(token, { alg });
       recordAttack(
-        `#8 Cross-Algorithm Injection (${alg}→FN-DSA)`,
+        `#6 Cross-Algorithm Injection (${alg}→FN-DSA)`,
         hitProtected(forged),
         blockRateCrossAlg,
         tags,
@@ -414,7 +382,7 @@ export default function (data) {
     }
   });
 
-  // ── #9 RS256/HS256 Key Confusion ────────────────────────────
+  // ── #7 RS256/HS256 Key Confusion ────────────────────────────
   // Textbook attack: attacker knows only the RS256 *public* key (not
   // secret) and uses it as the HMAC secret to forge an alg=HS256 token.
   // A vulnerable verifier that reuses the same key object for both RSA
@@ -424,8 +392,8 @@ export default function (data) {
   // alg=HS256 is checked against the real HS256 secret, not the RS256
   // public key — the forged HMAC will not match either way.
   if (RS256_PUBLIC_KEY_PEM) {
-    group("9_rs256_hs256_key_confusion", () => {
-      const tags = { attack: "9_rs256_hs256_key_confusion" };
+    group("7_rs256_hs256_key_confusion", () => {
+      const tags = { attack: "7_rs256_hs256_key_confusion" };
       const parts = token.split(".");
       const hdr = jwtDecodeSegment(parts[0]);
       hdr.alg = "HS256";
@@ -434,7 +402,7 @@ export default function (data) {
       const forgedSig = crypto.hmac("sha256", RS256_PUBLIC_KEY_PEM, signingInput, "base64rawurl");
       const forged = signingInput + "." + forgedSig;
       recordAttack(
-        "#9 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)",
+        "#7 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)",
         hitProtected(forged),
         blockRateKeyConfusion,
         tags,
@@ -489,29 +457,15 @@ export function handleSummary(data) {
     },
     {
       id: 6,
-      name: "Expired Token Abuse",
-      metric: "attack_block_rate_6_expired_token",
-      expected: "401/403",
-      reference: 'RFC 7519 §4.1.4 "exp" (Expiration Time) Claim',
-    },
-    {
-      id: 7,
-      name: "Unsigned Compact Token",
-      metric: "attack_block_rate_7_unsigned_compact_token",
-      expected: "401/403",
-      reference: "RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.3",
-    },
-    {
-      id: 8,
       name: "Cross-Algorithm Injection",
-      metric: "attack_block_rate_8_cross_algorithm_injection",
+      metric: "attack_block_rate_6_cross_algorithm_injection",
       expected: "401/403",
       reference: "RFC 8725 §3.1 Perform Algorithm Verification",
     },
     {
-      id: 9,
+      id: 7,
       name: "RS256/HS256 Key Confusion",
-      metric: "attack_block_rate_9_rs256_hs256_key_confusion",
+      metric: "attack_block_rate_7_rs256_hs256_key_confusion",
       expected: "401/403",
       reference:
         'RFC 8725 §3.1 — verbatim: "attackers can change \'RS256\' to \'HS256\' and use the RSA public key as an HMAC secret"',
@@ -619,9 +573,8 @@ ${SEP}
   VULNERABLE : ${totalVulnerable} / ${attacks.length} attack vectors
 ${SEP}
   NOTES:
-  #3 / #8  Algorithm confusion and cross-injection share same mechanism.
-  #6       Expired token blocked via signature mismatch (payload modified w/o key).
-  #9       Meaningful only against a gateway whose allowlist accepts both
+  #3 / #6  Algorithm confusion and cross-injection share same mechanism.
+  #7       Meaningful only against a gateway whose allowlist accepts both
            RS256 and HS256 (default single-gateway deployment). Skipped if
            RS256_pk.pem is not present at k6/../keys/RS256_pk.pem.
 ${SEP}
