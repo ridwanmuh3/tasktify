@@ -18,14 +18,14 @@
  *     Thresholds fail the run if p95 or error rate exceeds per-algorithm budget.
  *
  * Usage:
- *   # Save per-iteration samples for statistical tests:
- *   k6 run --out json=benchmark_sign_samples.ndjson -e BENCH_HOST=localhost k6/benchmark_sign.js
+ *   # docker-compose.benchmark.yml — ONE auth+gateway pair serves every
+ *   # algorithm via JWT_ALLOWED_ALGS (see compose file). All ALGORITHMS entries
+ *   # share port 5001, so BENCH_HOST=localhost and BASE_URL=http://localhost:5001
+ *   # both resolve to the same gateway; BASE_URL is the simplest.
+ *   k6 run --out json=benchmark_sign_samples.ndjson -e BASE_URL=http://localhost:5001 k6/benchmark_sign.js
  *
- *   # Single-gateway (production / VPS):
+ *   # production / VPS:
  *   k6 run -e BASE_URL=https://poc-ridwanmuh3.my.id k6/benchmark_sign.js
- *
- *   # Multi-gateway (docker-compose.benchmark.yml):
- *   k6 run -e BENCH_HOST=localhost k6/benchmark_sign.js
  *
  *   # Tune iterations (default 100, min 100 for academic use):
  *   k6 run -e BASE_URL=... -e ITERATIONS=500 k6/benchmark_sign.js
@@ -112,14 +112,20 @@ const RUN_ISOLATED = !STRESS_ONLY && !ATTACK_ONLY;
 const RUN_STRESS = !ISOLATED_ONLY && !ATTACK_ONLY;
 const RUN_ATTACKS = ((!ISOLATED_ONLY && !STRESS_ONLY) || ATTACK_ONLY) && ATTACK_ITERATIONS > 0;
 
-// Classical baselines (HS256/RS256/ES256/EdDSA) disabled for now — their
-// gateway containers are removed from docker-compose.benchmark.yml to avoid
-// noisy-neighbor CPU contention on a shared 2-vCPU host between the two
-// FN-DSA variants under direct comparison (see docs/p0-penjelasan.md P0-7).
-// Restore both this array and the compose services together.
+// PQC (FN-DSA) benchmarked against classical baselines (HS256/RS256/ES256/EdDSA).
+// All algorithms are served by ONE gateway container (JWT_ALLOWED_ALGS lists
+// every one — see docker-compose.benchmark.yml), so noisy-neighbor CPU
+// contention between per-algorithm containers is gone (docs/p0-penjelasan.md
+// P0-7). The per-request "algorithm" field selects the signer, so every entry
+// carries the same gateway port 5001 — both BENCH_HOST and BASE_URL modes then
+// resolve to that one gateway.
 const ALGORITHMS = [
   { id: "FNP512", name: "FN-DSA-Precomputed-512", category: "PQC", port: 5001 },
-  { id: "FN512", name: "FN-DSA-512", category: "PQC", port: 5002 },
+  { id: "FN512", name: "FN-DSA-512", category: "PQC", port: 5001 },
+  { id: "HS256", name: "HS256", category: "Classical", port: 5001 },
+  { id: "RS256", name: "RS256", category: "Classical", port: 5001 },
+  { id: "ES256", name: "ES256", category: "Classical", port: 5001 },
+  { id: "EdDSA", name: "EdDSA", category: "Classical", port: 5001 },
 ];
 
 // Per-algorithm p95 latency budget for stress test thresholds (ms).
@@ -127,6 +133,10 @@ const ALGORITHMS = [
 const STRESS_BUDGET = {
   "FN-DSA-Precomputed-512": { dirty: 5000, actual: 500 },
   "FN-DSA-512": { dirty: 10000, actual: 1000 },
+  HS256: { dirty: 3000, actual: 100 },
+  RS256: { dirty: 3000, actual: 200 },
+  ES256: { dirty: 3000, actual: 100 },
+  EdDSA: { dirty: 3000, actual: 100 },
 };
 const DEFAULT_STRESS_BUDGET = { dirty: 300000, actual: 120000 };
 

@@ -46,14 +46,27 @@ services:
       - bench-backend
 
   # =========================
-  # FN-DSA-Precomputed-512
+  # All benchmark algorithms in ONE auth + ONE gateway pair.
+  # JWT_ALLOWED_ALGS lists every algorithm instead of one stack per algorithm;
+  # multiAlgJwtUtil.Sign() (pkg/utils/jwtutils/jwt.go) already dispatches on
+  # the per-request "algorithm" field, and the gateway's /api/benchmark/*
+  # handler always loads every supported algorithm regardless of
+  # JWT_ALLOWED_ALGS (gateway/internal/config/app.go) — so pure-signing,
+  # isolated, and stress scenarios all work unmodified against one pair.
+  # No other container competes for host CPU during a run — that removes the
+  # two-stack noisy-neighbor problem (docs/p0-penjelasan.md P0-7) structurally
+  # instead of by scheduling, so cross-algorithm comparison is clean.
+  # PQC (FN-DSA) vs classical (HS256/RS256/ES256/EdDSA) all benchmarked here.
+  # NOTE: mixing HS256 (symmetric) with asymmetric algs in one verify allow-list
+  # is an algorithm-confusion risk in PRODUCTION (RFC 8725) — acceptable only
+  # because this is an isolated benchmark stack with throwaway keys.
   # Gateway: :5001
   # =========================
-  bench-auth-fnp512:
+  bench-auth:
     build:
       context: .
       dockerfile: auth-service/Dockerfile
-    container_name: bench-auth-fnp512
+    container_name: bench-auth
     restart: unless-stopped
     environment:
       DB_USER: postgres
@@ -65,11 +78,11 @@ services:
       DB_POOL_IDLE: 5
       DB_MAX_POOL: 50
       DB_MAX_LIFETIME: 300
-      APP_NAME: bench-auth-fnp512
+      APP_NAME: bench-auth
       APP_MODE: production
       GRPC_PORT: 3001
       JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
-      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512,FN-DSA-512,HS256,RS256,ES256,EdDSA
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -81,20 +94,20 @@ services:
     networks:
       - bench-backend
 
-  bench-gw-fnp512:
+  bench-gw:
     build:
       context: .
       dockerfile: gateway/Dockerfile
-    container_name: bench-gw-fnp512
+    container_name: bench-gw
     restart: unless-stopped
     environment:
-      APP_NAME: bench-gw-fnp512
+      APP_NAME: bench-gw
       APP_PORT: 3000
       APP_MODE: production
-      AUTH_SERVICE_ADDR: bench-auth-fnp512:3001
+      AUTH_SERVICE_ADDR: bench-auth:3001
       TODO_SERVICE_ADDR: bench-todo:3002
       JWT_DEFAULT_ALG: FN-DSA-Precomputed-512
-      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512
+      JWT_ALLOWED_ALGS: FN-DSA-Precomputed-512,FN-DSA-512,HS256,RS256,ES256,EdDSA
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
@@ -103,70 +116,7 @@ services:
     ports:
       - "5001:3000"
     depends_on:
-      - bench-auth-fnp512
-      - bench-todo
-    networks:
-      - bench-backend
-
-  # =========================
-  # FN-DSA-512
-  # Gateway: :5002
-  # =========================
-  bench-auth-fn512:
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
-    container_name: bench-auth-fn512
-    restart: unless-stopped
-    environment:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: tasktify_bench
-      DB_HOST: bench-postgres
-      DB_PORT: 5432
-      DB_SSL_MODE: disable
-      DB_POOL_IDLE: 5
-      DB_MAX_POOL: 50
-      DB_MAX_LIFETIME: 300
-      APP_NAME: bench-auth-fn512
-      APP_MODE: production
-      GRPC_PORT: 3001
-      JWT_DEFAULT_ALG: FN-DSA-512
-      JWT_ALLOWED_ALGS: FN-DSA-512
-      JWT_ISSUER: tasktify
-      JWT_TOKEN_DURATION: 60
-      KEYS_DIR: /app/keys
-    volumes:
-      - ./keys:/app/keys
-    depends_on:
-      bench-postgres:
-        condition: service_healthy
-    networks:
-      - bench-backend
-
-  bench-gw-fn512:
-    build:
-      context: .
-      dockerfile: gateway/Dockerfile
-    container_name: bench-gw-fn512
-    restart: unless-stopped
-    environment:
-      APP_NAME: bench-gw-fn512
-      APP_PORT: 3000
-      APP_MODE: production
-      AUTH_SERVICE_ADDR: bench-auth-fn512:3001
-      TODO_SERVICE_ADDR: bench-todo:3002
-      JWT_DEFAULT_ALG: FN-DSA-512
-      JWT_ALLOWED_ALGS: FN-DSA-512
-      JWT_ISSUER: tasktify
-      JWT_TOKEN_DURATION: 60
-      KEYS_DIR: /app/keys
-    volumes:
-      - ./keys:/app/keys
-    ports:
-      - "5002:3000"
-    depends_on:
-      - bench-auth-fn512
+      - bench-auth
       - bench-todo
     networks:
       - bench-backend

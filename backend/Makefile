@@ -25,7 +25,9 @@ BENCH_STDOUT_OUT ?= $(BENCH_OUTPUT_DIR)/result.txt
 BENCH_STAT_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_stats.json
 BENCH_WELCH_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_welch.json
 BENCH_ABLATION_OUT ?= $(BENCH_OUTPUT_DIR)/fndsa_precompute_ablation.json
-BENCH_PORTS ?= 5001 5002 5003 5004 5005 5006
+# Single benchmark gateway now serves every algorithm (JWT_ALLOWED_ALGS),
+# so only one port to wait on (was 5001..5006, one per algorithm).
+BENCH_PORTS ?= 5001
 BASE_URL ?= https://poc-ridwanmuh3.my.id
 VPS_SSH ?= 
 VPS_REPO ?= ~/tasktify

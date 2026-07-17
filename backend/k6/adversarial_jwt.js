@@ -42,7 +42,7 @@
  *   k6 run k6/adversarial_jwt.js
  *   k6 run -e ITERATIONS=20 k6/adversarial_jwt.js
  *
- *   # Target one algorithm's isolated benchmark gateway (multi-gateway mode):
+ *   # Target the local benchmark gateway, choosing the algorithm to attack:
  *   k6 run -e BENCH_HOST=localhost -e ALGORITHM=RS256 k6/adversarial_jwt.js
  *
  *   # Target a specific single gateway URL:
@@ -70,15 +70,16 @@ const SUMMARY_DIR = (__ENV.BENCH_OUTPUT_DIR || "").replace(/\/+$/, "");
 const OUTPUT_NAME = __ENV.ADVERSARIAL_OUTPUT || "adversarial_result.json";
 const RAW_OUTPUT_NAME = __ENV.ADVERSARIAL_RAW_OUTPUT || "adversarial_raw.json";
 
-// Per-algorithm benchmark gateway ports (multi-gateway mode, see
-// docker-compose.benchmark.yml / k6/benchmark_sign.js ALGORITHMS).
+// One benchmark gateway now serves every algorithm (JWT_ALLOWED_ALGS lists all
+// — see docker-compose.benchmark.yml), so all algorithms map to the same port.
+// The per-request "algorithm" field, not the port, selects the signer.
 const ALG_PORTS = {
   "FN-DSA-Precomputed-512": 5001,
-  "FN-DSA-512": 5002,
-  HS256: 5003,
-  RS256: 5004,
-  ES256: 5005,
-  EdDSA: 5006,
+  "FN-DSA-512": 5001,
+  HS256: 5001,
+  RS256: 5001,
+  ES256: 5001,
+  EdDSA: 5001,
 };
 
 function normalizeBase(url) {
