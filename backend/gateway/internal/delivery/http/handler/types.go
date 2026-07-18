@@ -163,6 +163,7 @@ type BenchmarkPureSigningResult struct {
 		Resource          struct {
 			CPUUtilization     NumericStats `json:"cpu_utilization_pct"`
 			CPUTimeMs          NumericStats `json:"cpu_time_ms"`
+			CPUTimePerTokenMs  NumericStats `json:"cpu_time_per_token_ms"`
 			MemoryAllocKB      NumericStats `json:"memory_alloc_kb"`
 			MemoryAllocDeltaKB NumericStats `json:"memory_alloc_delta_kb"`
 			MemorySysKB        NumericStats `json:"memory_sys_kb"`

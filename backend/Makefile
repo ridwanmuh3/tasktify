@@ -25,6 +25,11 @@ BENCH_STDOUT_OUT ?= $(BENCH_OUTPUT_DIR)/result.txt
 BENCH_STAT_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_stats.json
 BENCH_WELCH_OUT ?= $(BENCH_OUTPUT_DIR)/benchmark_welch.json
 BENCH_ABLATION_OUT ?= $(BENCH_OUTPUT_DIR)/fndsa_precompute_ablation.json
+# Isolated-process FN-DSA precompute profile (resident expanded-key material +
+# dynamic-vs-precomputed sign timing). PROFILE_OUT empty => the Go test writes
+# its own default (benchmark-results/fndsa_precompute_profile.json).
+BENCH_PROFILE_OUT ?= $(BENCH_OUTPUT_DIR)/fndsa_precompute_profile.json
+PROFILE_OUT ?=
 # Single benchmark gateway now serves every algorithm (JWT_ALLOWED_ALGS),
 # so only one port to wait on (was 5001..5006, one per algorithm).
 BENCH_PORTS ?= 5001
@@ -254,6 +259,27 @@ check:
 prepare-bench-output:
 	mkdir -p $(BENCH_OUTPUT_DIR)
 
+# Emit one isolated-process FN-DSA precompute profile run (RSS + persistent
+# expanded-key bytes + dynamic-vs-precomputed sign timing). Feeds fig_18.
+# Host-specific — run on the target VPS for thesis numbers (see
+# hostinger-precompute-profile). PROFILE_OUT is resolved against this backend
+# dir (works the same whether invoked locally or over SSH); empty => the Go
+# test writes its own default. Override to collect per-run files for mean aggregation.
+PROFILE_OUT_ABS = $(if $(PROFILE_OUT),$(abspath $(PROFILE_OUT)),)
+precompute-profile: prepare-bench-output
+	cd pkg && env EMIT_PROFILE=1 GOCACHE=$(GOCACHE) PROFILE_OUT=$(PROFILE_OUT_ABS) \
+		go test ./fndsa -run '^TestReportPrecomputeProfile$$' -count=1
+
+# FN-DSA correctness/security gate: known-answer vectors (dynamic + precomputed)
+# plus adversarial attack rejection (forgery, tampering, domain/prehash confusion,
+# truncation, norm-bound). Pass/fail only — proves precomputation preserves KAT
+# conformance and attack rejection. Run on the signer's own host (the VPS for
+# thesis runs — see hostinger-adversarial-kat), not the client.
+adversarial-kat:
+	cd pkg && env GOCACHE=$(GOCACHE) go test ./fndsa \
+		-run '^(TestFNDSA_KAT|TestFNDSA_Precomputed_KAT|TestAttack_.*|TestPrecomputedSignRejectsTampering)$$' \
+		-count=1 -v
+
 bench-up: ensure-bench-keys ensure-vendor
 	$(BENCH_COMPOSE) up -d --build
 
@@ -337,6 +363,23 @@ hostinger-fetch: require-vps prepare-bench-output
 	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_WELCH_OUT) $(BENCH_OUTPUT_DIR)/
 	$(SCP) $(SCP_OPTS) $(VPS_SSH):$(VPS_BACKEND)/$(BENCH_ABLATION_OUT) $(BENCH_OUTPUT_DIR)/
 
+# --- Remote Go-test execution (k6 stays on the client; Go tests run on the
+# VPS that owns the signer keys, mirroring hostinger-calc's SSH pattern) ---
+# Emit one precompute profile run on the VPS. PROFILE_OUT is a VPS-side path
+# relative to the VPS backend dir (resolved there via PROFILE_OUT_ABS). Ensure
+# its parent dir exists first — the Go test's os.WriteFile won't create it.
+hostinger-precompute-profile: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && mkdir -p "$$(dirname "$(PROFILE_OUT)")" && make precompute-profile PROFILE_OUT=$(PROFILE_OUT)'
+
+# Run the FN-DSA KAT + adversarial correctness/security gate on the VPS.
+hostinger-adversarial-kat: require-vps
+	$(SSH) $(SSH_OPTS) $(VPS_SSH) 'cd $(VPS_BACKEND) && make adversarial-kat'
+
+# Fetch per-run precompute profile files emitted on the VPS back to the client.
+hostinger-fetch-profile: require-vps
+	mkdir -p $(BENCH_OUTPUT_DIR)/runs
+	$(SCP) $(SCP_OPTS) '$(VPS_SSH):$(VPS_BACKEND)/$(BENCH_OUTPUT_DIR)/runs/fndsa_precompute_profile_run_*.json' $(BENCH_OUTPUT_DIR)/runs/
+
 hostinger-bench:
 	$(MAKE) client-k6 BENCH_HOST=$(HOSTINGER_BENCH_HOST)
 	$(MAKE) hostinger-upload
@@ -393,4 +436,4 @@ attack-adversarial-compare-bench: bench-up wait-bench
 attack-adversarial-compare-remote:
 	$(MAKE) attack-adversarial-compare COMPARE_BENCH_HOST=$(HOSTINGER_BENCH_HOST)
 
-.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test test-race falcon-kat falcon-check check prepare-bench-output bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote attack-adversarial-compare attack-adversarial-compare-bench attack-adversarial-compare-remote
+.PHONY: help env keygen keygen-all ensure-keys ensure-bench-keys compile-proto up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy deploy dev-db dev-down dev backend run-gateway gateway run-auth auth run-todo todo build tidy vendor ensure-vendor test test-race falcon-kat falcon-check check prepare-bench-output precompute-profile adversarial-kat bench-up bench-down bench-logs bench-config wait-bench bench-run bench bench-sign bench-sign-remote require-vps require-k6 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote attack-adversarial-compare attack-adversarial-compare-bench attack-adversarial-compare-remote

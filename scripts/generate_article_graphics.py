@@ -25,6 +25,17 @@ ADVERSARIAL_FILES = (
     ROOT / "adversarial_result.json",
     ROOT / "backend" / "adversarial_result.json",
 )
+# Isolated-process FN-DSA precompute-vs-dynamic memory/timing profile
+# (pkg/fndsa/precompute_profile_test.go, EMIT_PROFILE=1). Deterministic
+# PersistentBytes() + RSS sampled with no other algorithm sharing the
+# process — unlike the k6 pure-signing RSS metric, this is valid for the
+# resident-memory claim (see fig_18).
+FNDSA_PROFILE_FILES = (
+    ROOT / "benchmark-results" / "fndsa_precompute_profile.json",
+    ROOT / "backend" / "benchmark-results" / "fndsa_precompute_profile.json",
+    ROOT / "fndsa_precompute_profile.json",
+    ROOT / "backend" / "fndsa_precompute_profile.json",
+)
 OUT_DIR = Path(os.environ.get("ARTICLE_GRAPHICS_DIR", ROOT / "figures" / "article"))
 
 W = 1900
@@ -129,6 +140,16 @@ def load_attack_compare() -> list[tuple[str, dict]]:
         except FileNotFoundError:
             return []
     return loaded
+
+
+def load_fndsa_profile() -> dict | None:
+    """Isolated-process FN-DSA precompute-vs-dynamic profile for fig_18. None
+    if the Go profile test hasn't been run (EMIT_PROFILE=1) so the figure is
+    skipped cleanly rather than falling back to the invalid k6 RSS metric."""
+    try:
+        return read_json_file("fndsa_precompute_profile.json", FNDSA_PROFILE_FILES)
+    except FileNotFoundError:
+        return None
 
 
 def fmt(value: float) -> str:
@@ -503,7 +524,7 @@ def render_isolated_metric_png(
         png_value_label(draw, cx, y - 30, fmt(value), label_bounds, VALUE_SIZE)
         draw_png_multiline(draw, cx, bottom + 42, ALGORITHM_WRAP[alg])
 
-    draw_png_algorithm_legend(draw, left, H - 64, right - left)
+    draw_png_algorithm_legend(draw, left, H - 64, right - left, [alg for alg, _ in values])
     return save_png(img, name)
 
 
@@ -650,7 +671,12 @@ def write_palette() -> None:
             writer.writerow([alg, ALGORITHM_SHORT[alg], COLORS[alg]])
 
 
-def write_data_csv(benchmark: dict, adversarial: dict, attack_compare: list[tuple[str, dict]] | None = None) -> None:
+def write_data_csv(
+    benchmark: dict,
+    adversarial: dict,
+    attack_compare: list[tuple[str, dict]] | None = None,
+    fndsa_profile: dict | None = None,
+) -> None:
     with (OUT_DIR / "article_graphics_data.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(["scope", "algorithm", "vus", "metric", "value", "unit"])
@@ -669,18 +695,24 @@ def write_data_csv(benchmark: dict, adversarial: dict, attack_compare: list[tupl
                 ("pure_signing", alg, "", "pure_signing_gc_free_avg", pure_ms["avg"], "ms"),
                 ("pure_signing", alg, "", "pure_signing_gc_free_p95", pure_ms["p95"], "ms"),
                 (
+                    # Delta = TotalAlloc growth during the timed Sign() call only —
+                    # see fig_15 comment for why this replaced absolute HeapAlloc.
                     "pure_signing",
                     alg,
                     "",
-                    "memory_alloc_avg",
-                    iso["pure_signing_memory_alloc_kb"]["avg"] / 1024,
-                    "MB",
+                    "memory_alloc_delta_avg",
+                    iso["pure_signing_memory_alloc_delta_kb"]["avg"],
+                    "KB",
                 ),
                 (
+                    # Process-wide VmRSS, all 6 algorithms share one gateway — NOT
+                    # isolated per algorithm. Kept for raw-data transparency only;
+                    # see fig_18 (fndsa_persistent_key_memory_kb below) for the
+                    # valid FN-DSA resident-memory comparison.
                     "pure_signing",
                     alg,
                     "",
-                    "memory_rss_avg",
+                    "memory_rss_avg_process_wide",
                     iso["pure_signing_memory_rss_kb"]["avg"] / 1024,
                     "MB",
                 ),
@@ -710,6 +742,10 @@ def write_data_csv(benchmark: dict, adversarial: dict, attack_compare: list[tupl
                         "%",
                     ]
                 )
+        if fndsa_profile is not None:
+            persistent_kb = fndsa_profile["persistent_bytes_per_key"] / 1024
+            for alg, value in (("FN-DSA-512", 0.0), ("FN-DSA-Precomputed-512", persistent_kb)):
+                writer.writerow(["profile", alg, "", "fndsa_persistent_key_memory_kb", value, "KB"])
         for alg, adv in attack_compare or []:
             for attack in adv["attacks"]:
                 writer.writerow(
@@ -789,6 +825,10 @@ def main() -> None:
     # both FN-DSA profiles have an adversarial_result_<alg>.json.
     attack_compare = load_attack_compare()
 
+    # Isolated-process FN-DSA memory profile (see load_fndsa_profile). None
+    # if EMIT_PROFILE=1 hasn't been run — fig_18 is skipped in that case.
+    fndsa_profile = load_fndsa_profile()
+
     # Isolated: access/refresh token avg+p95, CPU per token.
     isolated_specs = [
         (
@@ -866,22 +906,19 @@ def main() -> None:
             "pure_signing_gc_free_p95_ms",
         ),
         (
-            "fig_15_pure_signing_memory_alloc_avg_mb",
+            # memory_alloc_delta_kb = TotalAlloc growth during the timed Sign()
+            # call only. Switched from the old memory_alloc_kb (absolute
+            # HeapAlloc): with all 6 algorithms sharing one gateway process,
+            # absolute heap reflects whichever algorithm's state happens to be
+            # resident plus un-GC'd growth across the iteration loop, not this
+            # algorithm's per-signature cost. The delta is immune to that.
+            "fig_15_pure_signing_memory_alloc_delta_avg_kb",
             "Fig. 15",
             "Pure signing memory allocation",
-            "Average allocation (MB)",
-            lambda item: item["isolated"]["pure_signing_memory_alloc_kb"]["avg"] / 1024,
-            False,
-            "pure_signing_memory_alloc_avg_mb",
-        ),
-        (
-            "fig_18_pure_signing_memory_rss_avg_mb",
-            "Fig. 18",
-            "Pure signing resident memory (RSS)",
-            "Average RSS (MB)",
-            lambda item: item["isolated"]["pure_signing_memory_rss_kb"]["avg"] / 1024,
-            False,
-            "pure_signing_memory_rss_avg_mb",
+            "Average allocation delta (KB, log10)",
+            lambda item: item["isolated"]["pure_signing_memory_alloc_delta_kb"]["avg"],
+            True,
+            "pure_signing_memory_alloc_delta_avg_kb",
         ),
     ]
 
@@ -945,6 +982,7 @@ def main() -> None:
     valid_names |= {name for name, *_ in stress_specs}
     valid_names.add("fig_13_security_attack_block_rate_pct")
     valid_names.add("fig_21_security_attack_block_rate_compare_pct")
+    valid_names.add("fig_18_fndsa_persistent_key_memory_kb")
     for stale in OUT_DIR.glob("fig_*.png"):
         if stale.stem not in valid_names:
             stale.unlink()
@@ -989,6 +1027,31 @@ def main() -> None:
             }
         )
 
+    if fndsa_profile is not None:
+        # Dynamic FN-DSA-512 keeps no expanded key material resident between
+        # signatures (0 baseline); precomputed holds the cached FFT basis +
+        # LDL tree — persistent_bytes_per_key is PersistentBytes(), measured
+        # in an isolated Go-test process (no shared-gateway contamination).
+        persistent_kb = fndsa_profile["persistent_bytes_per_key"] / 1024
+        fig_18_values = [("FN-DSA-512", 0.0), ("FN-DSA-Precomputed-512", persistent_kb)]
+        render_isolated_metric_png(
+            "fig_18_fndsa_persistent_key_memory_kb",
+            "Resident expanded-key material (KB)",
+            fig_18_values,
+            False,
+        )
+        figures.append(
+            {
+                "figure_id": "Fig. 18",
+                "name": "fig_18_fndsa_persistent_key_memory_kb",
+                "title": "FN-DSA precomputed signer resident key material",
+                "metric": "fndsa_persistent_key_memory_kb",
+                "png": True,
+            }
+        )
+    else:
+        print("fndsa_precompute_profile.json not found — skipping fig_18 (run EMIT_PROFILE=1 go test)")
+
     if adversarial is not None:
         render_attack_metric_png(adversarial)
         figures.append(
@@ -1014,7 +1077,7 @@ def main() -> None:
         )
 
     write_palette()
-    write_data_csv(benchmark, adversarial, attack_compare)
+    write_data_csv(benchmark, adversarial, attack_compare, fndsa_profile)
     write_manifest(figures)
     write_captions(figures)
     write_contact_sheet(figures)

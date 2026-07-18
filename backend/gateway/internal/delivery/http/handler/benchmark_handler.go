@@ -253,6 +253,9 @@ func (h *BenchmarkHandler) PureSigning(c fiber.Ctx) error {
 	result.Stats.PureSigningGCFree = computeTimingStats(gcFreePureSigningTimings)
 	result.Stats.Resource.CPUUtilization = computeNumericStats(cpuSamples)
 	result.Stats.Resource.CPUTimeMs = computeNumericStats(cpuTimeSamples)
+	// Pure signing does one signature per iteration (unlike jwt_issuance's
+	// access+refresh pair), so cost-per-token equals the raw per-iteration CPU cost.
+	result.Stats.Resource.CPUTimePerTokenMs = computeNumericStats(cpuTimeSamples)
 	result.Stats.Resource.MemoryAllocKB = computeNumericStats(memAllocSamples)
 	result.Stats.Resource.MemoryAllocDeltaKB = computeNumericStats(memAllocDeltaSamples)
 	result.Stats.Resource.MemorySysKB = computeNumericStats(memSysSamples)

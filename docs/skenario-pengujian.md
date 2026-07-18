@@ -267,6 +267,31 @@ Pengujian dinyatakan **gagal** (exit code non-zero) apabila nilai p95 melampaui 
 | `stress_req_failed` | Counter | Jumlah permintaan gagal |
 | `stress_error_rate` | Rate | Proporsi permintaan gagal; gagal jika > 5% per skenario |
 
+### 5.6 Interpretasi Hasil Stress (Wajib Dibaca)
+
+Bagian ini menjawab dua pertanyaan yang pasti muncul saat sidang: **(a)** mengapa angka stress jauh lebih lambat daripada isolated, dan **(b)** mengapa pada sebagian run FN-DSA-Precomputed-512 justru *tampak* lebih lambat dari FN-DSA-512.
+
+**(a) Stress ≠ Isolated — beda cakupan, bukan regresi.** Isolated (Fase 1) mengukur `Sign(payload)` murni di dalam proses (sub-ms). Stress mengukur **E2E penuh di bawah beban konkuren** pada host 2 vCPU: RTT jaringan + gRPC gateway→auth + verifikasi password (bcrypt/Argon2) + query DB + antrean handler. Ratusan milidetik pada `stress_login_dirty` didominasi biaya login (bcrypt + DB), **bukan** signing. Jadi stress lebih lambat karena cakupannya beda, bukan karena algoritma memburuk.
+
+**(b) Inversi itu artefak estimator (mean), bukan sifat algoritma — pakai median.** Distribusi `stress_token_generation_clean` di bawah beban **menceng ke kanan (*right-skewed*)**: ekor GC/penjadwal menaikkan sampel tunggal jauh (mis. precomp 50VU: med 0,524 ms tetapi max 10,128 ms). **Mean tercemar ekor** sehingga peringkat per-run terbalik. **Median (p50) kebal ekor** dan konsisten — precomputed unggul di **semua** level VU:
+
+| VU | precomp p50 (ms) | dynamic p50 (ms) | Δ (dynamic − precomp) | precomp avg | dynamic avg |
+| --- | --- | --- | --- | --- | --- |
+| 10 | 0,534 | 0,598 | **+0,064** | 0,672 | 0,744 |
+| 30 | 0,526 | 0,560 | **+0,034** | 0,681 | 0,649 ⟵ inversi mean |
+| 50 | 0,524 | 0,627 | **+0,103** | 0,691 | 0,809 |
+
+Pada median, arah cocok dengan isolated (precomp < dynamic) di ketiga level; inversi 30VU hanya muncul pada mean. Median = estimator standar untuk latensi menceng, dan Fase 1 isolated pun sudah melaporkan p50. Selisihnya tetap kecil (0,03–0,10 ms) dan **negligible terhadap E2E** — jadi ini bukti **pendukung** yang konsisten, bukan headline.
+
+**Aturan pelaporan (untuk menghindari kesimpulan salah / *p-hacking*):**
+
+1. **Peringkat dan klaim keunggulan precomputation diambil HANYA dari Fase 1 Isolated pure-signing.** Di sana precomputed stabil unggul lintas run (≈ 0,31 ms vs ≈ 0,39 ms gc-free). Metrik ini kebal kontensi karena diukur per-operasi di proses terisolasi (lihat `fndsa_precompute_profile.json`).
+2. **Fase 2 Stress dilaporkan sebagai throughput dan bukti "overhead E2E PQC dapat diabaikan (*negligible*)"**, BUKAN untuk mem-peringkat algoritma berdasarkan waktu signing.
+3. Bila `stress_token_generation_clean` dilaporkan per algoritma, **gunakan median (p50), BUKAN mean** — mean menceng oleh ekor GC/penjadwal. Ambil p50 per run, lalu laporkan **mean ± CI 95% dari p50 lintas N run**. CI yang tumpang tindih = tidak dapat dibedakan secara statistik di bawah beban (kesimpulan yang benar, bukan kegagalan eksperimen); CI terpisah dengan precomp < dynamic = keunggulan konsisten tapi negligible.
+4. Figur artikel: `stress` hanya menggambarkan login/refresh/throughput. Jika `stress_token_generation_clean` ditambahkan, plot **p50**, bukan avg.
+
+**Kontrol lingkungan.** `GOMAXPROCS` dipin ke `2` (= vCPU host) pada `docker-compose.benchmark.yml` agar penjadwalan reproducible antar run berulang; skenario dijalankan berurutan dengan jeda pemulihan dan urutan algoritma diacak agar kontensi ter-rata. Tidak ada `cpus:` cap keras — cap keras pada host 2 vCPU akan mengubah latensi absolut dan merusak komparabilitas dengan run sebelumnya.
+
 ---
 
 ## 6. Fase 3 — Attack Block-Rate
@@ -313,10 +338,10 @@ Setiap baris di bawah dipetakan ke bagian spesifik RFC 7519 [1] (JSON Web Token)
 | Algorithm confusion | Covered | k6 (#3) + `pkg/jwt` | RFC 7515 [8] §4.1.1 "alg" Header Parameter; RFC 8725 [2] §3.1 |
 | None algorithm | Covered | k6 (#4) + `pkg/jwt` | RFC 7519 [1] §6; RFC 7515 [8] §4.1.1, §5.2; RFC 8725 [2] §3.1, §3.2 |
 | Payload manipulation tanpa re-sign | Covered | k6 (#5) + `pkg/jwt` | RFC 7515 [8] §5.2; RFC 8725 [2] §3.3, §3.10 |
-| Expired token | Covered | k6 (#6) payload-tamper; signed case di `pkg/jwt` | RFC 7519 [1] §4.1.4 |
-| Unsigned compact token / signature kosong | Covered | k6 (#7) + `pkg/jwt` | RFC 7515 [8] §7.1 (compact serialization), §5.2; RFC 7519 [1] §6; RFC 8725 [2] §3.1, §3.3 |
-| Cross-algorithm injection | Covered | k6 (#8) + `pkg/jwt` | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 |
-| RS256→HS256 key confusion (kunci publik dipakai sebagai HMAC secret) | Covered | k6 (#9) + `pkg/utils/jwtutils` (`TestAttack_RS256ToHS256KeyConfusion`) | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 (contoh literal di teks RFC) |
+| Expired token | Covered | `pkg/jwt` (signed case). Dropped from k6 (#6→removed) — `exp` validation runs identically regardless of signing algorithm, so it doesn't inform PQC-vs-classical comparison; still unit-tested. | RFC 7519 [1] §4.1.4 |
+| Unsigned compact token / signature kosong | Covered | `pkg/jwt`. Dropped from k6 (#7→removed) — byte-identical to Token Forgery's empty-signature case (#2a); redundant black-box duplicate, still unit-tested. | RFC 7515 [8] §7.1 (compact serialization), §5.2; RFC 7519 [1] §6; RFC 8725 [2] §3.1, §3.3 |
+| Cross-algorithm injection | Covered | k6 (#6) + `pkg/jwt` | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 |
+| RS256→HS256 key confusion (kunci publik dipakai sebagai HMAC secret) | Covered | k6 (#7) + `pkg/utils/jwtutils` (`TestAttack_RS256ToHS256KeyConfusion`) | RFC 7515 [8] §4.1.1; RFC 8725 [2] §3.1 (contoh literal di teks RFC) |
 | Issuer tidak valid / missing issuer | Covered | `pkg/utils/jwtutils` | RFC 7519 [1] §4.1.1; RFC 8725 [2] §3.8 |
 | Audience tidak valid / missing audience | Covered | `pkg/utils/jwtutils` menerbitkan `aud` (`JWT_AUDIENCE`) dan memvalidasinya; `TestJWTUtilsValidatesAudience` | RFC 7519 [1] §4.1.3; RFC 8725 [2] §3.9 |
 | Header pembawa/rujukan kunci (`jku`/`jwk`/`x5u`/`x5c`/`x5t`) | Covered | `pkg/utils/jwtutils` menolak header pembawa kunci; `TestJWTUtilsRejectsUnsupportedJOSEHeaders` | RFC 7515 [8] §4.1.4–§4.1.8; RFC 8725 [2] §3.10 Do Not Trust Received Public Keys |

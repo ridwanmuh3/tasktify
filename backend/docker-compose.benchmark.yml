@@ -39,6 +39,10 @@ services:
       APP_NAME: bench-todo
       APP_MODE: production
       GRPC_PORT: 3002
+      # Pin Go P-count to host vCPU (2) for reproducible scheduling across repeat
+      # runs. Do NOT add hard `cpus:` caps here — on a 2-vCPU host they starve the
+      # stack and shift absolute latency vs prior runs, breaking comparability.
+      GOMAXPROCS: "2"
     depends_on:
       bench-postgres:
         condition: service_healthy
@@ -86,6 +90,7 @@ services:
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
+      GOMAXPROCS: "2"
     volumes:
       - ./keys:/app/keys
     depends_on:
@@ -111,6 +116,7 @@ services:
       JWT_ISSUER: tasktify
       JWT_TOKEN_DURATION: 60
       KEYS_DIR: /app/keys
+      GOMAXPROCS: "2"
     volumes:
       - ./keys:/app/keys
     ports:

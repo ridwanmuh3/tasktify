@@ -308,8 +308,22 @@ const benchAuthMemoryRSSKBStdev = new Trend("bench_auth_memory_rss_kb_stdev");
 // Pure-signing has its own resource-stats block server-side
 // (BenchmarkPureSigningResult.Stats.Resource) distinct from jwt_issuance's —
 // these carry it through; previously only latency was read from that scope.
+const benchPureSigningCPUTimePerTokenMsAvg = new Trend(
+  "bench_pure_signing_cpu_time_per_token_ms_avg",
+  true,
+);
+const benchPureSigningCPUTimePerTokenMsStdev = new Trend(
+  "bench_pure_signing_cpu_time_per_token_ms_stdev",
+  true,
+);
 const benchPureSigningMemoryAllocKBAvg = new Trend("bench_pure_signing_memory_alloc_kb_avg");
 const benchPureSigningMemoryAllocKBStdev = new Trend("bench_pure_signing_memory_alloc_kb_stdev");
+const benchPureSigningMemoryAllocDeltaKBAvg = new Trend(
+  "bench_pure_signing_memory_alloc_delta_kb_avg",
+);
+const benchPureSigningMemoryAllocDeltaKBStdev = new Trend(
+  "bench_pure_signing_memory_alloc_delta_kb_stdev",
+);
 const benchPureSigningMemoryRSSKBAvg = new Trend("bench_pure_signing_memory_rss_kb_avg");
 const benchPureSigningMemoryRSSKBStdev = new Trend("bench_pure_signing_memory_rss_kb_stdev");
 const benchGCContaminatedCount = new Counter("bench_gc_contaminated_count");
@@ -455,8 +469,12 @@ for (const alg of ALGORITHMS) {
     thresholds[`bench_auth_memory_sys_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_auth_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_auth_memory_rss_kb_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_cpu_time_per_token_ms_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_cpu_time_per_token_ms_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_pure_signing_memory_alloc_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_pure_signing_memory_alloc_kb_stdev${ta}`] = [`avg>=0`];
+    thresholds[`bench_pure_signing_memory_alloc_delta_kb_avg${ta}`] = [`p(95)<9999999`];
+    thresholds[`bench_pure_signing_memory_alloc_delta_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_pure_signing_memory_rss_kb_avg${ta}`] = [`p(95)<9999999`];
     thresholds[`bench_pure_signing_memory_rss_kb_stdev${ta}`] = [`avg>=0`];
     thresholds[`bench_sign_sample${ta}`] = [`p(95)<9999999`];
@@ -797,8 +815,32 @@ export function runIsolated(data) {
     }
     addSamples(benchPureSigningSample, result.pure_signing_timings_ms, tags);
     addSamples(benchPureSigningGCFreeSample, result.pure_signing_gc_free_timings_ms, tags);
+    addStat(
+      benchPureSigningCPUTimePerTokenMsAvg,
+      s.resource?.cpu_time_per_token_ms,
+      "avg",
+      tags,
+    );
+    addStat(
+      benchPureSigningCPUTimePerTokenMsStdev,
+      s.resource?.cpu_time_per_token_ms,
+      "stdev",
+      tags,
+    );
     addStat(benchPureSigningMemoryAllocKBAvg, s.resource?.memory_alloc_kb, "avg", tags);
     addStat(benchPureSigningMemoryAllocKBStdev, s.resource?.memory_alloc_kb, "stdev", tags);
+    addStat(
+      benchPureSigningMemoryAllocDeltaKBAvg,
+      s.resource?.memory_alloc_delta_kb,
+      "avg",
+      tags,
+    );
+    addStat(
+      benchPureSigningMemoryAllocDeltaKBStdev,
+      s.resource?.memory_alloc_delta_kb,
+      "stdev",
+      tags,
+    );
     addStat(benchPureSigningMemoryRSSKBAvg, s.resource?.memory_rss_kb, "avg", tags);
     addStat(benchPureSigningMemoryRSSKBStdev, s.resource?.memory_rss_kb, "stdev", tags);
 
@@ -1336,11 +1378,23 @@ export function handleSummary(data) {
         "avg",
       );
       const isolatedGCCnt = getCount("bench_gc_contaminated_count", alg.name, null);
+      const isolatedPureCPUTimePerTokenAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_cpu_time_per_token_ms_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureCPUTimePerTokenStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_cpu_time_per_token_ms_stdev", alg.name, null, "avg")
+        : null;
       const isolatedPureMemAvg = hasIsolatedPure
         ? getNumber("bench_pure_signing_memory_alloc_kb_avg", alg.name, null, "avg")
         : null;
       const isolatedPureMemStdev = hasIsolatedPure
         ? getNumber("bench_pure_signing_memory_alloc_kb_stdev", alg.name, null, "avg")
+        : null;
+      const isolatedPureMemDeltaAvg = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_alloc_delta_kb_avg", alg.name, null, "avg")
+        : null;
+      const isolatedPureMemDeltaStdev = hasIsolatedPure
+        ? getNumber("bench_pure_signing_memory_alloc_delta_kb_stdev", alg.name, null, "avg")
         : null;
       const isolatedPureMemRSSAvg = hasIsolatedPure
         ? getNumber("bench_pure_signing_memory_rss_kb_avg", alg.name, null, "avg")
@@ -1393,9 +1447,24 @@ export function handleSummary(data) {
                     sd: isolatedPureGCFreeStdev,
                   }
                 : null,
+              pure_signing_cpu_time_per_token_ms: hasIsolatedPure
+                ? { avg: isolatedPureCPUTimePerTokenAvg, sd: isolatedPureCPUTimePerTokenStdev }
+                : null,
               pure_signing_memory_alloc_kb: hasIsolatedPure
                 ? { avg: isolatedPureMemAvg, sd: isolatedPureMemStdev }
                 : null,
+              // Delta = TotalAlloc growth during this specific Sign() call — immune
+              // to the shared-process contamination that affects memory_alloc_kb
+              // (absolute HeapAlloc) and memory_rss_kb below (see memory_rss_kb note).
+              pure_signing_memory_alloc_delta_kb: hasIsolatedPure
+                ? { avg: isolatedPureMemDeltaAvg, sd: isolatedPureMemDeltaStdev }
+                : null,
+              // NOTE: process-wide VmRSS sampled while ALL 6 algorithms share one
+              // gateway container — reflects whichever algorithm's keys/GC heap
+              // happen to be resident at sample time, not this algorithm's isolated
+              // footprint. Not valid for cross-algorithm memory comparison; use
+              // fndsa_precompute_profile.json (PersistentBytes(), isolated process)
+              // for the FN-DSA precomputed-vs-dynamic resident-memory claim instead.
               pure_signing_memory_rss_kb: hasIsolatedPure
                 ? { avg: isolatedPureMemRSSAvg, sd: isolatedPureMemRSSStdev }
                 : null,
@@ -1746,7 +1815,7 @@ export function handleSummary(data) {
     pad("Refresh avg", WI[6]),
     pad("Refresh p95", WI[7]),
     pad("E2E avg", WI[8]),
-    pad("CPU avg", WI[9]),
+    pad("CPU/tok", WI[9]),
     pad("RSS avg", WI[10]),
   ].join("");
 
@@ -1760,7 +1829,7 @@ export function handleSummary(data) {
     pad("(ms)", WI[6]),
     pad("(ms)", WI[7]),
     pad("(ms)", WI[8]),
-    pad("(%)", WI[9]),
+    pad("(ms)", WI[9]),
     pad("(KB)", WI[10]),
   ].join("");
 
@@ -1813,7 +1882,7 @@ export function handleSummary(data) {
         )
       : "—";
     const ta = hasJWT ? getVal("bench_total_avg", n, null, "avg") : "—";
-    const cpu = hasJWT ? getVal("bench_auth_cpu_avg", n, null, "avg") : "—";
+    const cpu = hasJWT ? getVal("bench_auth_cpu_time_per_token_ms_avg", n, null, "avg") : "—";
     const rss = hasJWT ? getVal("bench_auth_memory_rss_kb_avg", n, null, "avg") : "—";
 
     const row =
@@ -1950,6 +2019,11 @@ ${SEP}
   Access/Refresh = GC-free JWT generation from benchmark payload when available; fallback to all samples
   E2E            = Full local JWT issuance handler iteration during isolated benchmark
   Warmup         = ${ISOLATED_WARMUP} discarded iterations before each isolated measurement
+  CPU/tok        = CPU time per generated token (access+refresh combined / 2), tick-delta based
+  RSS avg        = Process-wide VmRSS at sample time; all 6 algorithms share one gateway
+                    container, so this is NOT isolated per algorithm — use
+                    fndsa_precompute_profile.json (PersistentBytes(), isolated process) for the
+                    FN-DSA precomputed-vs-dynamic resident-memory claim instead
 
   ── SUPPORTING SYSTEM METRICS: STRESS (${CONCURRENCY_LEVELS.join(" / ")} VUs, ${STRESS_DURATION_S}s each) ──
   ${hdrP}

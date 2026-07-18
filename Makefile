@@ -48,8 +48,10 @@ help:
 	@echo ""
 	@echo "Article figures:"
 	@echo "  make figures          Generate article PNGs from benchmark_sign_result.json"
+	@echo "  make precompute-profile  Emit isolated FN-DSA RSS/persistent-key profile (fig_18)"
+	@echo "  make adversarial-kat  FN-DSA KAT + adversarial correctness/security gate"
 	@echo "  make bench-figures    Run client k6 (BENCH_HOST=...), then generate figures"
-	@echo "  make bench-figures-repeat RUNS=3  Repeat N times, median-merge, then figures"
+	@echo "  make bench-figures-repeat VPS_SSH=.. BENCH_HOST=.. RUNS=3  k6 on client + Go tests on VPS, merge, figures"
 
 env:
 	$(MAKE) -C $(BACKEND_DIR) env
@@ -123,10 +125,10 @@ test:
 check:
 	$(MAKE) -C $(BACKEND_DIR) check
 
-falcon-kat falcon-check wait-bench:
+falcon-kat falcon-check wait-bench adversarial-kat:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote:
+bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
 hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health:
@@ -135,7 +137,7 @@ hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health:
 client-k6 client-k6-isolated client-k6-stress client-k6-attack:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-hostinger-upload hostinger-calc hostinger-fetch hostinger-bench:
+hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
 attack-adversarial attack-adversarial-bench attack-adversarial-remote:
@@ -160,7 +162,13 @@ bench-figures: client-k6
 # each run is internally correct. Repeats the full bench N times (RUNS=3
 # default), takes the per-field median across runs, then regenerates figures
 # from that. Costs RUNS x ~22min wall time.
-#   make bench-figures-repeat BENCH_HOST=poc-ridwanmuh3.my.id RUNS=3
+#
+# Division of labor: k6 (client-k6, attack-adversarial-remote) runs on the
+# CLIENT against the VPS over the network; the Go tests (precompute profile,
+# KAT + adversarial correctness gate) run ON THE VPS via SSH — Go can't run
+# over HTTP, and the profile's RSS/timing figures must be measured on the
+# target host. Set VPS_SSH for the remote steps; BENCH_HOST for k6.
+#   make bench-figures-repeat VPS_SSH=root@host BENCH_HOST=poc-ridwanmuh3.my.id RUNS=3
 bench-figures-repeat:
 	@rm -rf $(BACKEND_DIR)/benchmark-results/runs
 	@mkdir -p $(BACKEND_DIR)/benchmark-results/runs
@@ -172,12 +180,19 @@ bench-figures-repeat:
 		$(MAKE) attack-adversarial-remote || exit 1; \
 		cp $(BACKEND_DIR)/benchmark-results/adversarial_result.json \
 			$(BACKEND_DIR)/benchmark-results/runs/adversarial_result_run_$$i.json; \
+		$(MAKE) hostinger-precompute-profile \
+			PROFILE_OUT=benchmark-results/runs/fndsa_precompute_profile_run_$$i.json || exit 1; \
 	done
+	$(MAKE) hostinger-adversarial-kat
+	$(MAKE) hostinger-fetch-profile
 	python3 scripts/aggregate_benchmark_runs.py \
 		--bench-glob '$(BACKEND_DIR)/benchmark-results/runs/benchmark_sign_result_run_*.json' \
 		--bench-out $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json \
 		--adversarial-glob '$(BACKEND_DIR)/benchmark-results/runs/adversarial_result_run_*.json' \
 		--adversarial-out $(BACKEND_DIR)/benchmark-results/adversarial_result.json
+	python3 scripts/aggregate_precompute_profile.py \
+		--glob '$(BACKEND_DIR)/benchmark-results/runs/fndsa_precompute_profile_run_*.json' \
+		--out $(BACKEND_DIR)/benchmark-results/fndsa_precompute_profile.json
 	$(MAKE) figures
 
-.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench attack-adversarial attack-adversarial-bench attack-adversarial-remote figures bench-figures bench-figures-repeat
+.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures bench-figures bench-figures-repeat
