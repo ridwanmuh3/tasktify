@@ -6,7 +6,7 @@ mrun_04_isolated_access_avg_ms,Isolated access-token generation latency,mrun_04_
 mrun_05_isolated_access_p95_ms,Isolated access-token generation p95 latency,mrun_05_isolated_access_p95_ms.png,17/20
 mrun_06_isolated_refresh_avg_ms,Isolated refresh-token generation latency,mrun_06_isolated_refresh_avg_ms.png,19/20
 mrun_07_isolated_refresh_p95_ms,Isolated refresh-token generation p95 latency,mrun_07_isolated_refresh_p95_ms.png,18/20
-mrun_08_isolated_cpu_per_token_ms,Isolated CPU time per generated token,mrun_08_isolated_cpu_per_token_ms.png,16/20
+mrun_08_isolated_cpu_per_token_us,Isolated CPU time per generated token,mrun_08_isolated_cpu_per_token_us.png,16/20
 mrun_09_stress_login_avg_ms,Stress login round-trip latency,mrun_09_stress_login_avg_ms.png,10VU 12/20; 30VU 13/20; 50VU 9/20
 mrun_10_stress_login_p95_ms,Stress login round-trip p95 latency,mrun_10_stress_login_p95_ms.png,10VU 11/20; 30VU 12/20; 50VU 9/20
 mrun_11_stress_refresh_avg_ms,Stress refresh round-trip latency,mrun_11_stress_refresh_avg_ms.png,10VU 12/20; 30VU 12/20; 50VU 11/20

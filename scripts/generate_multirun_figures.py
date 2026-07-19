@@ -424,8 +424,11 @@ def main() -> None:
     # algorithms the true cost sits below that grid, so some runs read exactly 0.00 --
     # a resolution floor, not zero CPU cost. Linear scale, not log: log10 cannot draw
     # a 0 whisker bound honestly (it clamps to the axis floor).
+    # Drawn in microseconds: in ms the medians read 0.05 / 0.10 / 0.40 / 1.25 and the
+    # leading zeros flatten the 25x spread; in us they read 50 / 100 / 400 / 1250 and
+    # the tick quantum is a clean 50 us. The CSV stays in ms (the metric's own unit).
     cpu_note = [
-        f"Resolution floor {CPU_TICK_QUANTUM_MS:.2f} ms/token (USER_HZ=100 clock ticks over 100 iterations).",
+        f"Resolution floor {CPU_TICK_QUANTUM_MS * 1000:.0f} us/token (USER_HZ=100 clock ticks over 100 iterations).",
         "Bars at or below the floor are under-resolved, not zero -- see multirun_cpu_quantization.csv.",
     ]
 
@@ -446,8 +449,8 @@ def main() -> None:
              "Average latency (ms, log10)", "refresh_avg", True)
     bar_spec("mrun_07_isolated_refresh_p95_ms", "Isolated refresh-token generation p95 latency",
              "P95 latency (ms, log10)", "refresh_p95", True)
-    bar_spec("mrun_08_isolated_cpu_per_token_ms", "Isolated CPU time per generated token",
-             "CPU time per token (ms)", "cpu_per_tok", False, cpu_note, decimals=2)
+    bar_spec("mrun_08_isolated_cpu_per_token_us", "Isolated CPU time per generated token",
+             "CPU time per token (µs)", "cpu_per_tok", False, cpu_note, decimals=0, scale=1000)
 
     # Stress scenario (full round-trips under concurrency).
     vu_spec("mrun_09_stress_login_avg_ms", "Stress login round-trip latency",

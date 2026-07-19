@@ -11,8 +11,11 @@ the same code path:
   3. parse fidelity naive whitespace split of each table vs the regex parser
   4. quartiles      q1 <= median <= q3, non-negative
   5. aggregation    multirun_data.csv recomputed from multirun_raw.csv
-  6. distribution   p95 >= avg (a violation means the harness fed avg and p95
-                    from different sample populations)
+  6. skew           avg > p95 is NOT an error: with a tail heavier than the top
+                    5% of samples the mean exceeds p95 legitimately (measured:
+                    HS256 stress refresh 30VU is med 0.008, p95 0.015, max 3.743,
+                    avg 0.024). Reported as a skew indicator, since it marks
+                    exactly the cells where a mean must not be quoted.
   7. quantization   CPU/token values must sit on the 0.05 ms tick grid
   8. outliers       cells >3x their own cross-run median (host noise, expected;
                     reported so the reader knows why median+IQR is used)
@@ -37,6 +40,7 @@ import generate_multirun_figures as m  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = m.OUT_DIR
 VU_LEVELS = (10, 30, 50)
+STRESS_DURATION_S = 30  # backend/k6/benchmark_sign.js
 
 # (section marker, end marker, column names) for the two VU tables. The isolated
 # table is handled separately because it has no VU column.
@@ -209,8 +213,8 @@ def main() -> int:
     fatal += bad
     section(f"aggregation: {checked} CSV rows recomputed from {len(raw)} raw values", bad)
 
-    # 6. p95 >= avg
-    viol = 0
+    # 6. skew: avg > p95 flags a tail heavy enough that the mean is unusable.
+    skewed = 0
     for r in runs:
         checks = [("isolated", None, r["isolated"], ("pure", "access", "refresh"))]
         for table, prefixes in (("stress", ("access", "refresh")),
@@ -221,13 +225,15 @@ def main() -> int:
             for alg in m.ALGS:
                 for pre in prefixes:
                     avg, p95 = data[alg][f"{pre}_avg"], data[alg][f"{pre}_p95"]
-                    if p95 < avg:
+                    if avg > p95:
                         where = PLOTTED.get(table, "not plotted")
-                        record("distribution", "warn",
+                        record("skew", "warn",
                                f"{r['file']}:{table}:{alg}:{level or '-'}:{pre}",
-                               f"p95 {p95} < avg {avg} (figures: {where})")
-                        viol += 1
-    section("distribution: p95 >= avg", 0, f"{viol} violations (warn, see CSV)")
+                               f"avg {avg} > p95 {p95}: tail beyond p95 dominates the mean, "
+                               f"quote median not mean (figures: {where})")
+                        skewed += 1
+    section("skew: cells where the mean exceeds p95", 0,
+            f"{skewed} flagged (warn; mean unusable there, median required)")
 
     # 7. CPU/token must land on the tick grid
     off_grid = 0
@@ -241,6 +247,61 @@ def main() -> int:
                 off_grid += 1
     fatal += off_grid
     section(f"quantization: CPU/token on the {m.CPU_TICK_QUANTUM_MS} ms tick grid", off_grid)
+
+    # 8b. k6 trend internal ordering. Only the newest sweep keeps its raw JSON, but
+    # min <= med <= p90 <= p95 <= p99 <= max IS guaranteed for any sample, unlike
+    # avg vs p95. A break here means the metric aggregation itself is wrong.
+    raw_json = ROOT / "backend" / "benchmark-results" / "benchmark_sign_raw.json"
+    if raw_json.exists():
+        import json
+        metrics = json.loads(raw_json.read_text()).get("metrics", {})
+        order = ["min", "med", "p(90)", "p(95)", "p(99)", "max"]
+        bad_order = trends = 0
+        for key, body in sorted(metrics.items()):
+            vals = body.get("values", {})
+            got = [(s, vals[s]) for s in order if isinstance(vals.get(s), (int, float))]
+            if len(got) < 2:
+                continue
+            trends += 1
+            for (s1, v1), (s2, v2) in zip(got, got[1:]):
+                if v1 > v2:
+                    record("percentile-order", "fatal", key, f"{s1}={v1} > {s2}={v2}")
+                    bad_order += 1
+            avg = vals.get("avg")
+            if isinstance(avg, (int, float)) and not (vals["min"] <= avg <= vals["max"]):
+                record("percentile-order", "fatal", key,
+                       f"avg={avg} outside [min={vals['min']}, max={vals['max']}]")
+                bad_order += 1
+        fatal += bad_order
+        section(f"percentile order: min<=med<=p90<=p95<=p99<=max over {trends} k6 trends",
+                bad_order)
+    else:
+        section("percentile order: skipped, benchmark_sign_raw.json absent", 0)
+
+    # 8c. derived rates. Both rate columns are count/STRESS_DURATION_S printed with
+    # toFixed(2), so multiplying back by the window must land on an integer count
+    # within the rounding budget. rps counts successes+failures, token_ok_s counts
+    # successes only, so rps >= token_ok_s must hold.
+    rate_tol = 0.5 * 0.01 * STRESS_DURATION_S + 1e-9
+    bad_rate = 0
+    for r in runs:
+        for alg in m.ALGS:
+            for level in VU_LEVELS:
+                rps = r["secondary"][alg][level]["rps"]
+                ok = r["stress"][alg][level]["token_ok_s"]
+                if rps < ok - 1e-9:
+                    record("rates", "fatal", f"{r['file']}:{alg}:{level}VU",
+                           f"rps {rps} < token_ok_s {ok}, but rps counts a superset")
+                    bad_rate += 1
+                for name, v in (("rps", rps), ("token_ok_s", ok)):
+                    count = v * STRESS_DURATION_S
+                    if abs(count - round(count)) > rate_tol:
+                        record("rates", "fatal", f"{r['file']}:{alg}:{level}VU:{name}",
+                               f"{v} implies non-integer count {count:.3f} over "
+                               f"{STRESS_DURATION_S}s")
+                        bad_rate += 1
+    fatal += bad_rate
+    section(f"rates: rps >= token_ok_s and both = integer count/{STRESS_DURATION_S}s", bad_rate)
 
     # 8. outliers
     cells = defaultdict(list)

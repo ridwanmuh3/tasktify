@@ -1,26 +1,26 @@
 check,severity,subject,detail
-distribution,warn,result.txt:stress:HS256:10:refresh,p95 0.013 < avg 0.023 (figures: not plotted)
-distribution,warn,result.txt:stress:HS256:30:refresh,p95 0.016 < avg 0.018 (figures: not plotted)
-distribution,warn,result.txt:stress:HS256:50:refresh,p95 0.014 < avg 0.018 (figures: not plotted)
-distribution,warn,result2.txt:stress:EdDSA:30:refresh,p95 0.059 < avg 0.06 (figures: not plotted)
-distribution,warn,result3.txt:stress:HS256:50:refresh,p95 0.017 < avg 0.018 (figures: not plotted)
-distribution,warn,result4.txt:isolated:HS256:-:refresh,p95 0.022 < avg 0.024 (figures: mrun_01..08)
-distribution,warn,result4.txt:stress:HS256:10:refresh,p95 0.016 < avg 0.018 (figures: not plotted)
-distribution,warn,result4.txt:stress:EdDSA:10:refresh,p95 0.059 < avg 0.06 (figures: not plotted)
-distribution,warn,result7.txt:stress:HS256:30:refresh,p95 0.014 < avg 0.018 (figures: not plotted)
-distribution,warn,result9.txt:stress:ES256:10:refresh,p95 0.083 < avg 0.088 (figures: not plotted)
-distribution,warn,result11.txt:stress:ES256:10:refresh,p95 0.077 < avg 0.08 (figures: not plotted)
-distribution,warn,result11.txt:stress:HS256:30:refresh,p95 0.022 < avg 0.029 (figures: not plotted)
-distribution,warn,result13.txt:stress:HS256:30:refresh,p95 0.012 < avg 0.021 (figures: not plotted)
-distribution,warn,result15.txt:stress:HS256:30:refresh,p95 0.019 < avg 0.022 (figures: not plotted)
-distribution,warn,result16.txt:isolated:ES256:-:refresh,p95 0.078 < avg 0.111 (figures: mrun_01..08)
-distribution,warn,result16.txt:stress:HS256:50:refresh,p95 0.02 < avg 0.025 (figures: not plotted)
-distribution,warn,result17.txt:stress:HS256:50:refresh,p95 0.016 < avg 0.02 (figures: not plotted)
-distribution,warn,result19.txt:stress:HS256:10:access,p95 0.089 < avg 0.096 (figures: not plotted)
-distribution,warn,result19.txt:stress:ES256:30:refresh,p95 0.076 < avg 0.081 (figures: not plotted)
-distribution,warn,result19.txt:stress:HS256:50:refresh,p95 0.017 < avg 0.021 (figures: not plotted)
-distribution,warn,result20.txt:stress:HS256:30:refresh,p95 0.015 < avg 0.024 (figures: not plotted)
-distribution,warn,result20.txt:stress:HS256:50:access,p95 0.089 < avg 0.095 (figures: not plotted)
+skew,warn,result.txt:stress:HS256:10:refresh,"avg 0.023 > p95 0.013: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result.txt:stress:HS256:30:refresh,"avg 0.018 > p95 0.016: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result.txt:stress:HS256:50:refresh,"avg 0.018 > p95 0.014: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result2.txt:stress:EdDSA:30:refresh,"avg 0.06 > p95 0.059: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result3.txt:stress:HS256:50:refresh,"avg 0.018 > p95 0.017: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result4.txt:isolated:HS256:-:refresh,"avg 0.024 > p95 0.022: tail beyond p95 dominates the mean, quote median not mean (figures: mrun_01..08)"
+skew,warn,result4.txt:stress:HS256:10:refresh,"avg 0.018 > p95 0.016: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result4.txt:stress:EdDSA:10:refresh,"avg 0.06 > p95 0.059: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result7.txt:stress:HS256:30:refresh,"avg 0.018 > p95 0.014: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result9.txt:stress:ES256:10:refresh,"avg 0.088 > p95 0.083: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result11.txt:stress:ES256:10:refresh,"avg 0.08 > p95 0.077: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result11.txt:stress:HS256:30:refresh,"avg 0.029 > p95 0.022: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result13.txt:stress:HS256:30:refresh,"avg 0.021 > p95 0.012: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result15.txt:stress:HS256:30:refresh,"avg 0.022 > p95 0.019: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result16.txt:isolated:ES256:-:refresh,"avg 0.111 > p95 0.078: tail beyond p95 dominates the mean, quote median not mean (figures: mrun_01..08)"
+skew,warn,result16.txt:stress:HS256:50:refresh,"avg 0.025 > p95 0.02: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result17.txt:stress:HS256:50:refresh,"avg 0.02 > p95 0.016: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result19.txt:stress:HS256:10:access,"avg 0.096 > p95 0.089: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result19.txt:stress:ES256:30:refresh,"avg 0.081 > p95 0.076: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result19.txt:stress:HS256:50:refresh,"avg 0.021 > p95 0.017: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result20.txt:stress:HS256:30:refresh,"avg 0.024 > p95 0.015: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+skew,warn,result20.txt:stress:HS256:50:access,"avg 0.095 > p95 0.089: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
 outlier,info,result7.txt:isolated:HS256:-:access_p95,0.122 = 5.1x cross-run median 0.024 (figures: mrun_01..08)
 outlier,info,result7.txt:isolated:HS256:-:refresh_p95,0.134 = 5.5x cross-run median 0.025 (figures: mrun_01..08)
 outlier,info,result2.txt:secondary:ES256:10:e2e_avg,111.694 = 5.5x cross-run median 20.374 (figures: mrun_09..13)
