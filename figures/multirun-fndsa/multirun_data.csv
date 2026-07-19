@@ -1,0 +1,55 @@
+figure,scenario,algorithm,vus,metric,median,q1,q3,runs
+mrun_01_pure_signing_avg_ms,isolated,FN-DSA-Precomputed-512,,pure_avg,0.321,0.2933,0.3778,20
+mrun_01_pure_signing_avg_ms,isolated,FN-DSA-512,,pure_avg,0.436,0.4203,0.4725,20
+mrun_02_pure_signing_p95_ms,isolated,FN-DSA-Precomputed-512,,pure_p95,0.4075,0.3575,0.489,20
+mrun_02_pure_signing_p95_ms,isolated,FN-DSA-512,,pure_p95,0.556,0.5298,0.5948,20
+mrun_03_process_rss_avg_mb,isolated,FN-DSA-Precomputed-512,,rss_kb,41081.32,34277.97,45436.81,20
+mrun_03_process_rss_avg_mb,isolated,FN-DSA-512,,rss_kb,39347.36,34264.84,45622.5,20
+mrun_04_isolated_access_avg_ms,isolated,FN-DSA-Precomputed-512,,access_avg,0.329,0.314,0.3575,20
+mrun_04_isolated_access_avg_ms,isolated,FN-DSA-512,,access_avg,0.4355,0.411,0.465,20
+mrun_05_isolated_access_p95_ms,isolated,FN-DSA-Precomputed-512,,access_p95,0.424,0.394,0.4463,20
+mrun_05_isolated_access_p95_ms,isolated,FN-DSA-512,,access_p95,0.561,0.537,0.59,20
+mrun_06_isolated_refresh_avg_ms,isolated,FN-DSA-Precomputed-512,,refresh_avg,0.33,0.3027,0.355,20
+mrun_06_isolated_refresh_avg_ms,isolated,FN-DSA-512,,refresh_avg,0.4375,0.4225,0.4632,20
+mrun_07_isolated_refresh_p95_ms,isolated,FN-DSA-Precomputed-512,,refresh_p95,0.428,0.3922,0.4483,20
+mrun_07_isolated_refresh_p95_ms,isolated,FN-DSA-512,,refresh_p95,0.5715,0.5488,0.6058,20
+mrun_08_isolated_cpu_per_token_us,isolated,FN-DSA-Precomputed-512,,cpu_per_tok,0.4,0.3125,0.5,20
+mrun_08_isolated_cpu_per_token_us,isolated,FN-DSA-512,,cpu_per_tok,0.55,0.45,0.6,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-Precomputed-512,10,login_avg,386.9645,383.895,396.7903,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-Precomputed-512,30,login_avg,1127.3305,1105.5117,1160.6155,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-Precomputed-512,50,login_avg,1903.056,1844.393,1968.1143,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-512,10,login_avg,395.699,385.2175,411.2495,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-512,30,login_avg,1138.6015,1113.8347,1173.079,20
+mrun_09_stress_login_avg_ms,secondary,FN-DSA-512,50,login_avg,1900.423,1812.4623,1971.5528,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-Precomputed-512,10,login_p95,684.9185,668.7,732.3502,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-Precomputed-512,30,login_p95,2254.414,2177.297,2380.4208,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-Precomputed-512,50,login_p95,3822.5615,3682.8008,4008.9428,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-512,10,login_p95,711.823,683.8585,757.8457,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-512,30,login_p95,2247.353,2181.3738,2392.624,20
+mrun_10_stress_login_p95_ms,secondary,FN-DSA-512,50,login_p95,3829.3745,3533.2858,4059.307,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-Precomputed-512,10,refresh_avg,305.3945,293.0827,309.9663,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-Precomputed-512,30,refresh_avg,1034.4055,1014.545,1065.3863,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-Precomputed-512,50,refresh_avg,1748.145,1674.4842,1790.5723,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-512,10,refresh_avg,310.2755,298.2983,319.1503,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-512,30,refresh_avg,1049.1005,1030.5973,1083.7377,20
+mrun_11_stress_refresh_avg_ms,secondary,FN-DSA-512,50,refresh_avg,1762.916,1707.3788,1810.061,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-Precomputed-512,10,refresh_p95,600.8515,586.8605,609.7385,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-Precomputed-512,30,refresh_p95,2133.098,2083.842,2263.4062,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-Precomputed-512,50,refresh_p95,3634.561,3482.489,3879.432,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-512,10,refresh_p95,630.904,584.959,676.3315,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-512,30,refresh_p95,2186.154,2091.3865,2298.3055,20
+mrun_12_stress_refresh_p95_ms,secondary,FN-DSA-512,50,refresh_p95,3700.949,3499.4178,3810.2018,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-Precomputed-512,10,rps,13.08,12.68,13.3,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-Precomputed-512,30,rps,13.5,13.2775,13.87,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-Precomputed-512,50,rps,14.03,13.41,14.43,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-512,10,rps,12.9,11.7975,13.205,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-512,30,rps,13.585,12.9275,13.76,20
+mrun_13_stress_throughput_rps,secondary,FN-DSA-512,50,rps,13.95,13.425,14.31,20
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,Signature Tampering,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,Token Forgery,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,Algorithm Confusion,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,None Algorithm Attack,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,Payload Manipulation,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,Cross-Algorithm Injection,100,,,1
+fig_13_security_attack_block_rate_pct,attack,FN-DSA-Precomputed-512,,RS256/HS256 Key Confusion,100,,,1
+mrun_15_precompute_persistent_memory_per_key_kb,profile,FN-DSA-Precomputed-512,,persistent_bytes_per_key,110712,,,3

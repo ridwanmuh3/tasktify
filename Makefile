@@ -149,6 +149,25 @@ figures:
 		(echo "Missing $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json. Run make client-k6 (or hostinger-bench) first."; exit 2)
 	python3 scripts/generate_article_graphics.py
 
+# Multi-run aggregate figures across every result*.txt.
+FNDSA_ALGS ?= FN-DSA-Precomputed-512,FN-DSA-512
+FIGURES_MULTIRUN_DIR ?= figures/multirun
+FIGURES_FNDSA_DIR ?= figures/multirun-fndsa
+
+figures-multirun:
+	python3 scripts/generate_multirun_figures.py
+	python3 scripts/validate_multirun_data.py
+
+# Same aggregate, drawn for the two FN-DSA profiles only. Separate output
+# directory so it never overwrites the six-algorithm set — the two answer
+# different questions and the article needs both. Dropping the baselines also
+# drops the three-orders-of-magnitude spread that forces a log axis, so these
+# come out linear and the precomputed-vs-dynamic gap is actually readable.
+figures-fndsa:
+	MULTIRUN_PLOT_ALGS='$(FNDSA_ALGS)' \
+	MULTIRUN_GRAPHICS_DIR='$(FIGURES_FNDSA_DIR)' \
+	python3 scripts/generate_multirun_figures.py
+
 # One-shot: run the client k6 benchmark against a remote gateway, run the
 # adversarial attack test (feeds fig_13's block-rate figure), then regenerate
 # article figures from the fresh results. Forwards BENCH_HOST the same way
@@ -196,4 +215,4 @@ bench-figures-repeat:
 		--out $(BACKEND_DIR)/benchmark-results/fndsa_precompute_profile.json
 	$(MAKE) figures
 
-.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures bench-figures bench-figures-repeat
+.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures figures-multirun figures-fndsa bench-figures bench-figures-repeat

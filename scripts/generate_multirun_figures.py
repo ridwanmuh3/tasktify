@@ -44,6 +44,25 @@ PRECOMP = "FN-DSA-Precomputed-512"
 DYNAMIC = "FN-DSA-512"
 WHISKER = "#22303C"
 
+# ALGS is the *parse* set and must stay complete: every report contains all six
+# algorithms and load_runs() rejects a report that is missing any of them.
+# PLOT_ALGS is the *draw* set. Narrowing it to the two FN-DSA profiles gives the
+# thesis' actual comparison without the four baselines compressing the scale --
+# HS256 at 0.002 ms and RS256 at 1.2 ms span three orders of magnitude, which
+# forces a log axis and leaves the precomputed-vs-dynamic gap visually flat.
+#   MULTIRUN_PLOT_ALGS="FN-DSA-Precomputed-512,FN-DSA-512" python3 ...
+PLOT_ALGS = [a.strip() for a in os.environ.get("MULTIRUN_PLOT_ALGS", "").split(",") if a.strip()]
+if not PLOT_ALGS:
+    PLOT_ALGS = list(ALGS)
+unknown = [a for a in PLOT_ALGS if a not in ALGS]
+if unknown:
+    raise SystemExit(f"MULTIRUN_PLOT_ALGS: unknown algorithm(s) {unknown}; known: {ALGS}")
+
+# A log axis earns its place only when the series really do span orders of
+# magnitude. Below this ratio it just makes near-equal bars look near-equal in a
+# harder-to-read way, so a requested log scale silently falls back to linear.
+LOG_SCALE_MIN_RATIO = 20.0
+
 # Smallest non-zero CPU/token the harness can report. readCPUTicks() reads
 # utime+stime from /proc/self/stat in USER_HZ=100 clock ticks (10 ms each);
 # benchmark_handler.go averages over ITERATIONS iterations and halves the sum to
@@ -158,7 +177,7 @@ def cpu_quantization_rows(runs: list[dict]) -> list[dict]:
     isn't, which is what makes this a floor rather than a measurement.
     """
     rows = []
-    for alg in ALGS:
+    for alg in PLOT_ALGS:
         cpu = [r["isolated"][alg]["cpu_per_tok"] for r in runs]
         wall = [(r["isolated"][alg]["access_avg"] + r["isolated"][alg]["refresh_avg"]) / 2
                 for r in runs]
@@ -177,7 +196,12 @@ def cpu_quantization_rows(runs: list[dict]) -> list[dict]:
 
 
 def raw_rows(runs: list[dict]) -> list[dict]:
-    """Every parsed number, one row per run/algorithm/scenario/metric."""
+    """Every parsed number, one row per run/algorithm/scenario/metric.
+
+    Deliberately ALGS, not PLOT_ALGS: this is the full-fidelity dump behind the
+    figures, and narrowing the drawn set is a presentation choice that should not
+    silently shrink the published data.
+    """
     rows = []
     for r in runs:
         for alg in ALGS:
@@ -220,6 +244,26 @@ def win_rate(runs: list[dict], get, higher_is_better: bool = False) -> tuple[int
 # ───────────────────────────── rendering ────────────────────────────
 
 
+def scale_label(y_label: str, log_scale: bool) -> str:
+    """Annotate the axis label with the scale actually used.
+
+    The log axis is adaptive (see spans_orders), so a hardcoded "log10" in the
+    label would lie the moment the fallback kicks in — which is exactly what
+    happens on the two-algorithm FN-DSA set.
+    """
+    if not log_scale:
+        return y_label
+    return f"{y_label[:-1]}, log10)" if y_label.endswith(")") else f"{y_label} (log10)"
+
+
+def spans_orders(values: list[float]) -> bool:
+    """True when the series is wide enough for a log axis to be worth it."""
+    positive = [v for v in values if v > 0]
+    if not positive:
+        return False
+    return max(positive) / min(positive) >= LOG_SCALE_MIN_RATIO
+
+
 def draw_note(draw, left: int, right: int, lines: list[str], color: str) -> None:
     """Caveat/provenance note. Drawn in the top margin: the bottom margin is
     already taken by tick labels and the algorithm legend."""
@@ -243,8 +287,9 @@ def render_bar_figure(name: str, y_label: str, stats: list[tuple[str, tuple[floa
     img, draw = g.new_png_canvas()
     left, top, right, bottom = g.plot_area()
     spread = [v for _, (q1, med, q3) in stats for v in (q1, med, q3)]
+    log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
-    g.draw_png_axes(img, draw, y_label, ticks, y_map)
+    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
 
     gap = 54
     slot = ((right - left) - gap * (len(stats) - 1)) / len(stats)
@@ -299,20 +344,21 @@ def render_vu_figure(name: str, y_label: str,
     img, draw = g.new_png_canvas()
     left, top, right, bottom = g.plot_area()
     spread = [v for rows in series.values() for _, (q1, med, q3) in rows for v in (q1, med, q3)]
+    log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
-    g.draw_png_axes(img, draw, y_label, ticks, y_map)
+    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
 
     vus = sorted({vu for rows in series.values() for vu, _ in rows})
     group_gap = 90
     group_w = ((right - left) - group_gap * (len(vus) - 1)) / len(vus)
     bar_gap = 10
-    bar_w = (group_w - bar_gap * (len(ALGS) - 1)) / len(ALGS)
+    bar_w = (group_w - bar_gap * (len(PLOT_ALGS) - 1)) / len(PLOT_ALGS)
     cap = bar_w * 0.28
     label_bounds = (left, top, right, bottom)
 
     for gi, vu in enumerate(vus):
         gx = left + gi * (group_w + group_gap)
-        for ai, alg in enumerate(ALGS):
+        for ai, alg in enumerate(PLOT_ALGS):
             q1, med, q3 = dict(series[alg])[vu]
             x = gx + ai * (bar_w + bar_gap)
             cx = x + bar_w / 2
@@ -328,7 +374,7 @@ def render_vu_figure(name: str, y_label: str,
 
     g.draw_png_text(draw, (left + right) / 2, bottom + 108,
                     "Concurrent virtual users (VUs)", g.AXIS_SIZE, fill=g.AXIS, anchor="ma")
-    g.draw_png_algorithm_legend(draw, left, g.H - 64, right - left)
+    g.draw_png_algorithm_legend(draw, left, g.H - 64, right - left, PLOT_ALGS)
     return g.save_png(img, name)
 
 
@@ -382,7 +428,7 @@ def main() -> None:
     def bar_spec(name, title, y_label, metric, log_scale, note=None, decimals=None, scale=1.0):
         # stats stay in the metric's native unit for the CSV; `scale` only converts
         # the drawn figure (KB->MB), so the CSV column never disagrees with its name.
-        stats = [(alg, iso_stat(runs, alg, metric)) for alg in ALGS]
+        stats = [(alg, iso_stat(runs, alg, metric)) for alg in PLOT_ALGS]
         drawn = [(alg, tuple(v * scale for v in qs)) for alg, qs in stats]
         path = render_bar_figure(name, y_label, drawn, log_scale, note, decimals)
         wins, ties, total = win_rate(runs, lambda r, a: r["isolated"][a][metric])
@@ -397,7 +443,7 @@ def main() -> None:
 
     def vu_spec(name, title, y_label, table, metric, log_scale, higher_is_better=False):
         series = {alg: [(vu, vu_stat(runs, table, alg, vu, metric)) for vu in (10, 30, 50)]
-                  for alg in ALGS}
+                  for alg in PLOT_ALGS}
         path = render_vu_figure(name, y_label, series, log_scale)
         detail = []
         for vu in (10, 30, 50):
@@ -434,21 +480,21 @@ def main() -> None:
 
     # Pure signing scenario.
     bar_spec("mrun_01_pure_signing_avg_ms", "Pure signing latency (median of runs)",
-             "Average latency (ms, log10)", "pure_avg", True)
+             "Average latency (ms)", "pure_avg", True)
     bar_spec("mrun_02_pure_signing_p95_ms", "Pure signing p95 latency (median of runs)",
-             "P95 latency (ms, log10)", "pure_p95", True)
+             "P95 latency (ms)", "pure_p95", True)
     bar_spec("mrun_03_process_rss_avg_mb", "Gateway process RSS during isolated benchmark",
              "Process-wide RSS (MB)", "rss_kb", False, rss_note, decimals=1, scale=1 / 1024)
 
     # Isolated JWT issuance scenario.
     bar_spec("mrun_04_isolated_access_avg_ms", "Isolated access-token generation latency",
-             "Average latency (ms, log10)", "access_avg", True)
+             "Average latency (ms)", "access_avg", True)
     bar_spec("mrun_05_isolated_access_p95_ms", "Isolated access-token generation p95 latency",
-             "P95 latency (ms, log10)", "access_p95", True)
+             "P95 latency (ms)", "access_p95", True)
     bar_spec("mrun_06_isolated_refresh_avg_ms", "Isolated refresh-token generation latency",
-             "Average latency (ms, log10)", "refresh_avg", True)
+             "Average latency (ms)", "refresh_avg", True)
     bar_spec("mrun_07_isolated_refresh_p95_ms", "Isolated refresh-token generation p95 latency",
-             "P95 latency (ms, log10)", "refresh_p95", True)
+             "P95 latency (ms)", "refresh_p95", True)
     bar_spec("mrun_08_isolated_cpu_per_token_us", "Isolated CPU time per generated token",
              "CPU time per token (µs)", "cpu_per_tok", False, cpu_note, decimals=0, scale=1000)
 
