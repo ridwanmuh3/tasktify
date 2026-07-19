@@ -405,30 +405,40 @@ hostinger-bench:
 HOSTINGER_BENCH_RUNS ?= 10
 HOSTINGER_RUNS_DIR ?= $(BENCH_OUTPUT_DIR)/hostinger-runs
 HOSTINGER_BENCH_INDEX ?= $(HOSTINGER_RUNS_DIR)/hostinger_bench_index.json
-# Artifacts copied out of each run. result.txt is the console report the figure
-# scripts parse; the rest are the JSON the stats scripts consume. These are
-# deleted before each iteration: hostinger-bench writes fixed filenames, so a
-# run that dies midway would otherwise leave the previous run's files in place
-# and they would be archived under the failed run's name as if they were its own.
-# The k6 sample ndjson is deliberately not archived — it is large and only
+# Artifacts moved out of each run. result.txt is the console report the figure
+# scripts parse; the rest are the JSON the stats scripts consume.
+#
+# mv, not cp: hostinger-bench writes these fixed filenames every time, so moving
+# them into the run directory both archives the run and clears the slate for the
+# next one. A cp would leave the files in place, and a run that died midway
+# would then have its predecessor's files archived under its own name as if they
+# were its data. Moving makes that impossible without a destructive pre-emptive
+# rm — a failed run simply archives nothing.
+#
+# The k6 sample ndjson is deliberately not archived: large, and only
 # hostinger-calc consumes it, in-run.
 HOSTINGER_BENCH_ARTIFACTS = \
 	$(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_STAT_OUT) \
 	$(BENCH_WELCH_OUT) $(BENCH_ABLATION_OUT) $(BENCH_STDOUT_OUT)
 
 hostinger-bench-repeat: require-vps require-k6 prepare-bench-output
-	@mkdir -p $(HOSTINGER_RUNS_DIR)
-	@: > $(HOSTINGER_RUNS_DIR)/.status.tsv
-	@for i in $$(seq 1 $(HOSTINGER_BENCH_RUNS)); do \
+	@case "$$MAKEFLAGS" in \
+		*n*) echo "hostinger-bench-repeat: dry run, doing nothing."; \
+		     echo "  GNU make runs any recipe line containing \$$(MAKE) even under -n,"; \
+		     echo "  and this loop is one such line, so it would archive for real."; \
+		     exit 0;; \
+	esac; \
+	mkdir -p $(HOSTINGER_RUNS_DIR); \
+	: > $(HOSTINGER_RUNS_DIR)/.status.tsv; \
+	for i in $$(seq 1 $(HOSTINGER_BENCH_RUNS)); do \
 		run=$$(printf 'run_%02d' $$i); \
 		dir=$(HOSTINGER_RUNS_DIR)/$$run; \
 		started=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
 		echo "=== hostinger-bench-repeat: $$run ($$i/$(HOSTINGER_BENCH_RUNS)) ==="; \
 		rm -rf $$dir && mkdir -p $$dir; \
-		rm -f $(HOSTINGER_BENCH_ARTIFACTS); \
 		if $(MAKE) hostinger-bench; then status=ok; else status=failed; fi; \
 		for f in $(HOSTINGER_BENCH_ARTIFACTS); do \
-			[ -f "$$f" ] && cp "$$f" "$$dir/" || true; \
+			[ -f "$$f" ] && mv "$$f" "$$dir/" || true; \
 		done; \
 		printf '%s\t%s\t%s\t%s\n' "$$run" "$$status" "$$started" \
 			"$$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $(HOSTINGER_RUNS_DIR)/.status.tsv; \
