@@ -468,9 +468,17 @@ def main() -> None:
     try:
         adversarial = g.read_json_file("adversarial_result.json", g.ADVERSARIAL_FILES)
         path = g.render_attack_metric_png(adversarial)
+        # Scope this honestly: the adversarial sweep runs one algorithm, not the
+        # six-way comparison the other figures make, so it cannot be a "both
+        # profiles tie". The stress reports carry no attack data at all (their
+        # Atk block column is "—" in every row); this figure's only source is
+        # adversarial_result.json from the separate ATTACK_ONLY run.
+        meta = adversarial["meta"]
         figures.append({"name": "fig_13_security_attack_block_rate_pct",
                         "title": "JWT attack block rate (RFC 7519/8725 vectors)",
-                        "file": path.name, "precomp_wins": "n/a (tie: 100% both profiles)"})
+                        "file": path.name,
+                        "precomp_wins": f"n/a (single profile: {meta['algorithm']}, "
+                                        f"n={meta['iterations']}/vector)"})
         for atk in adversarial["attacks"]:
             rows.append({"figure": "fig_13_security_attack_block_rate_pct", "scenario": "attack",
                          "algorithm": adversarial["meta"]["algorithm"], "vus": "",

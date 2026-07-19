@@ -12,5 +12,5 @@ mrun_10_stress_login_p95_ms,Stress login round-trip p95 latency,mrun_10_stress_l
 mrun_11_stress_refresh_avg_ms,Stress refresh round-trip latency,mrun_11_stress_refresh_avg_ms.png,10VU 12/20; 30VU 12/20; 50VU 11/20
 mrun_12_stress_refresh_p95_ms,Stress refresh round-trip p95 latency,mrun_12_stress_refresh_p95_ms.png,10VU 12/20; 30VU 14/20; 50VU 11/20
 mrun_13_stress_throughput_rps,Stress throughput,mrun_13_stress_throughput_rps.png,10VU 14/20; 30VU 10/20; 50VU 11/20
-fig_13_security_attack_block_rate_pct,JWT attack block rate (RFC 7519/8725 vectors),fig_13_security_attack_block_rate_pct.png,n/a (tie: 100% both profiles)
+fig_13_security_attack_block_rate_pct,JWT attack block rate (RFC 7519/8725 vectors),fig_13_security_attack_block_rate_pct.png,"n/a (single profile: FN-DSA-Precomputed-512, n=10/vector)"
 mrun_15_precompute_persistent_memory_per_key_kb,Precompute persistent memory per signer (valid source),mrun_15_precompute_persistent_memory_per_key_kb.png,"n/a (cost, not a win)"

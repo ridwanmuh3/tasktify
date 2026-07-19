@@ -277,7 +277,8 @@ Tambah `FuzzSign`/`FuzzParse` pada jalur signer dan parser JWT.
 - **P2-13.** Tidak ada zeroization / `Destroy()` pada `PrecomputedSigner`; tidak ada pembahasan core dump, swap,
   memory hardening.
 - **P2-14.** Metadata reproduksibilitas belum diemit ke result JSON: commit hash, versi Go, CGO on/off, build flags,
-  hasil KAT (`make falcon-kat` sudah ada — tinggal dicatat).
+  hasil KAT (`make falcon-kat` sudah ada). Hasil KAT + adversarial sudah dicatat di
+  `docs/pengujian-kat-dan-adversarial-fndsa.md`; sisa pekerjaan = emit commit/Go version/CGO/build flags ke result JSON.
 - **P2-15.** `fndsa_precompute_ablation.json` juga basi (9 Jul). Regenerasi bersama P0-1.
 - **P2-16.** Field CPU/memori isolated memiliki `min = max = avg = p95` (satu observasi agregat sisi server) tetapi
   `sd` besar. Jangan sajikan sebagai distribusi di naskah; laporkan sebagai observasi tunggal + sd sisi server.

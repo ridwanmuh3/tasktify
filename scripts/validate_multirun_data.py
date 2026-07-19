@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import csv
 import glob
+import re
 import statistics as st
 import sys
 from collections import defaultdict
@@ -302,6 +303,44 @@ def main() -> int:
                         bad_rate += 1
     fatal += bad_rate
     section(f"rates: rps >= token_ok_s and both = integer count/{STRESS_DURATION_S}s", bad_rate)
+
+    # 8d. zero / null sweep over every k6 metric.
+    #
+    # A metric reading exactly 0 has two very different causes and they must not be
+    # conflated:
+    #   benign  - failure and GC-contamination counters. Zero is the desired result.
+    #   dead    - a Trend that k6 declared but never received a sample for. addStat()
+    #             bails on an undefined field ("if (!stats) return"), and k6 still
+    #             serializes the declared metric with every statistic zeroed, so a
+    #             dead metric is indistinguishable from a real zero by shape alone.
+    #             min==max==avg==0 on a latency/CPU trend is the signature.
+    # Confirmed dead in the current sweep: bench_pure_signing_cpu_time_per_token_ms_*
+    # reads 0 for all six algorithms while bench_auth_cpu_time_per_token_ms_avg reads
+    # 0.05-1.4 and bench_pure_signing_memory_alloc_kb_avg (same s.resource object)
+    # reads 3199 KB. A standalone tick-delta harness over 100 RSA-2048 signs yields
+    # 2.0 ms, so a genuine 0 there is not physically plausible.
+    if raw_json.exists():
+        benign = re.compile(r"_failed|_contaminated_count|attack_allowed|dropped|"
+                            r"interrupted|_success|tls_handshaking|_stdev")
+        nulls = dead = 0
+        for key, body in sorted(metrics.items()):
+            vals = body.get("values", {})
+            for stat, val in vals.items():
+                if val is None or (isinstance(val, float) and val != val):
+                    record("null", "fatal", key, f"{stat} is {val}")
+                    nulls += 1
+            if body.get("type") != "trend" or benign.search(key):
+                continue
+            nums = [vals.get(s) for s in ("min", "max", "avg")]
+            if all(isinstance(v, (int, float)) for v in nums) and not any(nums):
+                record("dead-metric", "warn", key,
+                       "trend reads min=max=avg=0: never populated (k6 serializes a "
+                       "declared-but-empty trend as zeros) or genuinely zero")
+                dead += 1
+        fatal += nulls
+        section(f"null sweep over {len(metrics)} k6 metrics", nulls)
+        section("dead metrics: trends reading min=max=avg=0", 0,
+                f"{dead} flagged (warn; none feed a figure)")
 
     # 8. outliers
     cells = defaultdict(list)

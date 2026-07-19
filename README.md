@@ -447,4 +447,6 @@ Run from `backend/`.
 | ---- | ------- |
 | `docs/grpc-implementation.md` | gRPC contracts, metadata, trailers, keep-alive, and benchmark bias controls |
 | `docs/skenario-pengujian.md` | k6 scenario design, isolated/stress/attack phases, metrics, thresholds, and output files |
+| `docs/pengujian-kat-dan-adversarial-fndsa.md` | FN-DSA/Falcon known-answer tests and primitive-level adversarial vectors: construction, coverage, results, and claim limits |
+| `docs/hasil-benchmark-agregat-20-run.md` | Aggregate results across all 20 `result*.txt` sweeps: median + IQR per metric, per-run win rates, and the figures in `figures/multirun/` |
 | `backend/api/api-spec.yml` | API specification |

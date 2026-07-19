@@ -367,6 +367,8 @@ Istilah **Missing Signature Verification** tidak dipakai sebagai vektor input. V
 
 Tabel 6.5 di atas seluruhnya menguji lapisan JOSE/JWT — header `alg`, klaim, dan compact serialization — berpijak pada RFC 7519 [1] dan RFC 8725 [2]. RFC tersebut tidak menyatakan apa pun tentang apakah skema tanda tangan FN-DSA sendiri tahan forgery; itu properti primitif kriptografi, bukan format token yang membungkusnya. Pengujian yang hanya memalsukan header JWT membuktikan kebenaran kode parsing envelope — bukan klaim keamanan atas FN-DSA itu sendiri. Karena itu ada suite terpisah yang memanggil `fndsa.Sign`/`fndsa.Verify` langsung, melewati `pkg/jwt`, JSON, dan base64url sepenuhnya: `backend/pkg/fndsa/fndsa_adversarial_test.go`.
 
+> Pembahasan rinci tiap vektor (mekanisme, hasil eksekusi, dan batas klaim yang diizinkan) ada di **[`docs/pengujian-kat-dan-adversarial-fndsa.md`](pengujian-kat-dan-adversarial-fndsa.md)**. Ringkasan di bawah sengaja dipertahankan singkat; dokumen tersebut adalah rujukan normatif untuk penulisan naskah.
+
 Referensi untuk suite ini bukan RFC 7519 [1] dan RFC 8725 [2] (di luar cakupan keduanya), melainkan:
 
 - Fouque, Hoffstein, Kirchner, Lyubashevsky, Pornin, Prest, Ricosset, Seiler, Whyte, Zhang [4] — mendefinisikan algoritma Verify: signature `(s1, s2)` diterima hanya jika berhasil didekode DAN `||(s1, s2)|| ≤ β` (norm bound). Implementasi repo ini menegakkan pemeriksaan itu lewat `mqpoly_sqnorm_is_acceptable()` terhadap tabel `sqbeta[]` (`mq.go`, `vrfy.go`).
@@ -598,7 +600,7 @@ Correctness tidak dinilai dari latensi. Jalankan test terpisah untuk memastikan 
 | Bit-flip message gagal | Covered | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/sign_precomputed_test.go` |
 | Dynamic verifier dan precomputed verifier interoperabel | Covered | `backend/pkg/jwt/fndsa_precomputed_test.go`, `backend/pkg/jwt/fndsa_correctness_test.go` |
 | Signature untuk pesan sama tetap valid | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
-| Known-answer test | Covered | `backend/pkg/fndsa/fndsa_test.go` dynamic + precomputed KAT |
+| Known-answer test | Covered | `backend/pkg/fndsa/fndsa_test.go` dynamic + precomputed KAT (90 + 20 vektor). KAT tingkat komponen: `kgen_test.go`, `vrfy_test.go`, `sign_sampler_test.go`, `sign_core_test.go`, `sign_test.go`. Rincian, hasil, dan batas klaim: [`docs/pengujian-kat-dan-adversarial-fndsa.md`](pengujian-kat-dan-adversarial-fndsa.md) |
 | Property test | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
 | Concurrent verification | Covered | `backend/pkg/jwt/fndsa_correctness_test.go` |
 | Concurrent signing + race detector | Wajib dijalankan | `go test -race ./fndsa ./jwt ./utils/jwtutils` |

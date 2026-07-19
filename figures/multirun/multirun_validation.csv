@@ -21,6 +21,13 @@ skew,warn,result19.txt:stress:ES256:30:refresh,"avg 0.081 > p95 0.076: tail beyo
 skew,warn,result19.txt:stress:HS256:50:refresh,"avg 0.021 > p95 0.017: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
 skew,warn,result20.txt:stress:HS256:30:refresh,"avg 0.024 > p95 0.015: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
 skew,warn,result20.txt:stress:HS256:50:access,"avg 0.095 > p95 0.089: tail beyond p95 dominates the mean, quote median not mean (figures: not plotted)"
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg,trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:ES256},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:EdDSA},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:FN-DSA-512},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:FN-DSA-Precomputed-512},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:HS256},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
+dead-metric,warn,bench_pure_signing_cpu_time_per_token_ms_avg{alg:RS256},trend reads min=max=avg=0: never populated (k6 serializes a declared-but-empty trend as zeros) or genuinely zero
 outlier,info,result7.txt:isolated:HS256:-:access_p95,0.122 = 5.1x cross-run median 0.024 (figures: mrun_01..08)
 outlier,info,result7.txt:isolated:HS256:-:refresh_p95,0.134 = 5.5x cross-run median 0.025 (figures: mrun_01..08)
 outlier,info,result2.txt:secondary:ES256:10:e2e_avg,111.694 = 5.5x cross-run median 20.374 (figures: mrun_09..13)
