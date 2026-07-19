@@ -86,6 +86,9 @@ help:
 	@echo "  make hostinger-upload VPS_SSH=root@    Upload k6 artifacts to VPS"
 	@echo "  make hostinger-calc VPS_SSH=user@host      Calculate stats on VPS"
 	@echo "  make hostinger-bench VPS_SSH=user@host     Run client k6 + VPS calc"
+	@echo "  make hostinger-bench-repeat VPS_SSH=user@host HOSTINGER_BENCH_RUNS=10"
+	@echo "                                             Repeat hostinger-bench N times,"
+	@echo "                                             archive each run, emit JSON index"
 
 env:
 	@test -f .env || cp .env.example .env
@@ -385,6 +388,67 @@ hostinger-bench:
 	$(MAKE) hostinger-upload
 	$(MAKE) hostinger-calc
 	$(MAKE) hostinger-fetch
+
+# Run hostinger-bench N times (default 10) and keep every run.
+#
+# Why the per-run directory: hostinger-bench writes the same fixed filenames
+# every time ($(BENCH_RESULT_OUT) and friends), so an unguarded loop would leave
+# only the last run on disk. Each iteration is archived under
+# $(HOSTINGER_RUNS_DIR)/run_NN/ before the next one starts.
+#
+# A failing run does not abort the loop. At ~20 min per run this is a multi-hour
+# job, and losing eight good runs because the ninth hit a network blip is worse
+# than carrying on; the failure is recorded in the index and the target still
+# exits non-zero at the end so CI and the caller see it.
+#
+#   make hostinger-bench-repeat VPS_SSH=root@host HOSTINGER_BENCH_RUNS=10
+HOSTINGER_BENCH_RUNS ?= 10
+HOSTINGER_RUNS_DIR ?= $(BENCH_OUTPUT_DIR)/hostinger-runs
+HOSTINGER_BENCH_INDEX ?= $(HOSTINGER_RUNS_DIR)/hostinger_bench_index.json
+# Artifacts copied out of each run. result.txt is the console report the figure
+# scripts parse; the rest are the JSON the stats scripts consume. These are
+# deleted before each iteration: hostinger-bench writes fixed filenames, so a
+# run that dies midway would otherwise leave the previous run's files in place
+# and they would be archived under the failed run's name as if they were its own.
+# The k6 sample ndjson is deliberately not archived — it is large and only
+# hostinger-calc consumes it, in-run.
+HOSTINGER_BENCH_ARTIFACTS = \
+	$(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_STAT_OUT) \
+	$(BENCH_WELCH_OUT) $(BENCH_ABLATION_OUT) $(BENCH_STDOUT_OUT)
+
+hostinger-bench-repeat: require-vps require-k6 prepare-bench-output
+	@mkdir -p $(HOSTINGER_RUNS_DIR)
+	@: > $(HOSTINGER_RUNS_DIR)/.status.tsv
+	@for i in $$(seq 1 $(HOSTINGER_BENCH_RUNS)); do \
+		run=$$(printf 'run_%02d' $$i); \
+		dir=$(HOSTINGER_RUNS_DIR)/$$run; \
+		started=$$(date -u +%Y-%m-%dT%H:%M:%SZ); \
+		echo "=== hostinger-bench-repeat: $$run ($$i/$(HOSTINGER_BENCH_RUNS)) ==="; \
+		rm -rf $$dir && mkdir -p $$dir; \
+		rm -f $(HOSTINGER_BENCH_ARTIFACTS); \
+		if $(MAKE) hostinger-bench; then status=ok; else status=failed; fi; \
+		for f in $(HOSTINGER_BENCH_ARTIFACTS); do \
+			[ -f "$$f" ] && cp "$$f" "$$dir/" || true; \
+		done; \
+		printf '%s\t%s\t%s\t%s\n' "$$run" "$$status" "$$started" \
+			"$$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $(HOSTINGER_RUNS_DIR)/.status.tsv; \
+		echo "--- $$run: $$status ---"; \
+	done
+	@python3 -c 'import json,os,sys,glob; \
+d=sys.argv[1]; \
+rows=[l.rstrip("\n").split("\t") for l in open(os.path.join(d,".status.tsv")) if l.strip()]; \
+runs=[{"run":r[0],"status":r[1],"started_utc":r[2],"finished_utc":r[3], \
+"dir":os.path.join(d,r[0]), \
+"artifacts":sorted(os.path.basename(p) for p in glob.glob(os.path.join(d,r[0],"*")))} for r in rows]; \
+ok=sum(1 for r in runs if r["status"]=="ok"); \
+json.dump({"target":"hostinger-bench-repeat","base_url":sys.argv[2], \
+"requested_runs":int(sys.argv[3]),"completed_runs":len(runs),"ok_runs":ok, \
+"failed_runs":len(runs)-ok,"runs":runs}, open(sys.argv[4],"w"), indent=2); \
+print("wrote",sys.argv[4],"-",ok,"ok /",len(runs),"runs")' \
+		$(HOSTINGER_RUNS_DIR) "$(BASE_URL)" $(HOSTINGER_BENCH_RUNS) $(HOSTINGER_BENCH_INDEX)
+	@rm -f $(HOSTINGER_RUNS_DIR)/.status.tsv
+	@failed=$$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["failed_runs"])' $(HOSTINGER_BENCH_INDEX)); \
+	test "$$failed" = "0" || (echo "hostinger-bench-repeat: $$failed run(s) failed — see $(HOSTINGER_BENCH_INDEX)"; exit 1)
 
 # --- Adversarial Attack Test ---
 attack-adversarial: prepare-bench-output

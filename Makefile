@@ -33,6 +33,7 @@ help:
 	@echo "  make compose-config   Validate production Compose config"
 	@echo "  make bench-config     Validate benchmark Compose config"
 	@echo "  make hostinger-bench  Run client k6, upload artifacts, calculate on VPS"
+	@echo "  make hostinger-bench-repeat HOSTINGER_BENCH_RUNS=10  Repeat it N times, JSON index"
 	@echo "  make ps               Show production Compose services"
 	@echo "  make logs             Follow all logs"
 	@echo "  make logs-gateway     Follow gateway logs"
@@ -137,7 +138,7 @@ hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health:
 client-k6 client-k6-isolated client-k6-stress client-k6-attack:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile:
+hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
 attack-adversarial attack-adversarial-bench attack-adversarial-remote:
@@ -195,4 +196,4 @@ bench-figures-repeat:
 		--out $(BACKEND_DIR)/benchmark-results/fndsa_precompute_profile.json
 	$(MAKE) figures
 
-.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures bench-figures bench-figures-repeat
+.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures bench-figures bench-figures-repeat
