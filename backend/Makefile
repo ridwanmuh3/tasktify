@@ -421,14 +421,23 @@ HOSTINGER_BENCH_ARTIFACTS = \
 	$(BENCH_RESULT_OUT) $(BENCH_RAW_OUT) $(BENCH_STAT_OUT) \
 	$(BENCH_WELCH_OUT) $(BENCH_ABLATION_OUT) $(BENCH_STDOUT_OUT)
 
+# Dry-run detection. GNU make executes any recipe line containing $(MAKE) even
+# under -n so that recursive dry-runs descend, and this target's loop is such a
+# line — so under -n it would archive for real unless the recipe is empty.
+#
+# Only the FIRST word of MAKEFLAGS holds the short flags, and it carries no
+# leading dash ("n" under -n, "--" otherwise). Both parts matter: grepping all
+# of MAKEFLAGS for "n" matches command-line variables (HOSTINGER_BENCH_RUNS=1
+# contains one), and long options arrive as their own dashed words. So: take the
+# first word, ignore it if it starts with a dash, then look for n.
+MAKE_FLAG_WORD := $(firstword $(MAKEFLAGS))
+DRY_RUN := $(if $(filter-out -%,$(MAKE_FLAG_WORD)),$(findstring n,$(MAKE_FLAG_WORD)),)
+
 hostinger-bench-repeat: require-vps require-k6 prepare-bench-output
-	@case "$$MAKEFLAGS" in \
-		*n*) echo "hostinger-bench-repeat: dry run, doing nothing."; \
-		     echo "  GNU make runs any recipe line containing \$$(MAKE) even under -n,"; \
-		     echo "  and this loop is one such line, so it would archive for real."; \
-		     exit 0;; \
-	esac; \
-	mkdir -p $(HOSTINGER_RUNS_DIR); \
+ifneq ($(DRY_RUN),)
+	@echo "hostinger-bench-repeat: dry run, doing nothing (would run $(HOSTINGER_BENCH_RUNS) x hostinger-bench)."
+else
+	@mkdir -p $(HOSTINGER_RUNS_DIR); \
 	: > $(HOSTINGER_RUNS_DIR)/.status.tsv; \
 	for i in $$(seq 1 $(HOSTINGER_BENCH_RUNS)); do \
 		run=$$(printf 'run_%02d' $$i); \
@@ -459,6 +468,7 @@ print("wrote",sys.argv[4],"-",ok,"ok /",len(runs),"runs")' \
 	@rm -f $(HOSTINGER_RUNS_DIR)/.status.tsv
 	@failed=$$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["failed_runs"])' $(HOSTINGER_BENCH_INDEX)); \
 	test "$$failed" = "0" || (echo "hostinger-bench-repeat: $$failed run(s) failed — see $(HOSTINGER_BENCH_INDEX)"; exit 1)
+endif
 
 # --- Adversarial Attack Test ---
 attack-adversarial: prepare-bench-output
