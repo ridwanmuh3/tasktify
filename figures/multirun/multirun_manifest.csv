@@ -1,0 +1,16 @@
+name,title,file,precomp_wins
+mrun_01_pure_signing_avg_ms,Pure signing latency (median of runs),mrun_01_pure_signing_avg_ms.png,20/20
+mrun_02_pure_signing_p95_ms,Pure signing p95 latency (median of runs),mrun_02_pure_signing_p95_ms.png,18/20
+mrun_03_process_rss_avg_mb,Gateway process RSS during isolated benchmark,mrun_03_process_rss_avg_mb.png,12/20
+mrun_04_isolated_access_avg_ms,Isolated access-token generation latency,mrun_04_isolated_access_avg_ms.png,18/20 (2 tie)
+mrun_05_isolated_access_p95_ms,Isolated access-token generation p95 latency,mrun_05_isolated_access_p95_ms.png,17/20
+mrun_06_isolated_refresh_avg_ms,Isolated refresh-token generation latency,mrun_06_isolated_refresh_avg_ms.png,19/20
+mrun_07_isolated_refresh_p95_ms,Isolated refresh-token generation p95 latency,mrun_07_isolated_refresh_p95_ms.png,18/20
+mrun_08_isolated_cpu_per_token_ms,Isolated CPU time per generated token,mrun_08_isolated_cpu_per_token_ms.png,16/20
+mrun_09_stress_login_avg_ms,Stress login round-trip latency,mrun_09_stress_login_avg_ms.png,10VU 12/20; 30VU 13/20; 50VU 9/20
+mrun_10_stress_login_p95_ms,Stress login round-trip p95 latency,mrun_10_stress_login_p95_ms.png,10VU 11/20; 30VU 12/20; 50VU 9/20
+mrun_11_stress_refresh_avg_ms,Stress refresh round-trip latency,mrun_11_stress_refresh_avg_ms.png,10VU 12/20; 30VU 12/20; 50VU 11/20
+mrun_12_stress_refresh_p95_ms,Stress refresh round-trip p95 latency,mrun_12_stress_refresh_p95_ms.png,10VU 12/20; 30VU 14/20; 50VU 11/20
+mrun_13_stress_throughput_rps,Stress throughput,mrun_13_stress_throughput_rps.png,10VU 14/20; 30VU 10/20; 50VU 11/20
+fig_13_security_attack_block_rate_pct,JWT attack block rate (RFC 7519/8725 vectors),fig_13_security_attack_block_rate_pct.png,n/a (tie: 100% both profiles)
+mrun_15_precompute_persistent_memory_per_key_kb,Precompute persistent memory per signer (valid source),mrun_15_precompute_persistent_memory_per_key_kb.png,"n/a (cost, not a win)"

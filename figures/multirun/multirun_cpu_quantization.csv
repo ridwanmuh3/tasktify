@@ -1,0 +1,7 @@
+algorithm,runs,zero_runs,cpu_per_token_median_ms,cpu_quantum_ms,median_in_ticks,wall_per_token_median_ms,under_resolved
+FN-DSA-Precomputed-512,20,0,0.4,0.05,8.0,0.3287,no
+FN-DSA-512,20,0,0.55,0.05,11.0,0.436,no
+HS256,20,8,0.05,0.05,1.0,0.014,yes
+RS256,20,0,1.25,0.05,25.0,1.1427,no
+ES256,20,0,0.1,0.05,2.0,0.0587,no
+EdDSA,20,6,0.1,0.05,2.0,0.0437,no
