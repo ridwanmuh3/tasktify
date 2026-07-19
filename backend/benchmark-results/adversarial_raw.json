@@ -1,335 +1,8 @@
 {
-  "options": {
-    "summaryTrendStats": [
-      "avg",
-      "min",
-      "med",
-      "max",
-      "p(90)",
-      "p(95)"
-    ],
-    "summaryTimeUnit": "",
-    "noColor": true
-  },
-  "state": {
-    "testRunDurationMs": 3619.815631,
-    "isStdOutTTY": true,
-    "isStdErrTTY": true
-  },
-  "metrics": {
-    "http_req_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 23.627587,
-        "avg": 13.897519801242227,
-        "min": 10.704571,
-        "med": 12.291059,
-        "max": 107.213865,
-        "p(90)": 15.327622
-      }
-    },
-    "http_req_connecting": {
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 11.691837,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0.13459613664596273
-      },
-      "type": "trend",
-      "contains": "time"
-    },
-    "attack_blocked": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 140,
-        "rate": 38.67600294364274
-      }
-    },
-    "attack_block_rate_6_cross_algorithm_injection": {
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 30,
-        "fails": 0
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      },
-      "type": "rate"
-    },
-    "http_req_waiting": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 106.239773,
-        "p(90)": 13.767085,
-        "p(95)": 22.313664,
-        "avg": 12.62402895652174,
-        "min": 9.755117,
-        "med": 11.150034
-      }
-    },
-    "attack_block_rate_3_algorithm_confusion": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "fails": 0,
-        "rate": 1,
-        "passes": 30
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "vus": {
-      "values": {
-        "value": 1,
-        "min": 1,
-        "max": 1
-      },
-      "type": "gauge",
-      "contains": "default"
-    },
-    "group_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 27.0210035,
-        "max": 45.200212,
-        "p(90)": 41.3141513,
-        "p(95)": 42.871493449999996,
-        "avg": 27.00488540000001,
-        "min": 11.453103
-      }
-    },
-    "vus_max": {
-      "type": "gauge",
-      "contains": "default",
-      "values": {
-        "value": 1,
-        "min": 1,
-        "max": 1
-      }
-    },
-    "attack_block_rate_2_token_forgery": {
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 30,
-        "fails": 0
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      },
-      "type": "rate"
-    },
-    "http_req_receiving": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "p(95)": 1.89659,
-        "avg": 0.8809888012422363,
-        "min": 0.207294,
-        "med": 0.732307,
-        "max": 4.053783,
-        "p(90)": 1.405356
-      }
-    },
-    "http_req_failed": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 0.9316770186335404,
-        "passes": 150,
-        "fails": 11
-      }
-    },
-    "data_sent": {
-      "type": "counter",
-      "contains": "data",
-      "values": {
-        "count": 130395,
-        "rate": 36022.552884544966
-      }
-    },
-    "attack_block_rate_5_payload_manipulation": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "passes": 10,
-        "fails": 0,
-        "rate": 1
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "data_received": {
-      "type": "counter",
-      "contains": "data",
-      "values": {
-        "count": 49749,
-        "rate": 13743.517646023449
-      }
-    },
-    "iteration_duration": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "max": 357.964031,
-        "p(90)": 349.9572233,
-        "p(95)": 353.96062715,
-        "avg": 334.1404114,
-        "min": 316.607146,
-        "med": 333.06872250000004
-      }
-    },
-    "attack_block_rate_4_none_algorithm": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "passes": 20,
-        "fails": 0,
-        "rate": 1
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_duration{expected_response:true}": {
-      "contains": "time",
-      "values": {
-        "avg": 22.373144,
-        "min": 13.08495,
-        "med": 13.497861,
-        "max": 107.213865,
-        "p(90)": 16.115244,
-        "p(95)": 61.664554499999994
-      },
-      "type": "trend"
-    },
-    "http_req_blocked": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "med": 0.001971,
-        "max": 166.536219,
-        "p(90)": 0.002886,
-        "p(95)": 0.00317,
-        "avg": 1.226929956521739,
-        "min": 0.000298
-      }
-    },
-    "http_req_tls_handshaking": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "min": 0,
-        "med": 0,
-        "max": 51.543383,
-        "p(90)": 0,
-        "p(95)": 0,
-        "avg": 0.44759674534161487
-      }
-    },
-    "attack_block_rate_1_signature_tampering": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "fails": 0,
-        "rate": 1,
-        "passes": 10
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "iterations": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 10,
-        "rate": 2.7625716388316244
-      }
-    },
-    "attack_block_rate": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 140,
-        "fails": 0
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "http_req_sending": {
-      "type": "trend",
-      "contains": "time",
-      "values": {
-        "avg": 0.39250204347826095,
-        "min": 0.065978,
-        "med": 0.406532,
-        "max": 1.368685,
-        "p(90)": 0.539311,
-        "p(95)": 0.593284
-      }
-    },
-    "checks": {
-      "contains": "default",
-      "values": {
-        "rate": 0.9333333333333333,
-        "passes": 140,
-        "fails": 10
-      },
-      "type": "rate"
-    },
-    "attack_block_rate_7_rs256_hs256_key_confusion": {
-      "type": "rate",
-      "contains": "default",
-      "values": {
-        "rate": 1,
-        "passes": 10,
-        "fails": 0
-      },
-      "thresholds": {
-        "rate>0.99": {
-          "ok": true
-        }
-      }
-    },
-    "http_reqs": {
-      "type": "counter",
-      "contains": "default",
-      "values": {
-        "count": 161,
-        "rate": 44.477403385189156
-      }
-    }
-  },
   "setup_data": {
     "user": {
-      "email": "attack-okwmastk@attack.test",
-      "name": "attack-okwmastk",
+      "email": "attack-fttlctwp@attack.test",
+      "name": "attack-fttlctwp",
       "password": "AttackTest!123"
     }
   },
@@ -337,8 +10,6 @@
     "id": "d41d8cd98f00b204e9800998ecf8427e",
     "groups": [
       {
-        "name": "1_signature_tampering",
-        "path": "::1_signature_tampering",
         "id": "797f67725d46a5b13d6646fd3cc7929e",
         "groups": [],
         "checks": [
@@ -349,7 +20,9 @@
               "id": "417b5478be117a60b0842f6492296a91",
               "passes": 10
             }
-          ]
+          ],
+        "name": "1_signature_tampering",
+        "path": "::1_signature_tampering"
       },
       {
         "name": "2_token_forgery",
@@ -365,18 +38,18 @@
               "passes": 10
             },
             {
-              "passes": 10,
               "fails": 0,
               "name": "[#2b Token Forgery (fake short sig)] blocked (401/403)",
               "path": "::2_token_forgery::[#2b Token Forgery (fake short sig)] blocked (401/403)",
-              "id": "61fa8594f05184fa2cd256dc751e253c"
+              "id": "61fa8594f05184fa2cd256dc751e253c",
+              "passes": 10
             },
             {
-              "fails": 0,
               "name": "[#2c Token Forgery (random garbage)] blocked (401/403)",
               "path": "::2_token_forgery::[#2c Token Forgery (random garbage)] blocked (401/403)",
               "id": "89ea26f37a01d7e7002daf069a507ada",
-              "passes": 10
+              "passes": 10,
+              "fails": 0
             }
           ]
       },
@@ -391,11 +64,11 @@
               "id": "7318130661300a741bfd4849c20648df"
             },
             {
+              "fails": 0,
+              "name": "[#3 Algorithm Confusion (RS256)] blocked (401/403)",
               "path": "::3_algorithm_confusion::[#3 Algorithm Confusion (RS256)] blocked (401/403)",
               "id": "8cf7f526f8cfe1eb655a7f4c3d5777ea",
-              "passes": 10,
-              "fails": 0,
-              "name": "[#3 Algorithm Confusion (RS256)] blocked (401/403)"
+              "passes": 10
             },
             {
               "name": "[#3 Algorithm Confusion (ES256)] blocked (401/403)",
@@ -410,9 +83,6 @@
         "id": "46ff8862a6953b71dbdb221390a44a52"
       },
       {
-        "name": "4_none_algorithm",
-        "path": "::4_none_algorithm",
-        "id": "715387f211909ba0a95f4d3863881706",
         "groups": [],
         "checks": [
             {
@@ -429,26 +99,27 @@
               "passes": 10,
               "fails": 0
             }
-          ]
+          ],
+        "name": "4_none_algorithm",
+        "path": "::4_none_algorithm",
+        "id": "715387f211909ba0a95f4d3863881706"
       },
       {
-        "id": "be192f2bd340a8bb72790b3ac0a0cbeb",
         "groups": [],
         "checks": [
             {
-              "fails": 0,
               "name": "[#5 Payload Manipulation (email=admin)] blocked (401/403)",
               "path": "::5_payload_manipulation::[#5 Payload Manipulation (email=admin)] blocked (401/403)",
               "id": "4f714783a81572f94a1fce405170972d",
-              "passes": 10
+              "passes": 10,
+              "fails": 0
             }
           ],
         "name": "5_payload_manipulation",
-        "path": "::5_payload_manipulation"
+        "path": "::5_payload_manipulation",
+        "id": "be192f2bd340a8bb72790b3ac0a0cbeb"
       },
       {
-        "name": "6_cross_algorithm_injection",
-        "path": "::6_cross_algorithm_injection",
         "id": "6453d363cb518f9b2897b3483467ad33",
         "groups": [],
         "checks": [
@@ -460,47 +131,376 @@
               "fails": 0
             },
             {
-              "id": "b845bd5ff3e487e79918f32eaa212e81",
               "passes": 10,
               "fails": 0,
               "name": "[#6 Cross-Algorithm Injection (HS256→FN-DSA)] blocked (401/403)",
-              "path": "::6_cross_algorithm_injection::[#6 Cross-Algorithm Injection (HS256→FN-DSA)] blocked (401/403)"
+              "path": "::6_cross_algorithm_injection::[#6 Cross-Algorithm Injection (HS256→FN-DSA)] blocked (401/403)",
+              "id": "b845bd5ff3e487e79918f32eaa212e81"
             },
             {
+              "fails": 0,
+              "name": "[#6 Cross-Algorithm Injection (ES256→FN-DSA)] blocked (401/403)",
               "path": "::6_cross_algorithm_injection::[#6 Cross-Algorithm Injection (ES256→FN-DSA)] blocked (401/403)",
               "id": "1b22d9f91f211e473902bfe1aafd691a",
-              "passes": 10,
-              "fails": 0,
-              "name": "[#6 Cross-Algorithm Injection (ES256→FN-DSA)] blocked (401/403)"
+              "passes": 10
             }
-          ]
+          ],
+        "name": "6_cross_algorithm_injection",
+        "path": "::6_cross_algorithm_injection"
       },
       {
+        "name": "7_rs256_hs256_key_confusion",
+        "path": "::7_rs256_hs256_key_confusion",
+        "id": "083e0201987ad5168160386e9c3cb152",
         "groups": [],
         "checks": [
             {
+              "name": "[#7 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)] blocked (401/403)",
+              "path": "::7_rs256_hs256_key_confusion::[#7 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)] blocked (401/403)",
               "id": "4c0d0d62092fc972142d941ce7856d7c",
               "passes": 10,
-              "fails": 0,
-              "name": "[#7 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)] blocked (401/403)",
-              "path": "::7_rs256_hs256_key_confusion::[#7 RS256/HS256 Key Confusion (forged HMAC via RS256 pubkey)] blocked (401/403)"
+              "fails": 0
             }
-          ],
-        "name": "7_rs256_hs256_key_confusion",
-        "path": "::7_rs256_hs256_key_confusion",
-        "id": "083e0201987ad5168160386e9c3cb152"
+          ]
       }
     ],
     "checks": [
       {
-        "fails": 10,
         "name": "[sanity] valid token accepted (200)",
         "path": "::[sanity] valid token accepted (200)",
         "id": "58dbcbddd3c0ba8c3303a5dec8e8631f",
-        "passes": 0
+        "passes": 0,
+        "fails": 10
       }
     ],
     "name": "",
     "path": ""
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": true
+  },
+  "state": {
+    "isStdOutTTY": true,
+    "isStdErrTTY": true,
+    "testRunDurationMs": 4040.278661
+  },
+  "metrics": {
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 161,
+        "rate": 39.848736562183376
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 408.275842,
+        "p(90)": 403.3201135,
+        "p(95)": 405.79797775,
+        "avg": 370.1596861,
+        "min": 351.773354,
+        "med": 363.2145885
+      }
+    },
+    "attack_block_rate_3_algorithm_confusion": {
+      "values": {
+        "rate": 1,
+        "passes": 30,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "attack_block_rate_2_token_forgery": {
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 30,
+        "fails": 0,
+        "rate": 1
+      }
+    },
+    "http_req_failed": {
+      "contains": "default",
+      "values": {
+        "passes": 150,
+        "fails": 11,
+        "rate": 0.9316770186335404
+      },
+      "type": "rate"
+    },
+    "http_req_connecting": {
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "max": 11.878552,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0.14145857142857143
+      },
+      "type": "trend"
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 130655,
+        "rate": 32338.115997093595
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 1.894428,
+        "p(90)": 0.794543,
+        "p(95)": 0.940198,
+        "avg": 0.4746168074534161,
+        "min": 0.101647,
+        "med": 0.446015
+      }
+    },
+    "attack_block_rate_6_cross_algorithm_injection": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 30,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_7_rs256_hs256_key_confusion": {
+      "values": {
+        "rate": 1,
+        "passes": 10,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "attack_block_rate_1_signature_tampering": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 0,
+        "rate": 1,
+        "passes": 10
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "checks": {
+      "contains": "default",
+      "values": {
+        "rate": 0.9333333333333333,
+        "passes": 140,
+        "fails": 10
+      },
+      "type": "rate"
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1.432036937888198,
+        "min": 0.109318,
+        "med": 1.203565,
+        "max": 5.082695,
+        "p(90)": 2.698321,
+        "p(95)": 3.245058
+      }
+    },
+    "attack_blocked": {
+      "contains": "default",
+      "values": {
+        "count": 140,
+        "rate": 34.6510752714638
+      },
+      "type": "counter"
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.7333733726708074,
+        "min": 0,
+        "med": 0,
+        "max": 84.26691,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "attack_block_rate_5_payload_manipulation": {
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 10,
+        "fails": 0
+      }
+    },
+    "attack_block_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 140,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "attack_block_rate_4_none_algorithm": {
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 20,
+        "fails": 0
+      }
+    },
+    "http_req_duration": {
+      "values": {
+        "avg": 15.852484664596274,
+        "min": 11.910663,
+        "med": 13.924689,
+        "max": 127.902955,
+        "p(90)": 19.409049,
+        "p(95)": 23.501608
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "min": 1,
+        "max": 1,
+        "value": 1
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 16.238866,
+        "p(95)": 23.074039,
+        "avg": 13.945830919254657,
+        "min": 9.263971,
+        "med": 12.027063,
+        "max": 125.37015
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 25.63738454545454,
+        "min": 14.208938,
+        "med": 15.482457,
+        "max": 127.902955,
+        "p(90)": 17.220438,
+        "p(95)": 72.56169650000001
+      }
+    },
+    "data_received": {
+      "contains": "data",
+      "values": {
+        "count": 49728,
+        "rate": 12308.061936423943
+      },
+      "type": "counter"
+    },
+    "http_req_blocked": {
+      "values": {
+        "med": 0.002471,
+        "max": 204.38454,
+        "p(90)": 0.003369,
+        "p(95)": 0.00408,
+        "avg": 1.558295316770187,
+        "min": 0.000432
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 29.889030499999997,
+        "max": 57.216494,
+        "p(90)": 49.110594999999996,
+        "p(95)": 51.053477099999995,
+        "avg": 31.726508999999993,
+        "min": 13.137538
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 10,
+        "rate": 2.4750768051045573
+      }
+    }
   }
 }

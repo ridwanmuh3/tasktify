@@ -1,0 +1,202 @@
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  JWT GENERATION LATENCY STUDY  —  2026-07-18T12:04:59.914Z
+  Mode      : Isolated + Stress + Attack
+  Endpoint  : http://poc-ridwanmuh3.my.id:{5001-5006}
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ── PRIMARY THESIS METRIC: ISOLATED GC-FREE JWT GENERATION (1 VU, 100 iterations) ──
+  Algorithm                   N     Pure avg    Pure p95    Access avg  Access p95  Refresh avg Refresh p95 E2E avg     CPU/tok   RSS avg
+                              iters (ms)        (ms)        (ms)        (ms)        (ms)        (ms)        (ms)        (ms)      (KB)
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  FN-DSA-Precomputed-512      100   0.312       0.447       0.358       0.410       0.357       0.406       0.732       0.350     33588.560
+  FN-DSA-512                  100   0.442       0.538       0.435       0.530       0.443       0.533       0.910       0.550     33275.160
+  HS256                       100   0.002       0.003       0.014       0.024       0.014       0.025       0.029       0.050     32176.800
+  RS256                       100   1.208       1.390       1.148       1.490       1.158       1.494       2.310       1.300     32613.120
+  ES256                       100   0.044       0.066       0.055       0.076       0.052       0.069       0.108       0.100     32212.880
+  EdDSA                       100   0.034       0.050       0.045       0.072       0.045       0.066       0.090       0.100     32163.440
+
+  Pure           = GC-free direct SigningMethod.Sign over fixed message; fallback to all samples
+  Access/Refresh = GC-free JWT generation from benchmark payload when available; fallback to all samples
+  E2E            = Full local JWT issuance handler iteration during isolated benchmark
+  Warmup         = 20 discarded iterations before each isolated measurement
+  CPU/tok        = CPU time per generated token (access+refresh combined / 2), tick-delta based
+  RSS avg        = Process-wide VmRSS at sample time; all 6 algorithms share one gateway
+                    container, so this is NOT isolated per algorithm — use
+                    fndsa_precompute_profile.json (PersistentBytes(), isolated process) for the
+                    FN-DSA precomputed-vs-dynamic resident-memory claim instead
+
+  ── SUPPORTING SYSTEM METRICS: STRESS (10 / 30 / 50 VUs, 30s each) ──
+  Algorithm                   VUs   Access avg  Access p95  Refresh avg Refresh p95 Token ok/s
+                                    (ms)        (ms)        (ms)        (ms)        (ok/s)
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  FN-DSA-Precomputed-512      10    0.740       1.923       0.907       2.563       12.87
+                              30    0.659       1.482       0.812       2.376       13.50
+                              50    1.084       3.680       0.843       2.501       12.93
+                                    ────────────────────────────────────────────────────────────
+  FN-DSA-512                  10    0.919       2.607       0.869       2.507       11.63
+                              30    0.834       2.111       0.842       2.443       9.77
+                              50    1.208       3.643       0.851       2.478       13.37
+                                    ────────────────────────────────────────────────────────────
+  HS256                       10    0.085       0.149       0.023       0.013       13.67
+                              30    0.072       0.100       0.018       0.016       13.93
+                              50    0.089       0.115       0.018       0.014       14.80
+                                    ────────────────────────────────────────────────────────────
+  RS256                       10    2.299       4.951       2.648       5.443       11.13
+                              30    2.773       7.064       2.432       4.569       12.60
+                              50    1.926       4.160       2.253       4.301       13.47
+                                    ────────────────────────────────────────────────────────────
+  ES256                       10    0.203       0.398       0.066       0.102       13.00
+                              30    0.198       0.355       0.070       0.096       13.67
+                              50    0.306       1.538       0.064       0.091       14.20
+                                    ────────────────────────────────────────────────────────────
+  EdDSA                       10    0.145       0.226       0.052       0.060       13.80
+                              30    0.115       0.236       0.043       0.057       13.70
+                              50    0.152       0.407       0.043       0.061       14.17
+                                    ────────────────────────────────────────────────────────────
+
+  ── SECONDARY METRICS: END-TO-END, ERROR RATE, ATTACK BLOCK RATE ──
+  Algorithm                   VUs   Login avg   Login p95   Refresh avg Refresh p95 E2E avg     E2E p95     RPS         ErrRate     Atk block
+                                    (ms)        (ms)        (ms)        (ms)        (ms)        (ms)        req/s        
+  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  FN-DSA-Precomputed-512      10    385.175     670.596     305.310     608.102     39.252      111.897     12.87       0.0%        —
+                              30    1182.650    2287.206    1018.787    2110.502    22.101      69.370      13.50       0.0%
+                              50    2024.856    3852.888    1637.224    3477.406    457.911     1626.116    12.93       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  FN-DSA-512                  10    414.187     812.119     337.083     758.601     59.299      325.670     11.63       0.0%        —
+                              30    1284.306    3045.320    1357.227    4329.359    446.440     4073.299    9.77        0.0%
+                              50    1907.478    4022.767    1802.564    3746.523    129.630     1215.911    13.37       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  HS256                       10    372.240     702.633     281.166     603.766     35.722      190.783     13.67       0.0%        —
+                              30    1136.710    2244.345    1016.606    2082.519    18.392      36.149      13.93       0.0%
+                              50    1788.699    3723.627    1684.871    3411.265    19.291      59.247      14.80       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  RS256                       10    460.595     949.175     384.930     711.888     56.463      189.660     11.13       0.0%        —
+                              30    1250.604    2362.842    1113.156    2407.914    24.239      82.403      12.60       0.0%
+                              50    1991.683    3743.607    1779.192    3806.411    35.845      118.441     13.47       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ES256                       10    401.072     721.341     303.105     642.296     19.039      38.616      13.00       0.0%        —
+                              30    1093.176    2240.829    987.243     2055.562    29.811      77.792      13.67       0.0%
+                              50    1842.522    3532.869    1741.303    3632.445    28.653      97.200      14.20       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  EdDSA                       10    367.499     663.422     290.727     595.069     19.582      54.037      13.80       0.0%        —
+                              30    1111.804    2167.837    1062.431    2185.529    21.958      58.715      13.70       0.0%
+                              50    1882.219    4044.425    1727.317    3500.550    21.182      50.879      14.17       0.0%
+                                    ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Pure avg/p95 = /api/benchmark/pure-signing; no JWT serialization/Base64URL/compact assembly
+  Access avg/p95 = X-Token-Generation-Time-Ms header; JWT generation from benchmark payload only
+  Refresh avg/p95 = X-Refresh-Token-Generation-Time-Ms header on /api/auth/refresh
+  Token ok/s   = Successful /api/benchmark/token responses / 30s
+  Login        = Full /api/auth/signin round-trip: bcrypt verify + DB lookup + JWT generation
+  Refresh      = Full /api/auth/refresh round-trip: refresh-token verify + JWT rotation
+  E2E          = Full k6 client round-trip for /api/benchmark/token (JWT generation only, no bcrypt/DB)
+  RPS          = Total benchmark-token requests / 30s
+  Atk block    = Tampered-token /api/profile requests blocked with 401/403
+  Thesis note  = Primary thesis result = isolated table; supporting system result = stress tables
+══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+running (22m27.0s), 00/50 VUs, 7242 complete and 0 interrupted iterations
+isolated_ES256     ✓ [ 100% ] 1 VUs   0m01.2s/1m0s  1/1 shared iters
+isolated_EdDSA     ✓ [ 100% ] 1 VUs   0m01.2s/1m0s  1/1 shared iters
+isolated_HS256     ✓ [ 100% ] 1 VUs   0m01.3s/1m0s  1/1 shared iters
+isolated_FN512     ✓ [ 100% ] 1 VUs   0m01.3s/1m0s  1/1 shared iters
+isolated_RS256     ✓ [ 100% ] 1 VUs   0m01.6s/1m0s  1/1 shared iters
+isolated_FNP512    ✓ [ 100% ] 1 VUs   0m01.8s/1m0s  1/1 shared iters
+stress_ES256_10VU  ✓ [ 100% ] 10 VUs  30s
+stress_ES256_30VU  ✓ [ 100% ] 30 VUs  30s
+stress_ES256_50VU  ✓ [ 100% ] 50 VUs  30s
+stress_EdDSA_10VU  ✓ [ 100% ] 10 VUs  30s
+stress_EdDSA_30VU  ✓ [ 100% ] 30 VUs  30s
+stress_EdDSA_50VU  ✓ [ 100% ] 50 VUs  30s
+stress_HS256_10VU  ✓ [ 100% ] 10 VUs  30s
+stress_HS256_30VU  ✓ [ 100% ] 30 VUs  30s
+stress_HS256_50VU  ✓ [ 100% ] 50 VUs  30s
+stress_FN512_10VU  ✓ [ 100% ] 10 VUs  30s
+stress_FN512_30VU  ✓ [ 100% ] 30 VUs  30s
+stress_FN512_50VU  ✓ [ 100% ] 50 VUs  30s
+stress_RS256_10VU  ✓ [ 100% ] 10 VUs  30s
+stress_RS256_30VU  ✓ [ 100% ] 30 VUs  30s
+stress_RS256_50VU  ✓ [ 100% ] 50 VUs  30s
+stress_FNP512_10VU ✓ [ 100% ] 10 VUs  30s
+stress_FNP512_30VU ✓ [ 100% ] 30 VUs  30s
+stress_FNP512_50VU ✓ [ 100% ] 50 VUs  30s
+attack_ES256       ✓ [ 100% ] 1 VUs   0m00.7s/2m0s  25/25 shared iters
+attack_EdDSA       ✓ [ 100% ] 1 VUs   0m00.8s/2m0s  25/25 shared iters
+attack_HS256       ✓ [ 100% ] 1 VUs   0m01.0s/2m0s  25/25 shared iters
+attack_FN512       ✓ [ 100% ] 1 VUs   0m00.9s/2m0s  25/25 shared iters
+attack_RS256       ✓ [ 100% ] 1 VUs   0m00.7s/2m0s  25/25 shared iters
+attack_FNP512      ✓ [ 100% ] 1 VUs   0m01.8s/2m0s  25/25 shared iters
+make[2]: Leaving directory '/shared/projects/research/tasktify/backend'
+make[1]: Leaving directory '/shared/projects/research/tasktify'
+make[1]: Entering directory '/shared/projects/research/tasktify'
+make -C backend attack-adversarial-remote
+make[2]: Entering directory '/shared/projects/research/tasktify/backend'
+mkdir -p benchmark-results
+k6 run --no-color \
+	-e BENCH_OUTPUT_DIR=benchmark-results \
+	-e BASE_URL=https://poc-ridwanmuh3.my.id \
+	-e ITERATIONS=10 \
+	-e ALGORITHM=FN-DSA-Precomputed-512 \
+	k6/adversarial_jwt.js
+
+         /\      Grafana   /‾‾/
+    /\  /  \     |\  __   /  /
+   /  \/    \    | |/ /  /   ‾‾\
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/
+
+
+     execution: local
+        script: k6/adversarial_jwt.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 5m10s max duration (incl. graceful stop):
+              * adversarial_jwt: 10 iterations shared among 1 VUs (maxDuration: 5m0s, gracefulStop: 10s)
+
+time="2026-07-18T19:05:00+07:00" level=info msg="[setup] Registering attack user at: https://poc-ridwanmuh3.my.id/api/auth/register" source=console
+time="2026-07-18T19:05:01+07:00" level=info msg="[setup] Attack user registered: attack-idptkyzn@attack.test" source=console
+time="2026-07-18T19:05:01+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:02+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:03+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:03+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:03+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:04+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:04+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:05+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:05+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+time="2026-07-18T19:05:06+07:00" level=error msg="[sanity] valid token rejected (404) — check gateway" source=console
+
+══════════════════════════════════════════════════════════════════════════════════
+  ADVERSARIAL JWT TEST — 7 ATTACK VECTORS
+  Algorithm : FN-DSA-Precomputed-512
+  Endpoint  : https://poc-ridwanmuh3.my.id
+  Iterations: 10
+══════════════════════════════════════════════════════════════════════════════════
+  Attack                           Block Rate   Expected                 Status
+  ──────────────────────────────────────────────────────────────────────────────────
+  #1 Signature Tampering           100.0%       401/403                  PROTECTED
+    RFC 8725 §3.3 Validate All Cryptographic Operations
+  #2 Token Forgery                 100.0%       401/403                  PROTECTED
+    RFC 8725 §3.1 Perform Algorithm Verification; §3.3
+  #3 Algorithm Confusion           100.0%       401/403                  PROTECTED
+    RFC 8725 §3.1 Perform Algorithm Verification
+  #4 None Algorithm Attack         100.0%       401/403                  PROTECTED
+    RFC 7519 §6 Unsecured JWTs; RFC 8725 §3.1, §3.2
+  #5 Payload Manipulation          100.0%       401/403                  PROTECTED
+    RFC 8725 §3.3 Validate All Cryptographic Operations
+  #6 Cross-Algorithm Injection     100.0%       401/403                  PROTECTED
+    RFC 8725 §3.1 Perform Algorithm Verification
+  #7 RS256/HS256 Key Confusion     100.0%       401/403                  PROTECTED
+    RFC 8725 §3.1 — verbatim: "attackers can change 'RS256' to 'HS256' and use the RSA public key as an HMAC secret"
+  ──────────────────────────────────────────────────────────────────────────────────
+  Overall block rate: 100.0%  (140 blocked / 140 total)
+══════════════════════════════════════════════════════════════════════════════════
+  PROTECTED  : 7 / 7 attack vectors
+  VULNERABLE : 0 / 7 attack vectors
+══════════════════════════════════════════════════════════════════════════════════
+  NOTES:
+  #3 / #6  Algorithm confusion and cross-injection share same mechanism.
+  #7       Meaningful only against a gateway whose allowlist accepts both
+           RS256 and HS256 (default single-gateway deployment). Skipped if
+           RS256_pk.pem is not present at k6/../keys/RS256_pk.pem.
+══════════════════════════════════════════════════════════════════════════════════
