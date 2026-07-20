@@ -446,7 +446,6 @@ func (h *BenchmarkHandler) signBenchmarkToken(algorithm string, email string, to
 	userID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(strings.ToLower(email)))
 	payload := &jwtutils.JWTPayload{
 		UserID:    userID,
-		Email:     email,
 		Algorithm: algorithm,
 		TokenUse:  tokenUse,
 	}

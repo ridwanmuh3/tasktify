@@ -139,7 +139,6 @@ func (s *AuthService) signTokenPair(user *entity.User, algorithm string) (string
 	accessStart := time.Now()
 	accessToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
 		UserID:    user.Id,
-		Email:     user.Email,
 		Algorithm: algorithm,
 		TokenUse:  jwtutils.TokenUseAccess,
 	})
@@ -151,7 +150,6 @@ func (s *AuthService) signTokenPair(user *entity.User, algorithm string) (string
 	refreshStart := time.Now()
 	refreshToken, err := s.jwtUtil.Sign(&jwtutils.JWTPayload{
 		UserID:    user.Id,
-		Email:     user.Email,
 		Algorithm: algorithm,
 		TokenUse:  jwtutils.TokenUseRefresh,
 	})

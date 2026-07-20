@@ -82,7 +82,6 @@ func TestAttack_RS256ToHS256KeyConfusion(t *testing.T) {
 
 	validToken, err := util.Sign(&JWTPayload{
 		UserID:    uuid.New(),
-		Email:     "victim@example.test",
 		Algorithm: "RS256",
 		TokenUse:  TokenUseAccess,
 	})
@@ -119,7 +118,6 @@ func TestAttack_RS256ToHS256KeyConfusion(t *testing.T) {
 	// key resolution, not a broken HS256 path.
 	hsToken, err := util.Sign(&JWTPayload{
 		UserID:    uuid.New(),
-		Email:     "legit@example.test",
 		Algorithm: "HS256",
 		TokenUse:  TokenUseAccess,
 	})
@@ -139,7 +137,6 @@ func TestAttack_RS256ToHS256KeyConfusion_RawDERSecret(t *testing.T) {
 
 	validToken, err := util.Sign(&JWTPayload{
 		UserID:    uuid.New(),
-		Email:     "victim@example.test",
 		Algorithm: "RS256",
 		TokenUse:  TokenUseAccess,
 	})

@@ -43,7 +43,6 @@ func baseSecurityClaims(tokenUse string) JWTClaims {
 	userID := uuid.New()
 	return JWTClaims{
 		UserID:   userID,
-		Email:    "security@example.test",
 		TokenUse: tokenUse,
 		RegisteredClaims: jwtlib.RegisteredClaims{
 			ID:        uuid.NewString(),
@@ -213,7 +212,6 @@ func TestJWTUtilsIssuesConfiguredAudience(t *testing.T) {
 	util, _, _ := newSecurityTestJWTAudience(t, "tasktify-api")
 	token, err := util.Sign(&JWTPayload{
 		UserID:   uuid.New(),
-		Email:    "issuer@example.test",
 		TokenUse: TokenUseAccess,
 	})
 	if err != nil {

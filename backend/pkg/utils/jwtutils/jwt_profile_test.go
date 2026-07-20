@@ -19,7 +19,6 @@ func TestMultiAlgJwtUtilUsesCanonicalFNDSAHeaderForPrecomputedProfile(t *testing
 
 	tokenString, err := util.Sign(&JWTPayload{
 		UserID:    userID,
-		Email:     "profile@example.com",
 		Algorithm: "FN-DSA-Precomputed-512",
 		TokenUse:  TokenUseAccess,
 	})
@@ -60,7 +59,6 @@ func TestMultiAlgJwtUtilRejectsUnconfiguredFNDSASigningProfile(t *testing.T) {
 
 	_, err := util.Sign(&JWTPayload{
 		UserID:    uuid.New(),
-		Email:     "profile@example.com",
 		Algorithm: "HS256",
 		TokenUse:  TokenUseAccess,
 	})
@@ -75,7 +73,6 @@ func TestMultiAlgJwtUtilAllowsCanonicalFNDSASigningProfile(t *testing.T) {
 
 	tokenString, err := util.Sign(&JWTPayload{
 		UserID:    userID,
-		Email:     "profile@example.com",
 		Algorithm: jwt.AlgFNDSA512,
 		TokenUse:  TokenUseAccess,
 	})
@@ -106,7 +103,6 @@ func TestMultiAlgJwtUtilRejectsJWTProfileViolations(t *testing.T) {
 			name: "invalid issuer",
 			claims: JWTClaims{
 				UserID:   userID,
-				Email:    "profile@example.com",
 				TokenUse: TokenUseAccess,
 				RegisteredClaims: jwt.RegisteredClaims{
 					ID:        uuid.NewString(),
@@ -122,7 +118,6 @@ func TestMultiAlgJwtUtilRejectsJWTProfileViolations(t *testing.T) {
 			name: "future iat",
 			claims: JWTClaims{
 				UserID:   userID,
-				Email:    "profile@example.com",
 				TokenUse: TokenUseAccess,
 				RegisteredClaims: jwt.RegisteredClaims{
 					ID:        uuid.NewString(),
@@ -138,7 +133,6 @@ func TestMultiAlgJwtUtilRejectsJWTProfileViolations(t *testing.T) {
 			name: "subject mismatch",
 			claims: JWTClaims{
 				UserID:   userID,
-				Email:    "profile@example.com",
 				TokenUse: TokenUseAccess,
 				RegisteredClaims: jwt.RegisteredClaims{
 					ID:        uuid.NewString(),
@@ -154,7 +148,6 @@ func TestMultiAlgJwtUtilRejectsJWTProfileViolations(t *testing.T) {
 			name: "altered typ",
 			claims: JWTClaims{
 				UserID:   userID,
-				Email:    "profile@example.com",
 				TokenUse: TokenUseAccess,
 				RegisteredClaims: jwt.RegisteredClaims{
 					ID:        uuid.NewString(),
