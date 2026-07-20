@@ -23,7 +23,6 @@ func BenchmarkJWTSign(b *testing.B) {
 	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", "", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
-		Email:  "bench-gxiulagx@bench.test",
 	}
 
 	for _, alg := range testAlgs {
@@ -51,7 +50,6 @@ func BenchmarkJWTVerify(b *testing.B) {
 	jwtUtil := NewMultiAlgJwtUtil("benchmark-issuer", "", 60, "FN-DSA-Precomputed-512", configs)
 	payload := &JWTPayload{
 		UserID: uuid.New(),
-		Email:  "bench-gxiulagx@bench.test",
 	}
 
 	// Pre-generate token untuk setiap algoritma agar tidak membebani waktu benchmark

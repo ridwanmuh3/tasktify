@@ -44,7 +44,6 @@ func (m *AuthMiddleware) Handle(c fiber.Ctx) error {
 
 	// Set user info ke locals untuk diteruskan sebagai X-User-ID
 	c.Locals("user_id", claims.UserID.String())
-	c.Locals("user_email", claims.Email)
 
 	return c.Next()
 }

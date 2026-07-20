@@ -19,13 +19,11 @@ type JwtUtil interface {
 type JWTClaims struct {
 	jwt.RegisteredClaims
 	UserID   uuid.UUID `json:"user_id"`
-	Email    string    `json:"email"`
 	TokenUse string    `json:"token_use,omitempty"`
 }
 
 type JWTPayload struct {
 	UserID    uuid.UUID
-	Email     string
 	Algorithm string // optional: override signing algorithm
 	TokenUse  string
 }
@@ -50,9 +48,6 @@ type AlgConfig struct {
 func (c JWTClaims) Validate() error {
 	if c.UserID == uuid.Nil {
 		return errors.New("user_id claim is required")
-	}
-	if c.Email == "" {
-		return errors.New("email claim is required")
 	}
 	if c.TokenUse != TokenUseAccess && c.TokenUse != TokenUseRefresh {
 		return errors.New("token_use claim is invalid")
@@ -173,7 +168,6 @@ func (j *jwtUtil) Sign(payload *JWTPayload) (string, error) {
 
 	token := jwt.NewWithClaims(j.method, JWTClaims{
 		UserID:   payload.UserID,
-		Email:    payload.Email,
 		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
@@ -264,7 +258,6 @@ func (m *multiAlgJwtUtil) Sign(payload *JWTPayload) (string, error) {
 
 	token := jwt.NewWithClaims(cfg.Method, JWTClaims{
 		UserID:   payload.UserID,
-		Email:    payload.Email,
 		TokenUse: tokenUse,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.NewString(),
