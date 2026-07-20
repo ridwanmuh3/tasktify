@@ -38,6 +38,32 @@ os.environ["ARTICLE_GRAPHICS_DIR"] = str(OUT_DIR)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_article_graphics as g  # noqa: E402
 
+# "Zoom" the aggregate figures: tighten the outer margins so the plotted content
+# fills the frame, and enlarge every text size for readability. Process-local
+# overrides on the shared drawing module — only this script's figures change,
+# the article set (separate process) keeps its own scale.
+g.MARGIN = {"left": 165, "right": 70, "top": 88, "bottom": 200}
+g.TICK_SIZE = 28
+g.AXIS_SIZE = 31
+g.VALUE_SIZE = 36          # boxed median number over each bar/marker — enlarged for Word
+g.STRESS_VALUE_SIZE = 29   # value labels on the VU trend points
+g.LEGEND_SIZE = 29
+g.LEGEND_TITLE_SIZE = 31
+
+# Standard categorical palette at moderate saturation (colorful but not vibrant,
+# per request). Recognizable blue/orange/green/purple/red/teal hues. Validated
+# CVD-safe on a light surface via the dataviz skill's validate_palette.js — all
+# six slots PASS lightness/chroma/CVD-separation/contrast. FN-DSA pair is the
+# standard high-contrast blue↔orange. Fixed hue order, never cycled.
+g.COLORS = {
+    "FN-DSA-Precomputed-512": "#3d7fd0",  # blue    (proposed)
+    "FN-DSA-512": "#d9791f",              # orange  (PQC baseline)
+    "HS256": "#3f9e57",                   # green
+    "RS256": "#8560ad",                   # purple
+    "ES256": "#d1454e",                   # red
+    "EdDSA": "#0e9d92",                   # teal
+}
+
 ALGS = g.ALGORITHM_ORDER
 NUM = r"[-+]?\d+(?:\.\d+)?"
 PRECOMP = "FN-DSA-Precomputed-512"
@@ -57,6 +83,11 @@ if not PLOT_ALGS:
 unknown = [a for a in PLOT_ALGS if a not in ALGS]
 if unknown:
     raise SystemExit(f"MULTIRUN_PLOT_ALGS: unknown algorithm(s) {unknown}; known: {ALGS}")
+
+# The precompute-vs-dynamic comparison set (the two FN-DSA profiles only). Its VU
+# figures stay trend lines to show the scaling shape; every other set draws the
+# stress figures as grouped bars.
+FNDSA_COMPARISON = set(PLOT_ALGS) == {PRECOMP, DYNAMIC}
 
 # A log axis earns its place only when the series really do span orders of
 # magnitude. Below this ratio it just makes near-equal bars look near-equal in a
@@ -160,12 +191,37 @@ def quartiles(values: list[float]) -> tuple[float, float, float]:
     return q1, med, q3
 
 
-def iso_stat(runs: list[dict], alg: str, metric: str) -> tuple[float, float, float]:
-    return quartiles([r["isolated"][alg][metric] for r in runs])
+# Opt-in best-vs-worst selection for the FN-DSA speed figures (set by
+# `make figures-fndsa`). When on, the precomputed profile is drawn from its
+# single most-favorable run and the dynamic baseline from its least-favorable
+# one, per an explicit request to show the extreme envelope rather than the
+# median. It is NOT the honest central estimate, so every figure it touches
+# carries EXTREME_NOTE and the true win-rate still comes from all runs.
+EXTREME = os.environ.get("MULTIRUN_FNDSA_EXTREME") == "1"
+EXTREME_NOTE = [
+    "Selected runs, NOT median: FN-DSA-Precomp = fastest of 20 runs, FN-DSA-512 = slowest of 20 runs.",
+    "Best-case vs worst-case envelope — an upper bound on the gap, not a typical result.",
+]
 
 
-def vu_stat(runs: list[dict], table: str, alg: str, vu: int, metric: str) -> tuple[float, float, float]:
-    return quartiles([r[table][alg][vu][metric] for r in runs])
+def sel_values(vals: list[float], alg: str, higher_is_better: bool, speed: bool) -> tuple[float, float, float]:
+    """Median+IQR normally; in EXTREME mode the two FN-DSA speed series collapse
+    to their single most/least favorable run (precomp best, baseline worst)."""
+    if EXTREME and speed and alg in (PRECOMP, DYNAMIC):
+        favor_high = higher_is_better if alg == PRECOMP else not higher_is_better
+        v = max(vals) if favor_high else min(vals)
+        return v, v, v
+    return quartiles(vals)
+
+
+def iso_stat(runs: list[dict], alg: str, metric: str,
+             higher_is_better: bool = False, speed: bool = False) -> tuple[float, float, float]:
+    return sel_values([r["isolated"][alg][metric] for r in runs], alg, higher_is_better, speed)
+
+
+def vu_stat(runs: list[dict], table: str, alg: str, vu: int, metric: str,
+            higher_is_better: bool = False, speed: bool = False) -> tuple[float, float, float]:
+    return sel_values([r[table][alg][vu][metric] for r in runs], alg, higher_is_better, speed)
 
 
 def cpu_quantization_rows(runs: list[dict]) -> list[dict]:
@@ -270,16 +326,38 @@ def draw_note(draw, left: int, right: int, lines: list[str], color: str) -> None
     g.draw_png_multiline(draw, (left + right) / 2, 30, lines, size=21, fill=color, line_height=28)
 
 
+# Widest a bar is allowed to get and how much wider than a bar the centre-to-
+# centre pitch may open up. Tuned for the two-profile FN-DSA set: slot-centring
+# across the full plot width left two thin bars marooned at the edges with a
+# lake of whitespace between them. Clustering keeps bars fat and the gap tight.
+BAR_W_MAX = 340
+BAR_PITCH_RATIO = 1.4
+
+
+def cluster_positions(left: float, right: float, n: int) -> tuple[float, list[float]]:
+    """(bar_width, [centre_x...]) for n wide bars clustered around the plot centre.
+
+    Bounded so it also stays sane for the six-algorithm multirun set: pitch never
+    exceeds an even full-width split, so the cluster can't overflow the axes."""
+    avail = right - left
+    bar_w = min(BAR_W_MAX, avail / (n * 1.7))
+    pitch = min(bar_w * BAR_PITCH_RATIO, avail / n)
+    x0 = (left + right) / 2 - pitch * (n - 1) / 2
+    return bar_w, [x0 + i * pitch for i in range(n)]
+
+
 def render_bar_figure(name: str, y_label: str, stats: list[tuple[str, tuple[float, float, float]]],
                       log_scale: bool, note: list[str] | None = None,
                       decimals: int | None = None) -> Path:
-    """Bar (or log stem) per algorithm, median value, IQR whisker.
+    """Bar per algorithm, median value; IQR printed numerically under each bar.
 
-    `decimals` fixes the label precision instead of g.fmt()'s variable-width
-    output. Fixed width is what makes a comparison figure readable: g.fmt()
-    renders the CPU/token medians as 0.4 / 0.05 / 1.25, and the eye reads that
-    ragged column as different magnitudes. At 2 decimals they line up as
-    0.40 / 0.05 / 1.25 and the 0.05 tick quantum is visible on sight.
+    Always a bar, including on the log axis (the six-algorithm speed figures span
+    three orders of magnitude, so the axis stays log; the bar just runs from the
+    axis floor to the value). `decimals` fixes the label precision instead of
+    g.fmt()'s variable-width output. Fixed width is what makes a comparison figure
+    readable: g.fmt() renders the CPU/token medians as 0.4 / 0.05 / 1.25, and the
+    eye reads that ragged column as different magnitudes. At 2 decimals they line
+    up as 0.40 / 0.05 / 1.25 and the 0.05 tick quantum is visible on sight.
     """
     def label(v: float) -> str:
         return g.fmt(v) if decimals is None else f"{v:.{decimals}f}"
@@ -291,90 +369,137 @@ def render_bar_figure(name: str, y_label: str, stats: list[tuple[str, tuple[floa
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
     g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
 
-    gap = 54
-    slot = ((right - left) - gap * (len(stats) - 1)) / len(stats)
-    bar_w = min(112, slot * 0.62)
-    cap = bar_w * 0.30
-    marker_r = 13
+    bar_w, centers = cluster_positions(left, right, len(stats))
 
     for idx, (alg, (q1, med, q3)) in enumerate(stats):
-        cx = left + slot / 2 + idx * (slot + gap)
+        cx = centers[idx]
         color = g.COLORS[alg]
         y = y_map(med)
-        if log_scale:
-            draw.line((cx, bottom, cx, y), fill=color, width=8)
-        else:
-            draw.rounded_rectangle((cx - bar_w / 2, y, cx + bar_w / 2, bottom), radius=5, fill=color)
+        draw.rounded_rectangle((cx - bar_w / 2, y, cx + bar_w / 2, bottom), radius=5, fill=color)
 
-        y_lo, y_hi = y_map(q1), y_map(q3)
-        draw.line((cx, y_lo, cx, y_hi), fill=WHISKER, width=4)
-        draw.line((cx - cap, y_hi, cx + cap, y_hi), fill=WHISKER, width=4)
-        draw.line((cx - cap, y_lo, cx + cap, y_lo), fill=WHISKER, width=4)
-
-        if log_scale:
-            draw.ellipse((cx - marker_r - 4, y - marker_r - 4, cx + marker_r + 4, y + marker_r + 4), fill=g.WHITE)
-            draw.ellipse((cx - marker_r, y - marker_r, cx + marker_r, y + marker_r), fill=color)
-
-        g.png_value_label(draw, cx, min(y, y_hi) - 30, label(med), (left, top, right, bottom), g.VALUE_SIZE)
-        # Print the IQR numerically: the whisker shows the spread but cannot be
-        # read off the axis, and the spread is the point of a 20-run aggregate.
-        wrap = g.ALGORITHM_WRAP[alg]
-        g.draw_png_multiline(draw, cx, bottom + 42, wrap)
-        g.draw_png_multiline(draw, cx, bottom + 42 + 30 * len(wrap),
-                             [f"IQR {label(q1)}–{label(q3)}"], size=18, fill="#7B8794")
+        # No IQR error-bar drawn on the bar: the black whisker over a coloured bar
+        # read as a visual bug. The spread is kept as the numeric "IQR a–b" caption
+        # under the bar instead (omitted when the bar is a single selected run).
+        g.png_value_label(draw, cx, y - 44, label(med), (left, top, right, bottom), g.VALUE_SIZE)
+        if q1 != q3:
+            g.draw_png_multiline(draw, cx, bottom + 50,
+                                 [f"IQR {label(q1)}–{label(q3)}"], size=23, fill="#7B8794")
 
     if note:
         draw_note(draw, left, right, note, "#7A2E1E")
-    g.draw_png_algorithm_legend(draw, left, g.H - 64, right - left, [a for a, _ in stats])
+    g.draw_png_algorithm_legend(draw, left, bottom + 132, right - left, [a for a, _ in stats])
     return g.save_png(img, name)
 
 
 def render_vu_figure(name: str, y_label: str,
                      series: dict[str, list[tuple[int, tuple[float, float, float]]]],
-                     log_scale: bool) -> Path:
-    """Grouped bars: one group per VU level, one bar per algorithm, IQR whisker.
+                     log_scale: bool, note: list[str] | None = None) -> Path:
+    """VU figures: trend for the two-profile FN-DSA comparison (the scaling shape
+    of precompute vs dynamic is the point), grouped bars for the six-algorithm
+    set (per request: everything except that comparison is a bar diagram)."""
+    if FNDSA_COMPARISON:
+        return _render_vu_trend(name, y_label, series, log_scale, note)
+    return _render_vu_bars(name, y_label, series, log_scale, note)
 
-    Deliberately not a line chart. Under concurrency every algorithm's
-    round-trip latency is dominated by bcrypt + DB + queueing, so all six
-    series lie on top of each other and a line chart renders as one thick
-    band with unreadable labels. Grouped bars separate the algorithms
-    spatially and let the reader see directly that the bars are the same
-    height -- which is the actual finding.
+
+def _render_vu_trend(name: str, y_label: str,
+                     series: dict[str, list[tuple[int, tuple[float, float, float]]]],
+                     log_scale: bool, note: list[str] | None = None) -> Path:
+    """Trend across VU levels: one line + markers per algorithm (median).
+
+    Stress round-trips move along a continuous load axis, so a trend line shows
+    the scaling shape directly (bars can't). No error bar drawn — the black
+    whisker over a marker read as a visual bug; q1/q3 stay in multirun_data.csv.
+    Each series gets a small x-dodge so near-identical lines don't paint over
+    each other.
     """
     img, draw = g.new_png_canvas()
     left, top, right, bottom = g.plot_area()
-    spread = [v for rows in series.values() for _, (q1, med, q3) in rows for v in (q1, med, q3)]
+    spread = [med for rows in series.values() for _, (q1, med, q3) in rows]
     log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
     g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
 
     vus = sorted({vu for rows in series.values() for vu, _ in rows})
+    v_min, v_max = vus[0], vus[-1]
+    # Inset from the axes so the first/last marker + value label clear the y-axis
+    # and the right edge.
+    pad = (right - left) * 0.08
+
+    def x_map(vu: int) -> float:
+        if v_max == v_min:
+            return (left + right) / 2
+        return left + pad + (vu - v_min) / (v_max - v_min) * (right - left - 2 * pad)
+
+    for vu in vus:
+        x = x_map(vu)
+        draw.line((x, top, x, bottom), fill=g.GRID, width=2)
+        g.draw_png_text(draw, x, bottom + 50, f"{vu} VU",
+                        g.TICK_SIZE, fill="#425466", anchor="ma", bold=True)
+
+    label_bounds = (left, top, right, bottom)
+    raw_labels: list[tuple[float, float, str]] = []
+    n = len(PLOT_ALGS)
+    for ai, alg in enumerate(PLOT_ALGS):
+        dodge = (ai - (n - 1) / 2) * 22
+        color = g.COLORS[alg]
+        pts = [(x_map(vu) + dodge, y_map(med), med) for vu, (q1, med, q3) in series[alg]]
+        draw.line([(x, y) for x, y, _ in pts], fill=color, width=7, joint="curve")
+        for x, y, med in pts:
+            draw.ellipse((x - 17, y - 17, x + 17, y + 17), fill=g.WHITE)
+            draw.ellipse((x - 12, y - 12, x + 12, y + 12), fill=color)
+            raw_labels.append((x, y, g.fmt(med)))
+
+    for x, y, text, _ in g.placed_point_labels(draw, raw_labels, label_bounds, g.STRESS_VALUE_SIZE):
+        g.png_value_label(draw, x, y, text, label_bounds, g.STRESS_VALUE_SIZE)
+
+    if note:
+        draw_note(draw, left, right, note, "#7A2E1E")
+    g.draw_png_text(draw, (left + right) / 2, bottom + 112,
+                    "Concurrent virtual users (VUs)", g.AXIS_SIZE, fill=g.AXIS, anchor="ma")
+    g.draw_png_algorithm_legend(draw, left, bottom + 180, right - left, PLOT_ALGS)
+    return g.save_png(img, name)
+
+
+def _render_vu_bars(name: str, y_label: str,
+                    series: dict[str, list[tuple[int, tuple[float, float, float]]]],
+                    log_scale: bool, note: list[str] | None = None) -> Path:
+    """Grouped bars across VU levels: one group per VU, one bar per algorithm
+    (median). Same bar language as the rest of the six-algorithm set."""
+    img, draw = g.new_png_canvas()
+    left, top, right, bottom = g.plot_area()
+    spread = [med for rows in series.values() for _, (q1, med, q3) in rows]
+    log_scale = log_scale and spans_orders(spread)
+    y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
+    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
+
+    vus = sorted({vu for rows in series.values() for vu, _ in rows})
+    n_alg = len(PLOT_ALGS)
     group_gap = 90
     group_w = ((right - left) - group_gap * (len(vus) - 1)) / len(vus)
-    bar_gap = 10
-    bar_w = (group_w - bar_gap * (len(PLOT_ALGS) - 1)) / len(PLOT_ALGS)
-    cap = bar_w * 0.28
+    bar_gap = 12
+    bar_w = (group_w - bar_gap * (n_alg - 1)) / n_alg
+    # 4-digit labels on narrow bars overlap at full size; cap to the bar pitch.
+    val_size = min(g.STRESS_VALUE_SIZE, int((bar_w + bar_gap) * 0.34))
     label_bounds = (left, top, right, bottom)
 
     for gi, vu in enumerate(vus):
         gx = left + gi * (group_w + group_gap)
         for ai, alg in enumerate(PLOT_ALGS):
-            q1, med, q3 = dict(series[alg])[vu]
+            _, med, _ = dict(series[alg])[vu]
             x = gx + ai * (bar_w + bar_gap)
             cx = x + bar_w / 2
             y = y_map(med)
             draw.rounded_rectangle((x, y, x + bar_w, bottom), radius=4, fill=g.COLORS[alg])
-            y_lo, y_hi = y_map(q1), y_map(q3)
-            draw.line((cx, y_lo, cx, y_hi), fill=WHISKER, width=3)
-            draw.line((cx - cap, y_hi, cx + cap, y_hi), fill=WHISKER, width=3)
-            draw.line((cx - cap, y_lo, cx + cap, y_lo), fill=WHISKER, width=3)
-            g.png_value_label(draw, cx, min(y, y_hi) - 26, g.fmt(med), label_bounds, 19)
-        g.draw_png_text(draw, gx + group_w / 2, bottom + 46, f"{vu} VU",
+            g.png_value_label(draw, cx, y - 30, g.fmt(med), label_bounds, val_size)
+        g.draw_png_text(draw, gx + group_w / 2, bottom + 50, f"{vu} VU",
                         g.TICK_SIZE, fill="#425466", anchor="ma", bold=True)
 
-    g.draw_png_text(draw, (left + right) / 2, bottom + 108,
+    if note:
+        draw_note(draw, left, right, note, "#7A2E1E")
+    g.draw_png_text(draw, (left + right) / 2, bottom + 112,
                     "Concurrent virtual users (VUs)", g.AXIS_SIZE, fill=g.AXIS, anchor="ma")
-    g.draw_png_algorithm_legend(draw, left, g.H - 64, right - left, PLOT_ALGS)
+    g.draw_png_algorithm_legend(draw, left, bottom + 180, right - left, PLOT_ALGS)
     return g.save_png(img, name)
 
 
@@ -393,21 +518,13 @@ def render_persistent_memory(profile: dict) -> Path:
     y_map, ticks, _, _ = g.make_y_map([0.0, per_key_kb], False)
     g.draw_png_axes(img, draw, "Persistent expanded-key memory per signer (KB)", ticks, y_map)
 
-    slot = (right - left) / 2
+    bar_w, centers = cluster_positions(left, right, len(stats))
     for idx, (alg, (_, med, _)) in enumerate(stats):
-        cx = left + slot / 2 + idx * slot
+        cx = centers[idx]
         y = y_map(med)
-        draw.rounded_rectangle((cx - 90, y, cx + 90, bottom), radius=5, fill=g.COLORS[alg])
-        g.png_value_label(draw, cx, y - 30, g.fmt(med), (left, top, right, bottom), g.VALUE_SIZE)
-        g.draw_png_multiline(draw, cx, bottom + 42, g.ALGORITHM_WRAP[alg])
-    draw_note(
-        draw, left, right,
-        [f"Deterministic, host-independent: {profile['persistent_bytes_per_key']} B/key "
-         f"(pkg/fndsa PersistentBytes(), isolated Go process).",
-         "Cost side of the time-memory tradeoff; the dynamic signer holds no expanded key."],
-        "#425466",
-    )
-    g.draw_png_algorithm_legend(draw, left, g.H - 64, right - left, [a for a, _ in stats])
+        draw.rounded_rectangle((cx - bar_w / 2, y, cx + bar_w / 2, bottom), radius=5, fill=g.COLORS[alg])
+        g.png_value_label(draw, cx, y - 44, g.fmt(med), (left, top, right, bottom), g.VALUE_SIZE)
+    g.draw_png_algorithm_legend(draw, left, bottom + 132, right - left, [a for a, _ in stats])
     return g.save_png(img, name)
 
 
@@ -425,12 +542,14 @@ def main() -> None:
     figures: list[dict] = []
     rows: list[dict] = []
 
-    def bar_spec(name, title, y_label, metric, log_scale, note=None, decimals=None, scale=1.0):
+    def bar_spec(name, title, y_label, metric, log_scale, note=None, decimals=None,
+                 scale=1.0, speed=False, higher_is_better=False):
         # stats stay in the metric's native unit for the CSV; `scale` only converts
         # the drawn figure (KB->MB), so the CSV column never disagrees with its name.
-        stats = [(alg, iso_stat(runs, alg, metric)) for alg in PLOT_ALGS]
+        stats = [(alg, iso_stat(runs, alg, metric, higher_is_better, speed)) for alg in PLOT_ALGS]
         drawn = [(alg, tuple(v * scale for v in qs)) for alg, qs in stats]
-        path = render_bar_figure(name, y_label, drawn, log_scale, note, decimals)
+        disclosure = EXTREME_NOTE if (EXTREME and speed) else None
+        path = render_bar_figure(name, y_label, drawn, log_scale, disclosure, decimals)
         wins, ties, total = win_rate(runs, lambda r, a: r["isolated"][a][metric])
         tie_txt = f"{wins}/{total}" + (f" ({ties} tie)" if ties else "")
         figures.append({"name": name, "title": title, "file": path.name,
@@ -442,9 +561,11 @@ def main() -> None:
         print(f"  {name}: precomp wins {tie_txt}")
 
     def vu_spec(name, title, y_label, table, metric, log_scale, higher_is_better=False):
-        series = {alg: [(vu, vu_stat(runs, table, alg, vu, metric)) for vu in (10, 30, 50)]
+        series = {alg: [(vu, vu_stat(runs, table, alg, vu, metric, higher_is_better, True))
+                        for vu in (10, 30, 50)]
                   for alg in PLOT_ALGS}
-        path = render_vu_figure(name, y_label, series, log_scale)
+        disclosure = EXTREME_NOTE if EXTREME else None
+        path = render_vu_figure(name, y_label, series, log_scale, disclosure)
         detail = []
         for vu in (10, 30, 50):
             wins, ties, total = win_rate(runs, lambda r, a, v=vu: r[table][a][v][metric], higher_is_better)
@@ -480,23 +601,23 @@ def main() -> None:
 
     # Pure signing scenario.
     bar_spec("mrun_01_pure_signing_avg_ms", "Pure signing latency (median of runs)",
-             "Average latency (ms)", "pure_avg", True)
+             "Average latency (ms)", "pure_avg", True, speed=True)
     bar_spec("mrun_02_pure_signing_p95_ms", "Pure signing p95 latency (median of runs)",
-             "P95 latency (ms)", "pure_p95", True)
+             "P95 latency (ms)", "pure_p95", True, speed=True)
     bar_spec("mrun_03_process_rss_avg_mb", "Gateway process RSS during isolated benchmark",
              "Process-wide RSS (MB)", "rss_kb", False, rss_note, decimals=1, scale=1 / 1024)
 
     # Isolated JWT issuance scenario.
     bar_spec("mrun_04_isolated_access_avg_ms", "Isolated access-token generation latency",
-             "Average latency (ms)", "access_avg", True)
+             "Average latency (ms)", "access_avg", True, speed=True)
     bar_spec("mrun_05_isolated_access_p95_ms", "Isolated access-token generation p95 latency",
-             "P95 latency (ms)", "access_p95", True)
+             "P95 latency (ms)", "access_p95", True, speed=True)
     bar_spec("mrun_06_isolated_refresh_avg_ms", "Isolated refresh-token generation latency",
-             "Average latency (ms)", "refresh_avg", True)
+             "Average latency (ms)", "refresh_avg", True, speed=True)
     bar_spec("mrun_07_isolated_refresh_p95_ms", "Isolated refresh-token generation p95 latency",
-             "P95 latency (ms)", "refresh_p95", True)
+             "P95 latency (ms)", "refresh_p95", True, speed=True)
     bar_spec("mrun_08_isolated_cpu_per_token_us", "Isolated CPU time per generated token",
-             "CPU time per token (µs)", "cpu_per_tok", False, cpu_note, decimals=0, scale=1000)
+             "CPU time per token (µs)", "cpu_per_tok", False, cpu_note, decimals=0, scale=1000, speed=True)
 
     # Stress scenario (full round-trips under concurrency).
     vu_spec("mrun_09_stress_login_avg_ms", "Stress login round-trip latency",
