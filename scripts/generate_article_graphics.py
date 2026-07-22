@@ -524,7 +524,9 @@ def render_isolated_metric_png(
         png_value_label(draw, cx, y - 30, fmt(value), label_bounds, VALUE_SIZE)
         draw_png_multiline(draw, cx, bottom + 42, ALGORITHM_WRAP[alg])
 
-    draw_png_algorithm_legend(draw, left, H - 64, right - left, [alg for alg, _ in values])
+    # No color legend: each bar is already named on the x-axis, so the legend
+    # only duplicated those labels. Stress/compare figures keep theirs (their
+    # x-axis is VUs / attack vectors, so color is the only algorithm key).
     return save_png(img, name)
 
 
@@ -835,7 +837,7 @@ def main() -> None:
             "fig_01_isolated_access_token_generation_avg_ms",
             "Fig. 1",
             "Isolated access-token generation latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda item: item["isolated"]["token_generation_ms"]["avg"],
             True,
             "access_token_generation_avg_ms",
@@ -844,7 +846,7 @@ def main() -> None:
             "fig_02_isolated_access_token_generation_p95_ms",
             "Fig. 2",
             "Isolated access-token generation p95 latency",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda item: item["isolated"]["token_generation_ms"]["p95"],
             True,
             "access_token_generation_p95_ms",
@@ -853,7 +855,7 @@ def main() -> None:
             "fig_03_isolated_refresh_token_generation_avg_ms",
             "Fig. 3",
             "Isolated refresh-token generation latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda item: item["isolated"]["refresh_token_generation_ms"]["avg"],
             True,
             "refresh_token_generation_avg_ms",
@@ -862,7 +864,7 @@ def main() -> None:
             "fig_04_isolated_refresh_token_generation_p95_ms",
             "Fig. 4",
             "Isolated refresh-token generation p95 latency",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda item: item["isolated"]["refresh_token_generation_ms"]["p95"],
             True,
             "refresh_token_generation_p95_ms",
@@ -871,7 +873,7 @@ def main() -> None:
             "fig_16_isolated_cpu_time_per_token_avg_ms",
             "Fig. 16",
             "Isolated CPU time per token",
-            "Average CPU time per token (ms, log10)",
+            "Average CPU time per token (ms)",
             lambda item: item["isolated"]["cpu_time_per_token_ms"]["avg"],
             True,
             "cpu_time_per_token_avg_ms",
@@ -884,7 +886,7 @@ def main() -> None:
             "fig_14_pure_signing_avg_ms",
             "Fig. 14",
             "Pure signing latency (GC-free)",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             # Falls back to the all-iterations pure-signing avg if every
             # iteration was GC-contaminated (pure_signing_gc_free_ms is
             # null only in that edge case).
@@ -898,7 +900,7 @@ def main() -> None:
             "fig_17_pure_signing_p95_ms",
             "Fig. 17",
             "Pure signing p95 latency (GC-free)",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda item: (
                 item["isolated"]["pure_signing_gc_free_ms"] or item["isolated"]["pure_signing_ms"]
             )["p95"],
@@ -915,7 +917,7 @@ def main() -> None:
             "fig_15_pure_signing_memory_alloc_delta_avg_kb",
             "Fig. 15",
             "Pure signing memory allocation",
-            "Average allocation delta (KB, log10)",
+            "Average allocation delta (KB)",
             lambda item: item["isolated"]["pure_signing_memory_alloc_delta_kb"]["avg"],
             True,
             "pure_signing_memory_alloc_delta_avg_kb",
@@ -928,7 +930,7 @@ def main() -> None:
             "fig_10_stress_login_avg_ms",
             "Fig. 10",
             "Stress login latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda row: row["login_ms"]["avg"],
             True,
             "stress_login_avg_ms",
@@ -937,7 +939,7 @@ def main() -> None:
             "fig_19_stress_login_p95_ms",
             "Fig. 19",
             "Stress login p95 latency",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda row: row["login_ms"]["p95"],
             True,
             "stress_login_p95_ms",
@@ -946,7 +948,7 @@ def main() -> None:
             "fig_11_stress_refresh_avg_ms",
             "Fig. 11",
             "Stress refresh latency",
-            "Average latency (ms, log10)",
+            "Average latency (ms)",
             lambda row: row["refresh_ms"]["avg"],
             True,
             "stress_refresh_avg_ms",
@@ -955,7 +957,7 @@ def main() -> None:
             "fig_20_stress_refresh_p95_ms",
             "Fig. 20",
             "Stress refresh p95 latency",
-            "P95 latency (ms, log10)",
+            "P95 latency (ms)",
             lambda row: row["refresh_ms"]["p95"],
             True,
             "stress_refresh_p95_ms",

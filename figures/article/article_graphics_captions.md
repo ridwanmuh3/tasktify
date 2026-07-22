@@ -16,11 +16,11 @@ Captions:
 - Fig. 16: Isolated CPU time per token. Metric: cpu_time_per_token_avg_ms.
 - Fig. 14: Pure signing latency (GC-free). Metric: pure_signing_gc_free_avg_ms.
 - Fig. 17: Pure signing p95 latency (GC-free). Metric: pure_signing_gc_free_p95_ms.
-- Fig. 15: Pure signing memory allocation. Metric: pure_signing_memory_alloc_avg_mb.
-- Fig. 18: Pure signing resident memory (RSS). Metric: pure_signing_memory_rss_avg_mb.
+- Fig. 15: Pure signing memory allocation. Metric: pure_signing_memory_alloc_delta_avg_kb.
 - Fig. 10: Stress login latency. Metric: stress_login_avg_ms.
 - Fig. 19: Stress login p95 latency. Metric: stress_login_p95_ms.
 - Fig. 11: Stress refresh latency. Metric: stress_refresh_avg_ms.
 - Fig. 20: Stress refresh p95 latency. Metric: stress_refresh_p95_ms.
 - Fig. 12: Stress successful throughput. Metric: stress_throughput_ok_per_s.
+- Fig. 18: FN-DSA precomputed signer resident key material. Metric: fndsa_persistent_key_memory_kb.
 - Fig. 13: JWT adversarial block rate by attack vector. Metric: security_attack_block_rate_pct.

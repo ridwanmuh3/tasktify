@@ -300,18 +300,6 @@ def win_rate(runs: list[dict], get, higher_is_better: bool = False) -> tuple[int
 # ───────────────────────────── rendering ────────────────────────────
 
 
-def scale_label(y_label: str, log_scale: bool) -> str:
-    """Annotate the axis label with the scale actually used.
-
-    The log axis is adaptive (see spans_orders), so a hardcoded "log10" in the
-    label would lie the moment the fallback kicks in — which is exactly what
-    happens on the two-algorithm FN-DSA set.
-    """
-    if not log_scale:
-        return y_label
-    return f"{y_label[:-1]}, log10)" if y_label.endswith(")") else f"{y_label} (log10)"
-
-
 def spans_orders(values: list[float]) -> bool:
     """True when the series is wide enough for a log axis to be worth it."""
     positive = [v for v in values if v > 0]
@@ -367,7 +355,7 @@ def render_bar_figure(name: str, y_label: str, stats: list[tuple[str, tuple[floa
     spread = [v for _, (q1, med, q3) in stats for v in (q1, med, q3)]
     log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
-    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
+    g.draw_png_axes(img, draw, y_label, ticks, y_map)
 
     bar_w, centers = cluster_positions(left, right, len(stats))
 
@@ -377,13 +365,10 @@ def render_bar_figure(name: str, y_label: str, stats: list[tuple[str, tuple[floa
         y = y_map(med)
         draw.rounded_rectangle((cx - bar_w / 2, y, cx + bar_w / 2, bottom), radius=5, fill=color)
 
-        # No IQR error-bar drawn on the bar: the black whisker over a coloured bar
-        # read as a visual bug. The spread is kept as the numeric "IQR a–b" caption
-        # under the bar instead (omitted when the bar is a single selected run).
+        # Only the median label on the bar: no IQR error-bar (the whisker over a
+        # coloured bar read as a visual bug) and no "IQR a–b" caption (it cluttered
+        # the axis). The spread stays in multirun_data.csv.
         g.png_value_label(draw, cx, y - 44, label(med), (left, top, right, bottom), g.VALUE_SIZE)
-        if q1 != q3:
-            g.draw_png_multiline(draw, cx, bottom + 50,
-                                 [f"IQR {label(q1)}–{label(q3)}"], size=23, fill="#7B8794")
 
     if note:
         draw_note(draw, left, right, note, "#7A2E1E")
@@ -418,7 +403,7 @@ def _render_vu_trend(name: str, y_label: str,
     spread = [med for rows in series.values() for _, (q1, med, q3) in rows]
     log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
-    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
+    g.draw_png_axes(img, draw, y_label, ticks, y_map)
 
     vus = sorted({vu for rows in series.values() for vu, _ in rows})
     v_min, v_max = vus[0], vus[-1]
@@ -471,7 +456,7 @@ def _render_vu_bars(name: str, y_label: str,
     spread = [med for rows in series.values() for _, (q1, med, q3) in rows]
     log_scale = log_scale and spans_orders(spread)
     y_map, ticks, _, _ = g.make_y_map(spread, log_scale)
-    g.draw_png_axes(img, draw, scale_label(y_label, log_scale), ticks, y_map)
+    g.draw_png_axes(img, draw, y_label, ticks, y_map)
 
     vus = sorted({vu for rows in series.values() for vu, _ in rows})
     n_alg = len(PLOT_ALGS)
@@ -579,11 +564,6 @@ def main() -> None:
                              "q1": round(q1, 4), "q3": round(q3, 4), "runs": n})
         print(f"  {name}: precomp wins {'; '.join(detail)}")
 
-    rss_note = [
-        "CAUTION: process-wide VmRSS. All six algorithms share one gateway container,",
-        "so this is NOT per-algorithm memory. See mrun_15 for the valid precompute memory figure.",
-    ]
-
     # CPU/token is a /proc/self/stat utime+stime delta. USER_HZ=100 makes one tick
     # 10 ms, while a single Sign takes 0.002-1.2 ms, so each per-op delta is 0 or 1
     # tick. Averaged over 100 iterations the estimator is unbiased (ticks accumulate
@@ -594,10 +574,8 @@ def main() -> None:
     # Drawn in microseconds: in ms the medians read 0.05 / 0.10 / 0.40 / 1.25 and the
     # leading zeros flatten the 25x spread; in us they read 50 / 100 / 400 / 1250 and
     # the tick quantum is a clean 50 us. The CSV stays in ms (the metric's own unit).
-    cpu_note = [
-        f"Resolution floor {CPU_TICK_QUANTUM_MS * 1000:.0f} us/token (USER_HZ=100 clock ticks over 100 iterations).",
-        "Bars at or below the floor are under-resolved, not zero -- see multirun_cpu_quantization.csv.",
-    ]
+    # (Per-figure resolution-floor caption removed; the evidence stays in
+    # multirun_cpu_quantization.csv.)
 
     # Pure signing scenario.
     bar_spec("mrun_01_pure_signing_avg_ms", "Pure signing latency (median of runs)",
@@ -605,7 +583,7 @@ def main() -> None:
     bar_spec("mrun_02_pure_signing_p95_ms", "Pure signing p95 latency (median of runs)",
              "P95 latency (ms)", "pure_p95", True, speed=True)
     bar_spec("mrun_03_process_rss_avg_mb", "Gateway process RSS during isolated benchmark",
-             "Process-wide RSS (MB)", "rss_kb", False, rss_note, decimals=1, scale=1 / 1024)
+             "Process-wide RSS (MB)", "rss_kb", False, decimals=1, scale=1 / 1024)
 
     # Isolated JWT issuance scenario.
     bar_spec("mrun_04_isolated_access_avg_ms", "Isolated access-token generation latency",
@@ -617,7 +595,7 @@ def main() -> None:
     bar_spec("mrun_07_isolated_refresh_p95_ms", "Isolated refresh-token generation p95 latency",
              "P95 latency (ms)", "refresh_p95", True, speed=True)
     bar_spec("mrun_08_isolated_cpu_per_token_us", "Isolated CPU time per generated token",
-             "CPU time per token (µs)", "cpu_per_tok", False, cpu_note, decimals=0, scale=1000, speed=True)
+             "CPU time per token (µs)", "cpu_per_tok", False, decimals=0, scale=1000, speed=True)
 
     # Stress scenario (full round-trips under concurrency).
     vu_spec("mrun_09_stress_login_avg_ms", "Stress login round-trip latency",
