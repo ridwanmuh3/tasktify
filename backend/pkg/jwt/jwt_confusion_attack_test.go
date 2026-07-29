@@ -548,7 +548,7 @@ func TestAttack_JSONInjectionInClaims(t *testing.T) {
 // Reference: RFC 7519 §4.1.7 "jti" (JWT ID) Claim ("This claim can be used
 // to prevent the JWT from being replayed"). Neither RFC 7519 nor RFC 8725
 // mandates stateful replay prevention — this test documents that gap
-// rather than closing it (see docs/skenario-pengujian.md §6.5 "Gap").
+// rather than closing it (see the "Gap" rows in the README security table).
 // ========================================================
 func TestAttack_ReplayAttack(t *testing.T) {
 	_, vkey, signer := setupFNDSAKeys(t)

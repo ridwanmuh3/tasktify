@@ -10,15 +10,15 @@ import (
 // ════════════════════════════════════════════════════════════════════════
 // Adversarial tests against the FN-DSA/Falcon signature PRIMITIVE.
 //
-// Why this file exists (separate from pkg/jwt and k6/adversarial_jwt.js):
+// Why this file exists (separate from pkg/jwt):
 //
-// The JWT-level adversarial suite (backend/k6/adversarial_jwt.js,
-// pkg/jwt/jwt_confusion_attack_test.go) is grounded in RFC 7519 (JSON Web
-// Token) and RFC 8725 (JWT Best Current Practices). Those RFCs define the
-// JOSE *envelope*: header "alg" verification, "exp"/"iat" claims, compact
-// serialization parsing. They say nothing about whether the underlying
-// FN-DSA signature scheme itself resists forgery — that is a property of
-// the cryptographic primitive, not the token format wrapped around it. A
+// The JWT-level adversarial suite (pkg/jwt/jwt_confusion_attack_test.go,
+// plus the k6 attack scenarios on the research branch) is grounded in RFC
+// 7519 (JSON Web Token) and RFC 8725 (JWT Best Current Practices). Those
+// RFCs define the JOSE *envelope*: header "alg" verification, "exp"/"iat"
+// claims, compact serialization parsing. They say nothing about whether the
+// underlying FN-DSA signature scheme itself resists forgery — that is a
+// property of the cryptographic primitive, not the token format around it. A
 // forged-header test can only prove the envelope-parsing code is correct;
 // it cannot substantiate a claim about FN-DSA's own security. Any thesis
 // claim that "FN-DSA resists adversarial forgery" therefore needs tests
@@ -114,8 +114,7 @@ func signatureAlgName(logn uint) string {
 // result is directly comparable between "Falcon" (baseline, FN-DSA-512
 // dynamic signing) and "Falcon Precomputed" (FN-DSA-Precomputed-512).
 // Precomputation only changes how the signer prepares the trapdoor basis
-// and LDL tree at startup (see docs/research-system-architecture.md
-// "Optimized Method Used") — it must not change forgery resistance, and
+// and LDL tree at startup — it must not change forgery resistance, and
 // these paired subtests are the evidence for that claim.
 type signerVariant struct {
 	name string
