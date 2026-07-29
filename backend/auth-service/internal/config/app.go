@@ -25,18 +25,15 @@ type BootstrapConfig struct {
 	Config     *viper.Viper
 }
 
-// Supported algorithms for multi-algorithm JWT signing.
-// HS256/RS256/ES256 are classical baselines kept alongside the PQC profiles
-// for the adversarial + performance comparison (thesis defense requirement).
+// Supported algorithms for multi-algorithm JWT signing. Fallback when
+// JWT_ALLOWED_ALGS is unset; deployments narrow it further (production pins
+// FN-DSA-Precomputed-512). FN-DSA only — mixing a symmetric algorithm into the
+// signer alongside asymmetric ones invites algorithm confusion (RFC 8725 §3.1).
 var supportedAlgorithms = []string{
 	"FN-DSA-512",
 	"FN-DSA-Precomputed-512",
 	"Falcon-512",
 	"Falcon-Precomputed-512",
-	"HS256",
-	"RS256",
-	"ES256",
-	"EdDSA",
 }
 
 func Bootstrap(config *BootstrapConfig) {

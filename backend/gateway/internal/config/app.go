@@ -26,18 +26,16 @@ type BootstrapConfig struct {
 	TodoServiceConn *grpc.ClientConn
 }
 
-// Supported algorithms for multi-algorithm JWT verification.
-// HS256/RS256/ES256 are classical baselines kept alongside the PQC profiles
-// for the adversarial + performance comparison (thesis defense requirement).
+// Supported algorithms for multi-algorithm JWT verification. Fallback when
+// JWT_ALLOWED_ALGS is unset; deployments narrow it further (production pins
+// FN-DSA-Precomputed-512). FN-DSA only — mixing a symmetric algorithm into a
+// verify allow-list alongside asymmetric ones invites algorithm confusion
+// (RFC 8725 §3.1).
 var supportedAlgorithms = []string{
 	"FN-DSA-512",
 	"FN-DSA-Precomputed-512",
 	"Falcon-512",
 	"Falcon-Precomputed-512",
-	"HS256",
-	"RS256",
-	"ES256",
-	"EdDSA",
 }
 
 func Bootstrap(config *BootstrapConfig) {
@@ -73,15 +71,6 @@ func Bootstrap(config *BootstrapConfig) {
 	if err != nil {
 		config.Log.Fatalf("failed to load algorithm configs: %v", err)
 	}
-	// Benchmark signing configs must cover every algorithm the benchmark client
-	// exercises, so they are loaded from the full supportedAlgorithms list rather
-	// than the JWT_ALLOWED_ALGS-narrowed set. Narrowing is meant for production
-	// verification; narrowing the benchmark signer makes /api/benchmark reject any
-	// algorithm not in the production allow-list (e.g. FN-DSA-Precomputed-512).
-	benchmarkAlgConfigs, err := jwtutils.LoadAllAlgConfigs(keysDir, supportedAlgorithms, true)
-	if err != nil {
-		config.Log.Fatalf("failed to load benchmark signing configs: %v", err)
-	}
 
 	issuer := config.Config.GetString("JWT_ISSUER")
 	audience := config.Config.GetString("JWT_AUDIENCE")
@@ -89,7 +78,6 @@ func Bootstrap(config *BootstrapConfig) {
 
 	// Multi-algorithm JWT util for token verification
 	jwtUtil := jwtutils.NewMultiAlgJwtUtil(issuer, audience, duration, defaultAlg, algConfigs)
-	benchmarkJWT := jwtutils.NewMultiAlgJwtUtil(issuer, audience, duration, defaultAlg, benchmarkAlgConfigs)
 
 	// gRPC clients
 	authClient := model.NewAuthServiceClient(config.AuthServiceConn)
@@ -103,16 +91,14 @@ func Bootstrap(config *BootstrapConfig) {
 	authHandler := handler.NewAuthHandler(config.Log, authClient)
 	userHandler := handler.NewUserHandler(config.Log, userClient)
 	taskHandler := handler.NewTaskHandler(config.Log, taskClient)
-	benchmarkHandler := handler.NewBenchmarkHandler(config.Log, benchmarkJWT, benchmarkAlgConfigs)
 
 	routeConfig := &route.RouteConfig{
-		App:              config.App,
-		Log:              config.Log,
-		AuthHandler:      authHandler,
-		UserHandler:      userHandler,
-		TaskHandler:      taskHandler,
-		BenchmarkHandler: benchmarkHandler,
-		AuthMiddleware:   authMiddleware,
+		App:            config.App,
+		Log:            config.Log,
+		AuthHandler:    authHandler,
+		UserHandler:    userHandler,
+		TaskHandler:    taskHandler,
+		AuthMiddleware: authMiddleware,
 	}
 
 	routeConfig.Setup()
