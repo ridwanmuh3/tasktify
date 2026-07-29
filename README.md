@@ -1,34 +1,19 @@
 # Tasktify
 
-Tasktify is a Go microservice task API with post-quantum JWT signing. It exposes HTTP/JSON through a Fiber gateway, uses gRPC between services, stores data in PostgreSQL, and benchmarks FN-DSA JWT generation with k6 JWT generation with k6.
+Tasktify is a Go microservice task API with post-quantum JWT signing. It exposes HTTP/JSON through a Fiber gateway, uses gRPC between services, and stores data in PostgreSQL.
 
-Current research scope is limited to two FN-DSA signer profiles:
+> **Branch scope.** This is the `service/tasktify-backend` branch: deployable backend services only. The benchmark harness, k6 scenarios, statistical scripts, article figures, and thesis documentation live on `research/pqc-jwt-benchmark`. The two branches are parallel deliverables — do not merge this one into the research branch (its deletions would remove the research artifacts); cherry-pick shared fixes instead.
 
-| Profile | JWS `alg` | Benchmark port | Meaning |
-| ------- | --------- | -------------- | ------- |
-| `FN-DSA-Precomputed-512` | `FN-DSA-512` | `5001` | FN-DSA-512 signer with precomputed LDL tree |
-| `FN-DSA-512` | `FN-DSA-512` | `5002` | FN-DSA-512 original signer |
+Two FN-DSA signer profiles are supported:
 
-`FN-DSA-Precomputed-512` is a benchmark profile, not a JOSE algorithm value. Tokens from both profiles use `FN-DSA-512`; precomputation is implementation state recorded in config, metadata, and benchmark output.
+| Profile | JWS `alg` | Meaning |
+| ------- | --------- | ------- |
+| `FN-DSA-Precomputed-512` | `FN-DSA-512` | FN-DSA-512 signer with precomputed LDL tree (production default) |
+| `FN-DSA-512` | `FN-DSA-512` | FN-DSA-512 original signer |
 
-## Recent Updates
-
-| Area | Change | Result |
-| ---- | ------ | ------ |
-| Benchmark scope | Removed unrelated benchmark algorithms from benchmark flow | Compose, keygen, gateway config, and k6 focus on `FN-DSA-Precomputed-512` and `FN-DSA-512` |
-| JWS algorithm | Kept `FN-DSA-512` as the token `alg` for both FN-DSA profiles | Avoids using `FN-DSA-Precomputed-512` as a fake JOSE algorithm |
-| JWT issuance | Added `POST /api/benchmark/jwt-issuance` | Measures JWT claims, serialization, Base64URL, signing, and compact token assembly without DB, bcrypt, auth-service, or gRPC |
-| Pure signing | Added `POST /api/benchmark/pure-signing` | Measures `SigningMethod.Sign(fixedMessage)` only, without JWT serialization, Base64URL, or compact assembly |
-| k6 workflow | Isolated k6 phase now runs JWT issuance and pure signing | `benchmark_sign_result.json` includes pure signing, JWT issuance, and JWT-over-pure overhead ratio |
-| Stress metadata | Added stage duration, ramp-up, steady state, ramp-down, request count, think time, load model, timeout, connection reuse, TLS, error rate, pool, and quota metadata | Load is no longer described by VU count only |
-| Security tests | Expanded JWT parser and claim tests | Covers malformed tokens, duplicate header/claim, invalid Base64URL, oversized token, `kid`, `typ`, token-use confusion, unsigned/signature-empty tokens, and claim validation |
-| FN-DSA correctness | Added dynamic and precomputed FN-DSA KAT coverage | `TestFNDSA_Precomputed_KAT` validates precomputed signing against known-answer behavior |
-| Automation | Added `make falcon-kat`, `make fndsa-check`, `make wait-bench`, and simplified benchmark targets | Validation and benchmark startup use fewer manual steps |
-| Documentation | Cleaned README and benchmark docs | Metric scope and interpretation are explicit |
+`FN-DSA-Precomputed-512` is a signer profile, not a JOSE algorithm value. Tokens from both profiles carry `FN-DSA-512` in the header; precomputation is implementation state recorded in config only.
 
 ## Architecture
-
-Production runtime:
 
 ```text
 Client
@@ -39,27 +24,15 @@ Client
           -> PostgreSQL
 ```
 
-Benchmark runtime:
-
-```text
-k6 client
-  -> Gateway FN-DSA-Precomputed-512 (:5001)
-  -> Gateway FN-DSA-512 (:5002)
-      -> shared benchmark PostgreSQL and todo service
-```
-
-Each benchmark profile gets an isolated gateway/auth process pair. This avoids cross-profile signer state and runtime contention inside one process.
-
 ## Components
 
 | Component | Path | Responsibility |
 | --------- | ---- | -------------- |
-| Gateway | `backend/gateway/` | Public HTTP API, JWT verification, benchmark endpoints, gRPC clients |
+| Gateway | `backend/gateway/` | Public HTTP API, JWT verification, gRPC clients |
 | Auth service | `backend/auth-service/` | User registration, sign-in, refresh token flow, bcrypt, JWT signing |
 | Todo service | `backend/todo-service/` | Task CRUD scoped by authenticated user |
 | Shared package | `backend/pkg/` | JWT implementation, FN-DSA signing methods, key loaders, precomputed signer |
-| Key generator | `backend/cmd/keygen/` | Generate production and benchmark keys |
-| k6 scripts | `backend/k6/` | Isolated, stress, refresh, and adversarial JWT scenarios |
+| Key generator | `backend/cmd/keygen/` | Generate JWT signing keys |
 | API specs | `backend/api/`, `backend/gateway/api/`, service `api/` folders | OpenAPI and service contracts |
 
 ## Runtime Flows
@@ -77,8 +50,7 @@ Sign-in:
 POST /api/auth/signin
 Gateway -> AuthService.SignIn
 Auth service -> PostgreSQL user lookup -> bcrypt check -> JWT access + refresh signing
-Gateway <- gRPC trailers with signing/runtime metrics
-Gateway -> HTTP response headers + token payload
+Gateway -> HTTP response with token payload
 ```
 
 Protected request:
@@ -87,19 +59,6 @@ Protected request:
 GET /api/profile or /api/tasks/*
 Gateway AuthMiddleware -> parse JWT -> validate alg, typ, issuer, signature, token_use
 Gateway -> service request with user id metadata
-```
-
-Benchmark endpoints:
-
-```text
-POST /api/benchmark/pure-signing
-Gateway -> SigningMethod.Sign(fixedMessage)
-
-POST /api/benchmark/jwt-issuance
-Gateway -> JWT claims -> JSON/Base64URL -> signing -> compact JWT
-
-POST /api/benchmark/token
-Gateway -> one access JWT plus signing-time headers
 ```
 
 ## API Routes
@@ -115,10 +74,6 @@ Default gateway URL is `http://localhost:3000` in local service mode.
 | `POST` | `/api/auth/register` | `name`, `email`, `password` | Create user |
 | `POST` | `/api/auth/signin` | `email`, `password`, optional `algorithm` | Access and refresh token pair |
 | `POST` | `/api/auth/refresh` | `refresh_token` | New access and refresh token pair |
-| `POST` | `/api/benchmark/pure-signing` | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated pure signing stats |
-| `POST` | `/api/benchmark/jwt-issuance` | `algorithm`, `iterations`, `warmup_iterations`, `email` | Isolated JWT issuance stats |
-| `POST` | `/api/benchmark/sign` | `algorithm`, `iterations`, `warmup_iterations`, `email` | Backward-compatible alias for JWT issuance |
-| `POST` | `/api/benchmark/token` | `algorithm`, `email` | One benchmark token plus signing-time headers |
 
 ### Protected
 
@@ -142,9 +97,8 @@ Authorization: Bearer <access_token>
 | Tool | Version / note |
 | ---- | -------------- |
 | Go | `1.25.7` in Go modules |
-| Docker Compose | Required for production and benchmark stacks |
+| Docker Compose | Required for the Compose stack |
 | PostgreSQL | `postgres:18-alpine` in Compose |
-| k6 | `0.50+` recommended |
 | Protocol Buffers | `protoc`, `protoc-gen-go`, `protoc-gen-go-grpc` for proto regeneration |
 
 Go modules:
@@ -173,33 +127,27 @@ Main environment variables:
 | `JWT_DEFAULT_ALG` | gateway/auth | Default signing profile |
 | `JWT_ALLOWED_ALGS` | gateway/auth | Comma-separated profile allowlist |
 | `JWT_ISSUER` | gateway/auth | Expected issuer |
+| `JWT_AUDIENCE` | gateway/auth | Expected audience; must match on both sides, empty disables the claim |
 | `JWT_TOKEN_DURATION` | gateway/auth | Token lifetime in minutes |
 | `KEYS_DIR` | gateway/auth | PEM key directory |
 
-Benchmark metadata can also record `RATE_LIMIT`, `CPU_QUOTA`, and `MEMORY_QUOTA` when those values are provided to k6 or the runtime environment.
+`JWT_ALLOWED_ALGS` narrows the algorithms a process loads. When unset, both services fall back to the FN-DSA profiles only; production pins `FN-DSA-Precomputed-512`.
 
 ## Keys
-
-Production keys:
 
 ```bash
 cd backend
 make keygen
 ```
 
-Benchmark keys:
-
-```bash
-cd backend
-make keygen-all
-```
-
-Benchmark key filenames:
+Writes the key pair into `auth-service/keys/` and copies it to `gateway/keys/`:
 
 ```text
 FNDSA-512_pk.pem
 FNDSA-512_sk.pem
 ```
+
+Keys are gitignored (`**/keys/*.pem`). Generate them per environment.
 
 ## Build And Run
 
@@ -226,7 +174,7 @@ Remove volumes:
 make clean
 ```
 
-Local service mode:
+Local service mode (PostgreSQL in Docker, three Go processes on the host):
 
 ```bash
 make dev
@@ -237,97 +185,6 @@ Regenerate protobuf code:
 ```bash
 make compile-proto
 ```
-
-## Benchmark Workflow
-
-Validate FN-DSA/FN-DSA code and benchmark config:
-
-```bash
-cd backend
-make fndsa-check
-```
-
-Run local benchmark stack and k6 workflow:
-
-```bash
-cd backend
-make bench-sign
-make bench-down
-```
-
-Run against one remote gateway:
-
-```bash
-cd backend
-make client-k6 BASE_URL=https://example.com
-```
-
-Remote single-gateway runs must load every benchmarked signing profile in
-`JWT_ALLOWED_ALGS`, for example `FN-DSA-Precomputed-512,FN-DSA-512`.
-Otherwise the unconfigured profile fails instead of being silently measured with
-the wrong signer.
-
-Useful k6 flags:
-
-| Variable | Meaning |
-| -------- | ------- |
-| `BASE_URL` | Single gateway base URL |
-| `BENCH_HOST` | Multi-gateway host; k6 adds profile ports |
-| `ITERATIONS` | Isolated server-side iterations, default `100` |
-| `ISOLATED_WARMUP` | Warmup iterations, default `20` |
-| `ISOLATED_ONLY=true` | Run isolated phase only |
-| `STRESS_ONLY=true` | Run stress phase only |
-| `ATTACK_ONLY=true` | Run adversarial phase only |
-| `ATTACK_ITERATIONS` | Attack attempts per profile, default `25` |
-
-Benchmark artifacts are written under `backend/benchmark-results/` by default.
-Override with `BENCH_OUTPUT_DIR=path`.
-
-| File | Purpose |
-| ---- | ------- |
-| `benchmark-results/benchmark_sign_result.json` | Academic summary grouped by signer profile |
-| `benchmark-results/benchmark_sign_raw.json` | Full k6 metric dump |
-| `benchmark-results/benchmark_sign_samples.ndjson` | Per-sample k6 output for statistical tests |
-| `benchmark-results/result.txt` | Human-readable k6 output |
-| `benchmark-results/benchmark_stats.json` | Statistical summary |
-| `benchmark-results/benchmark_welch.json` | Pairwise comparison summary |
-| `benchmark-results/fndsa_precompute_ablation.json` | FN-DSA precompute ablation output |
-
-## Benchmark Metrics
-
-Use these metric names consistently:
-
-| Metric | Scope | Use |
-| ------ | ----- | --- |
-| `isolated.pure_signing_gc_free_ms` | Direct FN-DSA signing over fixed message, GC-free | Pure signing baseline |
-| `isolated.token_generation_gc_free_ms` | Access JWT generation from benchmark payload, GC-free | Primary JWT issuance metric |
-| `isolated.refresh_token_generation_gc_free_ms` | Refresh JWT generation from benchmark payload, GC-free | Secondary JWT issuance metric |
-| `stress.token_generation_ms` | Access JWT generation under concurrent VUs | Signing under load |
-| `stress.refresh_token_generation_ms` | New JWT generation during refresh flow under concurrent VUs | Refresh signing under load |
-| `stress.login_ms` | Full `/api/auth/signin` round trip | Real login workflow impact |
-| `stress.refresh_ms` | Full `/api/auth/refresh` round trip | Real refresh workflow impact |
-| `stress.e2e_ms` | Full `/api/benchmark/token` k6 round trip | Benchmark endpoint overhead check |
-
-Interpretation rules:
-
-- Do not call `isolated.token_generation_gc_free_ms` login latency.
-- Do not call `isolated.token_generation_gc_free_ms` network latency.
-- Do not call `isolated.token_generation_gc_free_ms` pure cryptographic signing.
-- Use `isolated.pure_signing_gc_free_ms` for pure FN-DSA/FN-DSA signing.
-- Use `isolated.token_generation_gc_free_ms` for server-side JWT issuance from benchmark payload.
-- Use `stress.login_ms` for login latency with JWT signing, because it includes DB lookup, bcrypt, transport, and response serialization.
-- Use `stress.refresh_ms` for refresh latency with token verification and JWT rotation.
-
-Stress runs also emit:
-
-| Metadata | Meaning |
-| -------- | ------- |
-| `stress_stage_model` | executor, closed-loop model, ramp-up, steady state, ramp-down, think time |
-| `stress_transport` | timeout, connection reuse, protocol note, TLS flag |
-| `stress_environment` | database pool, rate limit, CPU quota, memory quota when provided |
-| per-scenario request counts | success/failure totals for benchmark token, login, and refresh paths |
-
-VU count alone is not enough to describe load. Report stage model, request count, error rate, transport, and resource quota with every stress result.
 
 ## Security And Correctness
 
@@ -350,6 +207,7 @@ FN-DSA correctness tests cover:
 | Property | Location |
 | -------- | -------- |
 | Dynamic and precomputed KAT | `backend/pkg/fndsa/fndsa_test.go` |
+| Adversarial rejection: forgery, tampering, domain/prehash confusion, truncation, norm bound | `backend/pkg/fndsa/fndsa_adversarial_test.go` |
 | Signature verification, bit-flip signature failure, bit-flip message failure | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/*_test.go` |
 | Dynamic and precomputed verifier interoperability | `backend/pkg/jwt/fndsa_precomputed_test.go` |
 | Concurrent verification/signing behavior | `backend/pkg/jwt/fndsa_correctness_test.go` |
@@ -358,95 +216,47 @@ Run:
 
 ```bash
 cd backend
-make falcon-kat
-make fndsa-check
+make fndsa-kat        # KAT only
+make adversarial-kat  # KAT + attack rejection gate
+make fndsa-check      # full correctness/security gate + Compose config
 ```
-
-## Statistical Analysis
-
-Run after benchmark artifacts exist:
-
-```bash
-python3 scripts/benchmark_stat_tests.py
-```
-
-Common variants:
-
-```bash
-python3 scripts/benchmark_stat_tests.py --metric isolated.pure_signing_gc_free_ms
-python3 scripts/benchmark_stat_tests.py --metric isolated.refresh_token_generation_gc_free_ms
-python3 scripts/benchmark_stat_tests.py --baseline FN-DSA-Precomputed-512
-python3 scripts/benchmark_stat_tests.py --format csv
-```
-
-`backend/benchmark-results/benchmark_sign_samples.ndjson` enables normality checks and Mann-Whitney U tests. Without samples, the script falls back to summary statistics from `benchmark_sign_result.json`.
-
-## FN-DSA Precompute Ablation
-
-Run:
-
-```bash
-python3 scripts/fndsa_precompute_ablation.py
-python3 scripts/fndsa_precompute_ablation.py --format csv
-```
-
-Direct Go benchmark:
-
-```bash
-cd backend/pkg
-go test ./fndsa -run '^$' -bench '^BenchmarkFNDSAPrecomputeAblation512/' -benchmem
-```
-
-The ablation compares original runtime signing against detached precomputation stages. `Significance %` in that output means relative runtime reduction from A0, not statistical significance.
 
 ## Validation
 
-Recent validation commands:
-
 ```bash
-cd backend/gateway
-env GOCACHE=/tmp/go-build-cache go test ./internal/delivery/http/handler ./internal/delivery/http/route
-env GOCACHE=/tmp/go-build-cache go test ./internal/config
-
-cd ../pkg
-env GOCACHE=/tmp/go-build-cache go test ./utils/jwtutils ./jwt ./fndsa
-
-cd ..
-k6 inspect k6/benchmark_sign.js
-make fndsa-check
+cd backend
+make test    # all four modules, then the race detector on pkg
+make build   # gateway, auth-service, todo-service binaries into bin/
+make check   # validate production and dev Compose configs
 ```
 
 ## Make Targets
 
-Run from `backend/`.
+Run from `backend/` (the workspace `Makefile` proxies the same names from the repo root).
 
 | Target | Action |
 | ------ | ------ |
-| `make keygen` | Generate production keys into `auth-service/keys` and copy to `gateway/keys` |
-| `make keygen-all` | Generate benchmark keys into `keys/` |
+| `make env` | Create `.env` from `.env.example` when missing |
+| `make keygen` | Generate keys into `auth-service/keys` and copy to `gateway/keys` |
 | `make compile-proto` | Regenerate protobuf files |
-| `make up` | Start production Compose stack |
-| `make up-build` | Build and start production Compose stack |
-| `make down` | Stop production stack |
-| `make clean` | Stop production stack and remove volumes |
+| `make dev` | Start PostgreSQL in Docker, run all three services locally |
+| `make dev-db` / `make dev-down` | Start / stop the local PostgreSQL only |
+| `make up` / `make up-build` | Start (and optionally build) the Compose stack |
+| `make down` / `make clean` | Stop the stack, optionally removing volumes |
+| `make ps` / `make logs` / `make logs-gateway` | Compose status and log following |
 | `make vendor` | Vendor dependencies for Docker builds |
-| `make tidy` | Run `go mod tidy` in Go modules |
-| `make build` | Build gateway, auth-service, and todo-service binaries into `bin/` |
-| `make falcon-kat` | Run FN-DSA dynamic and precomputed KAT |
-| `make fndsa-check` | Run FN-DSA KAT/tests plus Compose and k6 script checks |
-| `make bench-up` | Build and start benchmark Compose stack |
-| `make wait-bench` | Wait for benchmark gateways on ports `5001` and `5002` |
-| `make bench-down` | Stop benchmark stack and remove volumes |
-| `make bench-sign` | Run local benchmark workflow and write `benchmark-results/result.txt` |
-| `make bench-sign-remote` | Run remote benchmark against configured URL |
-| `make attack-adversarial` | Run adversarial JWT test |
+| `make tidy` | Run `go mod tidy` across the Go modules |
+| `make build` | Build the three service binaries into `bin/` |
+| `make test` | Run all Go tests plus the race detector on `pkg` |
+| `make check` | Validate production and dev Compose configs |
+| `make fndsa-kat` | FN-DSA dynamic and precomputed KAT |
+| `make adversarial-kat` | KAT plus adversarial attack-rejection gate |
+| `make fndsa-check` | Full correctness/security gate and Compose config |
 
 ## Related Documentation
 
 | File | Purpose |
 | ---- | ------- |
-| `docs/grpc-implementation.md` | gRPC contracts, metadata, trailers, keep-alive, and benchmark bias controls |
-| `docs/skenario-pengujian.md` | k6 scenario design, isolated/stress/attack phases, metrics, thresholds, and output files |
-| `docs/pengujian-kat-dan-adversarial-fndsa.md` | FN-DSA/Falcon known-answer tests and primitive-level adversarial vectors: construction, coverage, results, and claim limits |
-| `docs/hasil-benchmark-agregat-20-run.md` | Aggregate results across all 20 `result*.txt` sweeps: median + IQR per metric, per-run win rates, and the figures in `figures/multirun/` |
 | `backend/api/api-spec.yml` | API specification |
+| `backend/pkg/jwt/SECURITY.md` | Security notes for the JWT package |
+| `research/pqc-jwt-benchmark` branch | Benchmark harness, k6 scenarios, statistical analysis, figures, thesis documentation |
