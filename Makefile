@@ -5,7 +5,6 @@
 .DEFAULT_GOAL := help
 
 BACKEND_DIR := backend
-RUNS ?= 3
 
 help:
 	@echo "Tasktify workspace targets"
@@ -31,9 +30,6 @@ help:
 	@echo "  make down             Stop stack"
 	@echo "  make clean            Stop stack and remove volumes"
 	@echo "  make compose-config   Validate production Compose config"
-	@echo "  make bench-config     Validate benchmark Compose config"
-	@echo "  make hostinger-bench  Run client k6, upload artifacts, calculate on VPS"
-	@echo "  make hostinger-bench-repeat HOSTINGER_BENCH_RUNS=10  Repeat it N times, JSON index"
 	@echo "  make ps               Show production Compose services"
 	@echo "  make logs             Follow all logs"
 	@echo "  make logs-gateway     Follow gateway logs"
@@ -45,14 +41,9 @@ help:
 	@echo "  make build            Build backend binaries"
 	@echo "  make test             Run backend Go tests"
 	@echo "  make check            Validate Compose configs"
-	@echo "  make fndsa-check     Run FN-DSA KAT/tests and benchmark config checks"
-	@echo ""
-	@echo "Article figures:"
-	@echo "  make figures          Generate article PNGs from benchmark_sign_result.json"
-	@echo "  make precompute-profile  Emit isolated FN-DSA RSS/persistent-key profile (fig_18)"
-	@echo "  make adversarial-kat  FN-DSA KAT + adversarial correctness/security gate"
-	@echo "  make bench-figures    Run client k6 (BENCH_HOST=...), then generate figures"
-	@echo "  make bench-figures-repeat VPS_SSH=.. BENCH_HOST=.. RUNS=3  k6 on client + Go tests on VPS, merge, figures"
+	@echo "  make fndsa-kat        Run FN-DSA known-answer tests"
+	@echo "  make adversarial-kat  FN-DSA KAT + adversarial rejection gate"
+	@echo "  make fndsa-check      Full correctness/security gate + Compose config"
 
 env:
 	$(MAKE) -C $(BACKEND_DIR) env
@@ -93,9 +84,6 @@ clean:
 compose-config:
 	$(MAKE) -C $(BACKEND_DIR) compose-config
 
-bench-config:
-	$(MAKE) -C $(BACKEND_DIR) bench-config
-
 ps:
 	$(MAKE) -C $(BACKEND_DIR) ps
 
@@ -126,93 +114,7 @@ test:
 check:
 	$(MAKE) -C $(BACKEND_DIR) check
 
-falcon-kat falcon-check wait-bench adversarial-kat:
+fndsa-kat adversarial-kat fndsa-check:
 	$(MAKE) -C $(BACKEND_DIR) $@
 
-bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile:
-	$(MAKE) -C $(BACKEND_DIR) $@
-
-hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health:
-	$(MAKE) -C $(BACKEND_DIR) $@
-
-client-k6 client-k6-isolated client-k6-stress client-k6-attack:
-	$(MAKE) -C $(BACKEND_DIR) $@
-
-hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile:
-	$(MAKE) -C $(BACKEND_DIR) $@
-
-attack-adversarial attack-adversarial-bench attack-adversarial-remote:
-	$(MAKE) -C $(BACKEND_DIR) $@
-
-figures:
-	@test -f $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json || \
-		(echo "Missing $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json. Run make client-k6 (or hostinger-bench) first."; exit 2)
-	python3 scripts/generate_article_graphics.py
-
-# Multi-run aggregate figures across every result*.txt.
-FNDSA_ALGS ?= FN-DSA-Precomputed-512,FN-DSA-512
-FIGURES_MULTIRUN_DIR ?= figures/multirun
-FIGURES_FNDSA_DIR ?= figures/multirun-fndsa
-
-figures-multirun:
-	python3 scripts/generate_multirun_figures.py
-	python3 scripts/validate_multirun_data.py
-
-# Same aggregate, drawn for the two FN-DSA profiles only. Separate output
-# directory so it never overwrites the six-algorithm set — the two answer
-# different questions and the article needs both. Dropping the baselines also
-# drops the three-orders-of-magnitude spread that forces a log axis, so these
-# come out linear and the precomputed-vs-dynamic gap is actually readable.
-figures-fndsa:
-	MULTIRUN_PLOT_ALGS='$(FNDSA_ALGS)' \
-	MULTIRUN_GRAPHICS_DIR='$(FIGURES_FNDSA_DIR)' \
-	python3 scripts/generate_multirun_figures.py
-
-# One-shot: run the client k6 benchmark against a remote gateway, run the
-# adversarial attack test (feeds fig_13's block-rate figure), then regenerate
-# article figures from the fresh results. Forwards BENCH_HOST the same way
-# client-k6 does, e.g.:
-#   make bench-figures BENCH_HOST=poc-ridwanmuh3.my.id
-bench-figures: client-k6
-	$(MAKE) attack-adversarial-remote
-	$(MAKE) figures
-
-# This VPS shares its host with unrelated load (a Minecraft server on the
-# same box), so a single run's numbers drift between attempts even though
-# each run is internally correct. Repeats the full bench N times (RUNS=3
-# default), takes the per-field median across runs, then regenerates figures
-# from that. Costs RUNS x ~22min wall time.
-#
-# Division of labor: k6 (client-k6, attack-adversarial-remote) runs on the
-# CLIENT against the VPS over the network; the Go tests (precompute profile,
-# KAT + adversarial correctness gate) run ON THE VPS via SSH — Go can't run
-# over HTTP, and the profile's RSS/timing figures must be measured on the
-# target host. Set VPS_SSH for the remote steps; BENCH_HOST for k6.
-#   make bench-figures-repeat VPS_SSH=root@host BENCH_HOST=poc-ridwanmuh3.my.id RUNS=3
-bench-figures-repeat:
-	@rm -rf $(BACKEND_DIR)/benchmark-results/runs
-	@mkdir -p $(BACKEND_DIR)/benchmark-results/runs
-	@for i in $$(seq 1 $(RUNS)); do \
-		echo "=== bench-figures-repeat: run $$i/$(RUNS) ==="; \
-		$(MAKE) client-k6 || exit 1; \
-		cp $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json \
-			$(BACKEND_DIR)/benchmark-results/runs/benchmark_sign_result_run_$$i.json; \
-		$(MAKE) attack-adversarial-remote || exit 1; \
-		cp $(BACKEND_DIR)/benchmark-results/adversarial_result.json \
-			$(BACKEND_DIR)/benchmark-results/runs/adversarial_result_run_$$i.json; \
-		$(MAKE) hostinger-precompute-profile \
-			PROFILE_OUT=benchmark-results/runs/fndsa_precompute_profile_run_$$i.json || exit 1; \
-	done
-	$(MAKE) hostinger-adversarial-kat
-	$(MAKE) hostinger-fetch-profile
-	python3 scripts/aggregate_benchmark_runs.py \
-		--bench-glob '$(BACKEND_DIR)/benchmark-results/runs/benchmark_sign_result_run_*.json' \
-		--bench-out $(BACKEND_DIR)/benchmark-results/benchmark_sign_result.json \
-		--adversarial-glob '$(BACKEND_DIR)/benchmark-results/runs/adversarial_result_run_*.json' \
-		--adversarial-out $(BACKEND_DIR)/benchmark-results/adversarial_result.json
-	python3 scripts/aggregate_precompute_profile.py \
-		--glob '$(BACKEND_DIR)/benchmark-results/runs/fndsa_precompute_profile_run_*.json' \
-		--out $(BACKEND_DIR)/benchmark-results/fndsa_precompute_profile.json
-	$(MAKE) figures
-
-.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config bench-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check falcon-kat falcon-check wait-bench adversarial-kat bench-up bench-down bench-logs bench-run bench bench-sign bench-sign-remote precompute-profile hostinger-bench-up hostinger-bench-down hostinger-bench-logs hostinger-health client-k6 client-k6-isolated client-k6-stress client-k6-attack hostinger-upload hostinger-calc hostinger-fetch hostinger-bench hostinger-bench-repeat hostinger-precompute-profile hostinger-adversarial-kat hostinger-fetch-profile attack-adversarial attack-adversarial-bench attack-adversarial-remote figures figures-multirun figures-fndsa bench-figures bench-figures-repeat
+.PHONY: help env keys keygen vendor gateway run-gateway auth run-auth todo run-todo backend dev dev-api dev-db dev-down up up-build down clean compose-config ps logs logs-gateway logs-auth logs-todo logs-caddy build proto compile-proto test check fndsa-kat adversarial-kat fndsa-check
