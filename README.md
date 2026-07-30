@@ -186,41 +186,6 @@ Regenerate protobuf code:
 make compile-proto
 ```
 
-## Security And Correctness
-
-JWT security tests cover:
-
-| Category | Status |
-| -------- | ------ |
-| Signature tampering and unsigned/signature-empty compact token | Covered |
-| Algorithm confusion and algorithm case variation | Covered |
-| Malformed JSON, invalid Base64URL, duplicate header, duplicate claim | Covered |
-| Invalid or missing issuer, invalid subject, invalid `nbf`, illogical `iat` | Covered |
-| Oversized token, unknown `kid`, `kid` traversal attempt | Covered |
-| `typ` alteration and access/refresh token-use confusion | Covered |
-| Audience validation | Gap until app config defines audience |
-| Refresh token replay/reuse | Gap until stateful refresh-token store or JTI blacklist exists |
-| Key revocation/rotation | Gap until key registry and operational rotation exist |
-
-FN-DSA correctness tests cover:
-
-| Property | Location |
-| -------- | -------- |
-| Dynamic and precomputed KAT | `backend/pkg/fndsa/fndsa_test.go` |
-| Adversarial rejection: forgery, tampering, domain/prehash confusion, truncation, norm bound | `backend/pkg/fndsa/fndsa_adversarial_test.go` |
-| Signature verification, bit-flip signature failure, bit-flip message failure | `backend/pkg/jwt/fndsa_correctness_test.go`, `backend/pkg/fndsa/*_test.go` |
-| Dynamic and precomputed verifier interoperability | `backend/pkg/jwt/fndsa_precomputed_test.go` |
-| Concurrent verification/signing behavior | `backend/pkg/jwt/fndsa_correctness_test.go` |
-
-Run:
-
-```bash
-cd backend
-make fndsa-kat        # KAT only
-make adversarial-kat  # KAT + attack rejection gate
-make fndsa-check      # full correctness/security gate + Compose config
-```
-
 ## Validation
 
 ```bash
